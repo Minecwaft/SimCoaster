@@ -209,13 +209,37 @@ struct MeshRenderer::Impl {
     std::unordered_map<const TextureImage*, GpuTexture> textures;
 
     ~Impl() {
+        release_presentation();
+    }
+
+    void release_presentation() noexcept {
         if (context) {
             context->ClearState();
+        }
+        //DXGI keeps a flip chain associated with its HWND until the back-buffer
+        //views, buffer and chain are released and deferred destruction is flushed.
+        color_view.Reset();
+        depth_view.Reset();
+        target.Reset();
+        depth.Reset();
+        swap.Reset();
+        if (context) {
             context->Flush();
         }
     }
 
     Impl(std::uint32_t w, std::uint32_t h, void* window, bool force_software, std::optional<std::uint32_t> adapter_index, std::optional<ApplicationGraphicsProfile> profile) : software(force_software) {
+        try {
+            initialize(w, h, window, adapter_index, profile);
+        } catch (...) {
+            //A constructor failure skips ~Impl, including when a later shader
+            //or target allocation fails after the new swap chain was created.
+            release_presentation();
+            throw;
+        }
+    }
+
+    void initialize(std::uint32_t w, std::uint32_t h, void* window, std::optional<std::uint32_t> adapter_index, const std::optional<ApplicationGraphicsProfile>& profile) {
         ComPtr<IDXGIAdapter1> selected;
         if (adapter_index && !software) {
             ComPtr<IDXGIFactory1> factory;
