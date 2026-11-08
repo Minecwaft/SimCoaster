@@ -1,4 +1,5 @@
 #include "simcoaster/sprite_pixels.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <limits>
@@ -186,7 +187,7 @@ const SpritePixelPayload& SpritePixelCatalog::payload(std::size_t resource) {
     if (!cached) {
         auto parsed = parse_sprite_pixel_payload(catalog->resources.at(resource).pixel_payload);
         if (!parsed) {
-            throw std::runtime_error(catalog->resources.at(resource).pixel_path + ": invalid sprite pixels at " + std::to_string(parsed.error().offset));
+            throw std::runtime_error(std::format("{}: invalid sprite pixels at {}", catalog->resources.at(resource).pixel_path, parsed.error().offset));
         }
         cached = std::move(*parsed);
     }

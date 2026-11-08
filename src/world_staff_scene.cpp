@@ -4,6 +4,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "simcoaster/world_mesh_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -30,7 +31,7 @@ void append_cell_overlays(StaffWorld& c, MeshScene& scene, std::span<const Staff
             const auto path = directory / names[i];
             std::ifstream in(path, std::ios::binary | std::ios::ate);
             if (!in) {
-                throw std::runtime_error("Missing staff overlay texture: " + path.native_encoded_string());
+                throw std::runtime_error(std::format("Missing staff overlay texture: {}", path.native_encoded_string()));
             }
             const auto size = in.tellg();
             std::vector<std::byte> bytes(static_cast<std::size_t>(size));
@@ -195,7 +196,7 @@ void WorldSpriteScene::append(StaffWorld& c, const SceneCamera& camera, float as
         if (!textures_.contains(key)) {
             const auto decoded = decode_sprite_image(pixels_.payload(frame.resource), frame.frame);
             if (!decoded) {
-                throw std::runtime_error("Unable to decode sprite frame at byte " + std::to_string(decoded.error().offset));
+                throw std::runtime_error(std::format("Unable to decode sprite frame at byte {}", decoded.error().offset));
             }
             auto image = std::make_shared<TextureImage>();
             image->width = decoded->width;

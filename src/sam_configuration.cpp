@@ -1,5 +1,6 @@
 #include "simcoaster/sam_configuration.hpp"
 #include "simcoaster/world_sound_runtime.hpp"
+#include <format>
 #include <fstream>
 #include <stdexcept>
 
@@ -9,17 +10,17 @@ std::optional<std::string> read_text(const std::filesystem::path& path) {
     std::error_code error;
     if (!std::filesystem::exists(path, error)) {
         if (error) {
-            throw std::runtime_error(path.native_encoded_string() + ": " + error.message());
+            throw std::runtime_error(std::format("{}: {}", path.native_encoded_string(), error.message()));
         }
         return {};
     }
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        throw std::runtime_error("Cannot read SAM: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Cannot read SAM: {}", path.native_encoded_string()));
     }
     std::string result { std::istreambuf_iterator<char> { input }, {} };
     if (input.bad()) {
-        throw std::runtime_error("Incomplete SAM read: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Incomplete SAM read: {}", path.native_encoded_string()));
     }
     return result;
 }

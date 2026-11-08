@@ -3,6 +3,7 @@
 #ifndef NOMINMAX
 #    define NOMINMAX
 #endif
+#include <format>
 #include <cstring>
 #include <map>
 #include <usp10.h>
@@ -240,7 +241,7 @@ std::expected<SignTextMask, MeshError> SignFontLibrary::rasterize(const SignFont
         SetTextColor(device.dc, RGB(255, 255, 255));
         const RECT clip { 0, 0, static_cast<LONG>(width * 2), static_cast<LONG>(height * 2) };
         const auto written = ScriptStringOut(analysis.value, static_cast<int>(width) - measured / 2, definition.baseline_y, ETO_CLIPPED, &clip, 0, 0, FALSE);
-        check(SUCCEEDED(written), "ScriptStringOut HRESULT " + std::to_string(static_cast<std::uint32_t>(written)));
+        check(SUCCEEDED(written), std::format("ScriptStringOut HRESULT {}", static_cast<std::uint32_t>(written)));
         GdiFlush();
         const auto* source = static_cast<const std::uint8_t*>(bits);
         result.ink_top = -1;

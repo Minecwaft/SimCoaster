@@ -14,6 +14,7 @@
 #include "simcoaster/world_bank.hpp"
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_special_rides.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <memory>
@@ -454,7 +455,7 @@ ParkObjectRuntimeView* world_operations::builtin::initialize_park_object_instanc
         initialize_or_refresh_park_object_mesh(c, *object, false);
         auto loaded = create_installed_park_object_rsse_state(c, *object);
         if (!loaded) {
-            throw std::runtime_error("unable to load park object RSSE: " + loaded.error().path);
+            throw std::runtime_error(std::format("unable to load park object RSSE: {}", loaded.error().path));
         }
         auto* script = *loaded;
         created_script = object->script_id;

@@ -3,6 +3,7 @@
 #include "simcoaster/world_object_ui.hpp"
 #include "simcoaster/world_research.hpp"
 #include "world_object_access.hpp"
+#include <format>
 #include <algorithm>
 
 namespace simcoaster {
@@ -16,7 +17,7 @@ void world_operations::builtin::copy_catalog_object_sign_name(WorldRuntime& c, s
     if (id && mapping != object_name_catalog::rows.end()) {
         auto name = format_bfst_wide_string(c.messages.mail_language.object_names, c.messages.mail_language.conversion, second ? mapping->sign_b : mapping->sign_a, destination.size());
         if (!name) {
-            throw std::runtime_error("Object sign name: " + name.error().reason);
+            throw std::runtime_error(std::format("Object sign name: {}", name.error().reason));
         }
         std::ranges::copy(*name, destination.begin());
         destination[name->size()] = 0;
@@ -52,7 +53,7 @@ std::u16string get_catalog_object_display_name(WorldRuntime& c, std::uint16_t id
     const auto text = [&](std::uint16_t entry) {
         auto value = format_bfst_wide_string(c.messages.mail_language.object_names, c.messages.mail_language.conversion, entry, 64);
         if (!value) {
-            throw std::runtime_error("Catalog display name: " + value.error().reason);
+            throw std::runtime_error(std::format("Catalog display name: {}", value.error().reason));
         }
         return *value;
     };

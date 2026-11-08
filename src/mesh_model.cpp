@@ -2,6 +2,8 @@
 #include "simcoaster/mesh_transform.hpp"
 #include "simcoaster/simulation_sine.hpp"
 #include "mesh_binary.hpp"
+#include <iterator>
+#include <format>
 #include <fstream>
 #include <cmath>
 #include <limits>
@@ -93,7 +95,7 @@ std::string describe_mesh_error(const MeshError& error) {
     };
     auto result = error.resource.empty() ? std::string {} : error.resource + ": ";
     result += message;
-    result += " at byte/index " + std::to_string(error.offset);
+    std::format_to(std::back_inserter(result), " at byte/index {}", error.offset);
     if (error.archive_error) {
         result += " (" + std::string { asset_failure_name(error.archive_error->reason) } + ")";
     }

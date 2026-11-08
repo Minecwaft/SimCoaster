@@ -10,6 +10,8 @@
 #include "simcoaster/park_construction_refresh.hpp"
 #include "simcoaster/rsse_state.hpp"
 #include "simcoaster/world_fixed_point.hpp"
+#include <iterator>
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -462,7 +464,7 @@ std::expected<std::uint32_t, MeshError> WorldMeshRuntime::create(WorldRuntime& c
             place(c, *created, args, *source);
         } catch (MeshError error) {
             if (error.resource.empty()) {
-                error.resource = "Mesh placement " + source->resource_name + " dimensions " + std::to_string(source->footprint_width) + "x" + std::to_string(source->footprint_height) + " nodes " + std::to_string(created->playback.model.nodes.size()) + " root " + (created->playback.model.root ? std::to_string(*created->playback.model.root) : "absent") + " angle " + std::to_string(args.placement.orientation_degrees);
+                error.resource = std::format("Mesh placement {} dimensions {}x{} nodes {} root {} angle {}", source->resource_name, source->footprint_width, source->footprint_height, created->playback.model.nodes.size(), (created->playback.model.root ? std::format("{}", *created->playback.model.root) : "absent"), args.placement.orientation_degrees);
             }
             throw error;
         }
@@ -543,7 +545,7 @@ std::expected<std::uint32_t, MeshError> WorldMeshRuntime::create(WorldRuntime& c
     } catch (MeshError error) {
         rollback();
         if (error.resource.empty()) {
-            error.resource = "Mesh creation: " + std::string { creation_stage } + " (template " + std::to_string(args.definition_index) + ", tile " + std::to_string(args.placement.tile_x) + "," + std::to_string(args.placement.tile_y) + ", angle " + std::to_string(args.placement.orientation_degrees) + ")";
+            error.resource = std::format("Mesh creation: {} (template {}, tile {},{}, angle {})", creation_stage, args.definition_index, args.placement.tile_x, args.placement.tile_y, args.placement.orientation_degrees);
         }
         last_error = error;
         return std::unexpected(std::move(error));
@@ -1020,12 +1022,12 @@ bool WorldMeshRuntime::finish_mesh_restore_instance(WorldRuntime& c, std::uint32
             if (source) {
                 error.resource = source->source_directory + "/" + source->resource_name;
             }
-            error.resource += " [restore slot=" + std::to_string(slot) + ", key=" + std::to_string(target.metadata.definition_key) + ", nodes=" + std::to_string(playback.model.nodes.size());
+            std::format_to(std::back_inserter(error.resource), " [restore slot={}, key={}, nodes={}", slot, target.metadata.definition_key, playback.model.nodes.size());
             for (std::size_t i = 0; i < view.animation_controls.size(); ++i) {
                 const auto& control = view.animation_controls[i];
-                error.resource += "; control" + std::to_string(i) + "=" + std::to_string(control.animation_id) + "/" + std::to_string(control.sub_animation_id) + ", deferred=" + std::to_string(control.deferred_animation_id) + "/" + std::to_string(control.deferred_sub_animation_id);
+                std::format_to(std::back_inserter(error.resource), "; control{}={}/{}, deferred={}/{}", i, control.animation_id, control.sub_animation_id, control.deferred_animation_id, control.deferred_sub_animation_id);
                 if (control.animation_id < playback.assets->animations.groups.size()) {
-                    error.resource += ", group_size=" + std::to_string(playback.assets->animations.groups[control.animation_id].size());
+                    std::format_to(std::back_inserter(error.resource), ", group_size={}", playback.assets->animations.groups[control.animation_id].size());
                 }
             }
             error.resource += "]";

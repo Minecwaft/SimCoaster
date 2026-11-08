@@ -4,6 +4,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_bank.hpp"
 #include "simcoaster/world_mesh_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -17,7 +18,7 @@ inline void require(bool value, std::size_t index = 0, std::source_location wher
         const std::string_view source { where.file_name() };
         const auto separator = source.find_last_of("/\\");
         const auto filename = separator == std::string_view::npos ? source : source.substr(separator + 1);
-        throw MeshError { MeshFailure::configuration, index, "Coaster editor " + std::string { filename } + ":" + std::to_string(where.line()), {} };
+        throw MeshError { MeshFailure::configuration, index, std::format("Coaster editor {}:{}", filename, where.line()), {} };
     }
 }
 

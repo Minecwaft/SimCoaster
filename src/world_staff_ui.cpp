@@ -9,6 +9,7 @@
 #include "simcoaster/world_person.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <map>
@@ -170,7 +171,7 @@ struct WorldStaffUiRuntime::State {
         const auto path = (root / "Data/Language/American" / name).native_encoded_string();
         const auto content = c.ports.assets.read_balance_asset(c, path);
         if (!content) {
-            throw std::runtime_error("Missing Staff UI language resource: " + path);
+            throw std::runtime_error(std::format("Missing Staff UI language resource: {}", path));
         }
         const auto bytes = std::as_bytes(std::span { content->data(), content->size() });
         return language.emplace(std::move(name), std::vector<std::byte> { bytes.begin(), bytes.end() }).first->second;
@@ -179,7 +180,7 @@ struct WorldStaffUiRuntime::State {
     std::u16string text(std::span<const std::byte> source, std::uint32_t row, std::span<const BfstSignedIntegerArgument> integers = {}, std::span<const BfstWideStringArgument> strings = {}) const {
         auto result = format_bfst_wide_string(source, c.messages.mail_language.conversion, row, 16383, strings, integers);
         if (!result) {
-            throw std::runtime_error("Staff UI localized row " + std::to_string(row) + ": " + result.error().reason);
+            throw std::runtime_error(std::format("Staff UI localized row {}: {}", row, result.error().reason));
         }
         return std::move(*result);
     }

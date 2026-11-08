@@ -7,6 +7,7 @@
 #include "simcoaster/track_ride_runtime.hpp"
 #include "simcoaster/rsse_tour_runtime.hpp"
 #include "simcoaster/object_catalog.hpp"
+#include <format>
 #include <bit>
 #include <algorithm>
 #include <cmath>
@@ -639,7 +640,7 @@ void step_rsse_instruction(ScriptWorld& c, RsseScriptState& state) {
                 state.instruction_cursor = stopped;
                 return;
             }
-            throw std::logic_error("RSSE opcode is not yet reconstructed: " + std::string { rsse_opcode_descriptors[std::to_underlying(opcode)].mnemonic });
+            throw std::logic_error(std::format("RSSE opcode is not yet reconstructed: {}", rsse_opcode_descriptors[std::to_underlying(opcode)].mnemonic));
         }
     }
 }
@@ -653,7 +654,7 @@ void run_rsse_instruction_slice(ScriptWorld& c, RsseScriptState& state) {
             step_rsse_instruction(c, state);
         } catch (const std::exception& error) {
             const auto source = state.script_source ? state.script_source->path.native_encoded_string() + ":" + state.script_source->archive_entry : std::string {};
-            throw std::runtime_error("RSSE state " + std::to_string(state.id) + " at word " + std::to_string(instruction) + " (" + source + "): " + error.what());
+            throw std::runtime_error(std::format("RSSE state {} at word {} ({}): {}", state.id, instruction, source, error.what()));
         }
         if (!c.scripts.states.step_control) {
             --state.remaining_instruction_steps;

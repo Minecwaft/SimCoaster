@@ -1,6 +1,7 @@
 #include "simcoaster/mesh_animation.hpp"
 #include "simcoaster/simulation_sine.hpp"
 #include "mesh_binary.hpp"
+#include <format>
 #include <cmath>
 #include <limits>
 
@@ -295,7 +296,7 @@ std::expected<MeshAnimationLibrary, MeshError> load_mesh_animation_library(const
     for (std::size_t category = 0; category < suffixes.size(); ++category) {
         bool numbered = true;
         for (std::uint32_t variant = 1;; ++variant) {
-            auto candidate = name + suffixes[category] + (numbered ? std::to_string(variant) : std::string {}) + ".md2";
+            auto candidate = name + suffixes[category] + (numbered ? std::format("{}", variant) : std::string {}) + ".md2";
             auto bytes = source.read_resource(candidate);
             if (!bytes) {
                 return std::unexpected(bytes.error());

@@ -1,4 +1,5 @@
 #include "sound_runtime_internal.hpp"
+#include <format>
 #include <cmath>
 #include <limits>
 #include <set>
@@ -81,7 +82,7 @@ std::expected<std::unique_ptr<Target>, SoundError> SoundRuntime::State::restore_
     target->id = saved.target_id;
     target->playlist.random = now;
     const auto fail = [&](SoundFailure why, std::size_t offset, std::string_view field) {
-        const auto location = (target->catalog ? target->catalog->path : std::string {}) + " [restore " + std::string { field } + "; target=" + std::to_string(saved.target_id) + "; kind=" + std::to_string(std::to_underlying(saved.kind)) + "; catalog=" + std::to_string(saved.fields.catalog) + "; descriptor=" + std::to_string(saved.fields.descriptor) + "; selection=" + std::to_string(saved.fields.selection) + "; sample=" + std::to_string(saved.fields.sample) + "]";
+        const auto location = std::format("{} [restore {}; target={}; kind={}; catalog={}; descriptor={}; selection={}; sample={}]", (target->catalog ? target->catalog->path : std::string {}), field, saved.target_id, std::to_underlying(saved.kind), saved.fields.catalog, saved.fields.descriptor, saved.fields.selection, saved.fields.sample);
         return std::unexpected(SoundError { why, offset, location });
     };
     if (!std::ranges::all_of(saved.fields.position,
@@ -107,17 +108,17 @@ std::expected<std::unique_ptr<Target>, SoundError> SoundRuntime::State::restore_
     }
     const auto& group = target->catalog->effects.groups.front();
     if (saved.fields.descriptor >= group.descriptors.size()) {
-        return fail(SoundFailure::index, saved.fields.descriptor, "descriptor count=" + std::to_string(group.descriptors.size()));
+        return fail(SoundFailure::index, saved.fields.descriptor, std::format("descriptor count={}", group.descriptors.size()));
     }
     target->descriptor = &group.descriptors[saved.fields.descriptor];
     if (saved.fields.selection >= target->descriptor->selections.size()) {
-        return fail(SoundFailure::index, saved.fields.selection, "selection count=" + std::to_string(target->descriptor->selections.size()));
+        return fail(SoundFailure::index, saved.fields.selection, std::format("selection count={}", target->descriptor->selections.size()));
     }
     const auto& row = target->descriptor->selections[saved.fields.selection];
     target->cursor.selection = saved.fields.selection;
     if (row.parameters.sample_count) {
         if (saved.fields.sample >= row.parameters.sample_count || saved.fields.sample >= row.samples.size()) {
-            return fail(SoundFailure::index, saved.fields.sample, "sample active=" + std::to_string(row.parameters.sample_count) + " stored=" + std::to_string(row.samples.size()));
+            return fail(SoundFailure::index, saved.fields.sample, std::format("sample active={} stored={}", row.parameters.sample_count, row.samples.size()));
         }
         target->cursor.sample = saved.fields.sample;
     } else if (!target->emitter()) {
@@ -180,10 +181,7 @@ std::expected<void, SoundError> SoundRuntime::restore(const SoundBackendSnapshot
         for (std::size_t i = 1; i < chain.nodes.size(); ++i) {
             const auto expected_child = root_kind == SoundTargetKind::emitter ? SoundTargetKind::child : SoundTargetKind::conditional_child;
             if (chain.nodes[i].kind != expected_child || chain.nodes[i].fields.catalog != chain.nodes[0].fields.catalog || chain.nodes[i].fields.descriptor != chain.nodes[0].fields.descriptor) {
-                return std::unexpected(SoundError {
-                    SoundFailure::index,
-                    i,
-                    "restore child chain target=" + std::to_string(chain.id) + "; parent kind=" + std::to_string(std::to_underlying(root_kind)) + "; child kind=" + std::to_string(std::to_underlying(chain.nodes[i].kind)) + "; parent catalog/descriptor=" + std::to_string(chain.nodes[0].fields.catalog) + "/" + std::to_string(chain.nodes[0].fields.descriptor) + "; child catalog/descriptor=" + std::to_string(chain.nodes[i].fields.catalog) + "/" + std::to_string(chain.nodes[i].fields.descriptor) });
+                return std::unexpected(SoundError { SoundFailure::index, i, std::format("restore child chain target={}; parent kind={}; child kind={}; parent catalog/descriptor={}/{}; child catalog/descriptor={}/{}", chain.id, std::to_underlying(root_kind), std::to_underlying(chain.nodes[i].kind), chain.nodes[0].fields.catalog, chain.nodes[0].fields.descriptor, chain.nodes[i].fields.catalog, chain.nodes[i].fields.descriptor) });
             }
             auto child = s.restore_node(chain.nodes[i], remap, root->get());
             if (!child) {

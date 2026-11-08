@@ -32,6 +32,8 @@
 #include "simcoaster/world_ui_shortcuts.hpp"
 #include "simcoaster/world_ui_staff.hpp"
 #include "simcoaster/world_ui_visitors.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -51,11 +53,6 @@ constexpr unsigned char secondary_template[] {
 constexpr unsigned char objectives_template[] {
 #embed "ui_templates/objectives.bin"
 };
-
-std::u16string number(std::int64_t value) {
-    const auto text = std::to_string(value);
-    return { text.begin(), text.end() };
-}
 
 template <class T>
 T* record(WorldRuntime& c, ThingId id) {
@@ -179,7 +176,7 @@ struct WorldUiRuntime::State {
         secondary->cursor_id = 21;
         const auto parsed = ui.parse_template(primary, std::as_bytes(std::span { primary_template }));
         if (!parsed) {
-            throw std::runtime_error("Persistent primary UI template word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
+            throw std::runtime_error(std::format("Persistent primary UI template word {}: {}", parsed.error().word, parsed.error().reason));
         }
         //50A210 parses this separate persistent tree under the initially hidden
         //secondary canvas;39700 owns the two special-view camera commands.
@@ -187,7 +184,7 @@ struct WorldUiRuntime::State {
             return camera_panel_event(control, event);
         });
         if (!secondary_parsed) {
-            throw std::runtime_error("Persistent secondary UI template word " + std::to_string(secondary_parsed.error().word) + ": " + secondary_parsed.error().reason);
+            throw std::runtime_error(std::format("Persistent secondary UI template word {}: {}", secondary_parsed.error().word, secondary_parsed.error().reason));
         }
         //The existing World language owner loads American;50A210 suppresses
         //this language-specific secondary image for that same edition.
@@ -488,7 +485,7 @@ struct WorldUiRuntime::State {
     UiControl& required(UiControl* parent, std::uint32_t id) {
         auto* control = ui.find(parent, id);
         if (!control) {
-            throw std::runtime_error("Original UI template missing direct control " + std::to_string(id));
+            throw std::runtime_error(std::format("Original UI template missing direct control {}", id));
         }
         return *control;
     }
@@ -500,7 +497,7 @@ struct WorldUiRuntime::State {
     std::u16string localized(std::span<const std::byte> table, std::uint32_t row, std::span<const BfstSignedIntegerArgument> integers = {}, std::span<const BfstWideStringArgument> strings = {}) {
         auto text = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383, strings, integers);
         if (!text) {
-            throw std::runtime_error("World UI localized row " + std::to_string(row) + ": " + text.error().reason);
+            throw std::runtime_error(std::format("World UI localized row {}: {}", row, text.error().reason));
         }
         return std::move(*text);
     }
@@ -525,7 +522,7 @@ struct WorldUiRuntime::State {
         const auto path = (root / "Data/Language/American" / name).native_encoded_string();
         const auto bytes = c.ports.assets.read_balance_asset(c, path);
         if (!bytes) {
-            throw std::runtime_error("Missing World UI language resource: " + path);
+            throw std::runtime_error(std::format("Missing World UI language resource: {}", path));
         }
         const auto raw = std::as_bytes(std::span { bytes->data(), bytes->size() });
         return language.emplace(std::move(name), std::vector<std::byte> { raw.begin(), raw.end() }).first->second;
@@ -1070,7 +1067,7 @@ struct WorldUiRuntime::State {
         auto& cash = required(primary, 93);
         const auto value = account->balance;
         const auto magnitude = value < 0 ? -static_cast<std::int64_t>(value) : value;
-        ui.set_text(cash, (value < 0 ? u"-$ " : u"$ ") + number(magnitude));
+        ui.set_text(cash, (value < 0 ? u"-$ " : u"$ ") + number_text(magnitude));
         const auto wrapped = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value) + 999u);
         cash.color = cash_colors[static_cast<std::size_t>(std::clamp(wrapped / 1000, 0, 5))];
         auto& cost = required(&cash, 94);
@@ -1195,9 +1192,9 @@ struct WorldUiRuntime::State {
         const bool shown = manager.golden_ticket_balance != 0;
         ui.set_visible(required(&tickets, 50), shown);
         ui.set_visible(required(&tickets, 51), shown);
-        ui.set_text(required(&tickets, 50), u"x " + number(manager.golden_ticket_balance));
+        ui.set_text(required(&tickets, 50), u"x " + number_text(manager.golden_ticket_balance));
         if (auto* tags = record<TagSystemRecord>(c, c.simulation.current->saved.tag_system); tags && tags->mail_counter_state) {
-            ui.set_text(required(c.ui.mail_counter_root, 70), number(tags->mail_counter_state->total_count));
+            ui.set_text(required(c.ui.mail_counter_root, 70), number_text(tags->mail_counter_state->total_count));
         }
         if (full || ui.clock() >= next_indicator) {
             refresh_indicators();
@@ -1423,7 +1420,7 @@ struct WorldUiRuntime::State {
             }
             const auto font = fonts->slot(body->font, pixel_width);
             if (!font) {
-                throw std::runtime_error("Scrollable UI font: " + font.error().reason);
+                throw std::runtime_error(std::format("Scrollable UI font: {}", font.error().reason));
             }
             UiTextStyle style;
             style.wrap = true;
@@ -1433,7 +1430,7 @@ struct WorldUiRuntime::State {
             full[3] = full[1] + 100000.f;
             const auto measured = fonts->measure(**font, body->text, full, style);
             if (!measured) {
-                throw std::runtime_error("Scrollable UI measure: " + measured.error().reason);
+                throw std::runtime_error(std::format("Scrollable UI measure: {}", measured.error().reason));
             }
             const auto height = static_cast<std::int32_t>(measured->bounds[3] - measured->bounds[1]);
             const auto overflow = std::max(0, height - body->attachment_rect.height());
@@ -1562,7 +1559,7 @@ void WorldUiRuntime::State::open_objectives() {
         return objective_event(control, event);
     });
     if (!parsed || !*parsed) {
-        throw std::runtime_error("Original Objectives UI template: " + (parsed ? std::string { "no root" } : parsed.error().reason));
+        throw std::runtime_error(std::format("Original Objectives UI template: {}", (parsed ? std::string { "no root" } : parsed.error().reason)));
     }
     panel = *parsed;
     //501CD0 installs the panel only after resetting the live interaction owner.
@@ -2001,7 +1998,7 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
             //A known model can intentionally select a native-null part, e.g.
             //Staff thought icon999. The shipped staffstat binding is also null;
             //every other unknown model identity remains a resource error.
-            const auto message = "Missing original UI asset hash " + std::to_string(hash);
+            const auto message = std::format("Missing original UI asset hash {}", hash);
             if (std::ranges::find(diagnostics, message) == diagnostics.end()) {
                 diagnostics.push_back(message);
             }
@@ -2038,7 +2035,7 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
     if (!control.text.empty() || control.scalar_text || control.kind == UiControlKind::edit_box) {
         auto font = fonts->slot(control.font, pixel_width);
         if (!font) {
-            throw std::runtime_error("Original UI font: " + font.error().reason);
+            throw std::runtime_error(std::format("Original UI font: {}", font.error().reason));
         }
         UiTextStyle style;
         //512330 defaults to an unconstrained attachment;512680 preserves its
@@ -2092,14 +2089,14 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
         auto displayed = control.password ? std::u16string(control.text.size(), u'*') : control.text;
         if (control.scalar_text) {
             match (*control.scalar_text) {
-                case UiScalarTextKind::signed_integer  => displayed = number(control.value);
+                case UiScalarTextKind::signed_integer  => displayed = number_text(control.value);
                 case UiScalarTextKind::signed_currency => displayed = signed_cash_text(control.value);
                 case UiScalarTextKind::percentage      => {
                     {
                         const std::array argument { BfstSignedIntegerArgument { 6, control.value } };
                         auto formatted = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, 959, 63, {}, argument);
                         if (!formatted) {
-                            throw std::runtime_error("UI percentage: " + formatted.error().reason);
+                            throw std::runtime_error(std::format("UI percentage: {}", formatted.error().reason));
                         }
                         displayed = std::move(*formatted);
                     }
@@ -2128,7 +2125,7 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
             set_edit_area();
             auto measured = fonts->measure(**font, displayed, bounds(area), style);
             if (!measured) {
-                throw std::runtime_error("UI edit metrics: " + measured.error().reason);
+                throw std::runtime_error(std::format("UI edit metrics: {}", measured.error().reason));
             }
             //Font positions already include the attachment/client origin. Native
             //5149F0 returns local positions and859941 adds that SAME client origin;
@@ -2181,7 +2178,7 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
                 set_edit_area();
                 measured = fonts->measure(**font, displayed, bounds(area), style);
                 if (!measured) {
-                    throw std::runtime_error("UI scrolled edit metrics: " + measured.error().reason);
+                    throw std::runtime_error(std::format("UI scrolled edit metrics: {}", measured.error().reason));
                 }
             }
             const auto positions = std::make_shared<const std::vector<std::array<float, 2>>>(std::move(measured->positions));
@@ -2234,7 +2231,7 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
             const auto shadow_area = offset_area(control.rect, primary_offset);
             const auto drawn = fonts->append(output, **font, displayed, bounds(shadow_area), shadow, bounds(clipped(clip, control.rect)));
             if (!drawn) {
-                throw std::runtime_error("UI text shadow: " + drawn.error().reason);
+                throw std::runtime_error(std::format("UI text shadow: {}", drawn.error().reason));
             }
         }
         if (control.primary_shadow_text || control.secondary_shadow_text) {
@@ -2252,15 +2249,15 @@ void WorldUiRuntime::State::draw_control(UiControl& control, UiDrawList& output,
             shadow_area[3] += 2.f * style.scale[1];
             const auto shadow_drawn = fonts->append(output, **font, displayed, shadow_area, shadow_style, bounds(text_clip));
             if (!shadow_drawn) {
-                throw std::runtime_error("UI shadow attachment: " + shadow_drawn.error().reason);
+                throw std::runtime_error(std::format("UI shadow attachment: {}", shadow_drawn.error().reason));
             }
         }
         const auto drawn = fonts->append(output, **font, displayed, bounds(area), style, bounds(text_clip));
         if (!drawn) {
-            throw std::runtime_error("UI text layout: " + drawn.error().reason);
+            throw std::runtime_error(std::format("UI text layout: {}", drawn.error().reason));
         }
         if (edit_overlay && !assets->append(output, control.edit_caret_asset_hash, *edit_overlay)) {
-            const auto message = "Missing original edit caret asset hash " + std::to_string(control.edit_caret_asset_hash);
+            const auto message = std::format("Missing original edit caret asset hash {}", control.edit_caret_asset_hash);
             if (std::ranges::find(diagnostics, message) == diagnostics.end()) {
                 diagnostics.push_back(message);
             }

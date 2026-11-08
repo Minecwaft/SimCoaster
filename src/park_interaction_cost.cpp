@@ -3,6 +3,7 @@
 #include "simcoaster/world_staff_interaction.hpp"
 #include "simcoaster/bfst_strings.hpp"
 #include "simcoaster/ui_control.hpp"
+#include <format>
 #include <utility>
 
 namespace simcoaster {
@@ -57,7 +58,7 @@ void ParkConstructionRuntime::update_cursor_feedback(ConstructionWorld& c, World
     if (help && !c.messages.mail_language.ui_help.empty()) {
         auto text = format_bfst_wide_string(c.messages.mail_language.ui_help, c.messages.mail_language.conversion, help, 16383);
         if (!text) {
-            throw std::runtime_error("Invalid original construction help: " + text.error().reason);
+            throw std::runtime_error(std::format("Invalid original construction help: {}", text.error().reason));
         }
         state.cursor_help = std::move(*text);
     }

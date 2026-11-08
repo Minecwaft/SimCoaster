@@ -5,6 +5,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_mail.hpp"
 #include "simcoaster/world_park_admission.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <memory>
@@ -70,7 +71,7 @@ struct ApplicationEndingUiController::State {
     std::u16string text(std::uint32_t row) {
         auto result = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, row, 16383);
         if (!result) {
-            throw std::runtime_error("Ending UI text: " + result.error().reason);
+            throw std::runtime_error(std::format("Ending UI text: {}", result.error().reason));
         }
         return std::move(*result);
     }
@@ -79,7 +80,7 @@ struct ApplicationEndingUiController::State {
         if (auto* found = ui.find_recursive(root, id)) {
             return *found;
         }
-        throw std::runtime_error("Original ending template missing control " + std::to_string(id));
+        throw std::runtime_error(std::format("Original ending template missing control {}", id));
     }
 
     void destroy(UiControl*& root) {
@@ -211,7 +212,7 @@ struct ApplicationEndingUiController::State {
         const std::array date_arguments { BfstSignedIntegerArgument { 41, static_cast<std::int32_t>(packed_date & 255u) }, BfstSignedIntegerArgument { 42, static_cast<std::int32_t>((packed_date >> 8) & 255u) + 1 }, BfstSignedIntegerArgument { 43, std::bit_cast<std::int32_t>(packed_date) >> 16 } };
         auto date = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, 956, 63, {}, date_arguments);
         if (!date) {
-            throw std::runtime_error("Ending notice calendar date: " + date.error().reason);
+            throw std::runtime_error(std::format("Ending notice calendar date: {}", date.error().reason));
         }
         caption(required(notice, 43010), *date);
         for (const auto id : { 43002u, 43004u, 43008u, 43010u }) {
@@ -248,7 +249,7 @@ struct ApplicationEndingUiController::State {
         }
         auto font = fonts->slot(0, resolution[0]);
         if (!font) {
-            throw std::runtime_error("Original ending overlay font: " + font.error().reason);
+            throw std::runtime_error(std::format("Original ending overlay font: {}", font.error().reason));
         }
         UiTextStyle style;
         style.wrap = false;
@@ -256,7 +257,7 @@ struct ApplicationEndingUiController::State {
         style.vertical = UiTextVertical::middle;
         const auto measured = fonts->measure(**font, overlay->text, { 0, 0, 1000, 1000 }, style);
         if (!measured) {
-            throw std::runtime_error("Ending overlay measurement: " + measured.error().reason);
+            throw std::runtime_error(std::format("Ending overlay measurement: {}", measured.error().reason));
         }
         const auto width = static_cast<std::int32_t>(measured->bounds[2] - measured->bounds[0]);
         const auto height = static_cast<std::int32_t>(measured->bounds[3] - measured->bounds[1]);

@@ -1,5 +1,6 @@
 #include "park_runtime_codec.hpp"
 #include "park_runtime_state.hpp"
+#include <format>
 
 namespace simcoaster {
 using namespace park_detail;
@@ -33,7 +34,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
             }
             const auto challenges = sam::parse_record<ChallengeBalance, true>(simulation.world->challenges.balance, *text, preserve);
             if (!challenges) {
-                throw std::runtime_error("Invalid challenge schedule balance at byte " + std::to_string(challenges.error().offset));
+                throw std::runtime_error(std::format("Invalid challenge schedule balance at byte {}", challenges.error().offset));
             }
             const auto weather_loaded = load_weather_balance_checked(*simulation.world, *text, preserve);
             if (!weather_loaded) {
@@ -89,7 +90,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
     ensure(challenge_definitions.has_value(), "Challenges.sam is missing");
     const auto parsed_challenges = sam::parse_record<ChallengeDefinitions, true>(simulation.world->challenges.definitions, *challenge_definitions);
     if (!parsed_challenges) {
-        throw std::runtime_error("Invalid Challenges.sam at byte " + std::to_string(parsed_challenges.error().offset));
+        throw std::runtime_error(std::format("Invalid Challenges.sam at byte {}", parsed_challenges.error().offset));
     }
     const auto language = root / "Data/Language/American";
     const auto mapping_bytes = bindings.read_asset((language / "MBToUni.dat").native_encoded_string());
@@ -127,7 +128,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
         ensure(bytes.has_value(), "Staff name table is missing");
         auto table = parse_bfst_literals(*bytes, *mapping);
         if (!table) {
-            throw std::runtime_error(std::string { names[i] } + ": " + table.error().reason);
+            throw std::runtime_error(std::format("{}: {}", names[i], table.error().reason));
         }
         ensure(table->strings.size() >= 35, "Staff name table has too few entries");
         simulation.world->staff.recruitment.names[i] = std::move(table->strings);
@@ -162,7 +163,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
         if (!content.sprite_texture_archive) {
             auto archive = load_dwfb_archive(archive_path);
             if (!archive) {
-                throw std::runtime_error("Cannot open sprite texture archive: " + std::string { asset_failure_name(archive.error().reason) });
+                throw std::runtime_error(std::format("Cannot open sprite texture archive: {}", asset_failure_name(archive.error().reason)));
             }
             content.sprite_texture_archive = std::move(*archive);
         }
@@ -182,11 +183,11 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
             auto path = sprite_pixel_sidecar_path(resource.descriptor_path, resource.descriptor, settings);
             const auto entry = content.sprite_texture_archive->find_entry(path);
             if (!entry) {
-                throw std::runtime_error("Missing camera-mode sprite texture: " + path);
+                throw std::runtime_error(std::format("Missing camera-mode sprite texture: {}", path));
             }
             auto pixels = content.sprite_texture_archive->read_entry(*entry);
             if (!pixels) {
-                throw std::runtime_error("Invalid camera-mode sprite texture: " + path);
+                throw std::runtime_error(std::format("Invalid camera-mode sprite texture: {}", path));
             }
             pending.push_back({ i, std::move(path), std::move(*pixels) });
         }
@@ -252,7 +253,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
                 }
                 const auto pylons = prepare_coaster_pylons(*simulation.world, rendering.meshes, definition);
                 if (!pylons) {
-                    throw std::runtime_error(path + ": " + describe_mesh_error(pylons.error()));
+                    throw std::runtime_error(std::format("{}: {}", path, describe_mesh_error(pylons.error())));
                 }
                 rendering.meshes.configure_coaster_template(id, std::move(definition));
             }
@@ -272,7 +273,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
     ensure(library_bytes.has_value(), "Native particle library is missing");
     const auto library = initialize_world_profile_particles(*simulation.particles, *library_bytes, configuration.hardware_profile);
     if (!library) {
-        throw std::runtime_error("Data/Particle/Tp2.plb at byte " + std::to_string(library.error().offset) + ": " + library.error().reason);
+        throw std::runtime_error(std::format("Data/Particle/Tp2.plb at byte {}: {}", library.error().offset, library.error().reason));
     }
     configuration.particle_library = *library;
     //HUD clones have independent ownership, as in the original. They must
@@ -285,7 +286,7 @@ void ParkRuntime::State::initialize_assets(const std::filesystem::path& root, co
         return canonical_asset_key(std::string { source }) == canonical_asset_key(theme);
     });
     if (selected == theme_global_source_names.end()) {
-        throw std::invalid_argument("Unknown park theme: " + theme);
+        throw std::invalid_argument(std::format("Unknown park theme: {}", theme));
     }
     auto& manager = get_or_create_theme_global_info_manager(*simulation.world);
     manager.selected_theme_info = get_or_create_theme_global_info_for_ordinal(*simulation.world, manager, static_cast<std::uint32_t>(selected - theme_global_source_names.begin()));

@@ -6,11 +6,12 @@
 #include "simcoaster/terrain_catalog.hpp"
 #include "simcoaster/terrain_texture.hpp"
 #include "simcoaster/world_coaster_runtime.hpp"
+#include <iterator>
+#include <format>
 #include <cmath>
 #include <fstream>
 #include <map>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -82,14 +83,14 @@ WorldMeshScene::WorldMeshScene(std::filesystem::path root, std::string theme) : 
 WorldMeshScene::~WorldMeshScene() = default;
 
 namespace {
-void lighting_owner(std::ostream& out, std::string_view asset, const WorldMeshInstance* instance) {
-    out << "asset=" << asset;
+void lighting_owner(std::string& out, std::string_view asset, const WorldMeshInstance* instance) {
+    std::format_to(std::back_inserter(out), "asset={}", asset);
     if (instance) {
-        out << " instance=" << instance->metadata.slot << " generation=" << instance->generation;
+        std::format_to(std::back_inserter(out), " instance={} generation={}", instance->metadata.slot, instance->generation);
         for (std::size_t i = 0; i < instance->playback.controls.size(); ++i) {
             const auto& control = instance->playback.controls[i];
             if (control.clip.active()) {
-                out << " control=" << i << " animation=" << control.clip.category << ':' << control.clip.variant << " frame=" << control.frame;
+                std::format_to(std::back_inserter(out), " control={} animation={}:{} frame={:.6g}", i, control.clip.category, control.clip.variant, control.frame);
             }
         }
     }
@@ -106,17 +107,16 @@ void WorldMeshScene::report_lighting(const MeshScene& scene, std::size_t first, 
         if (!sources_->reported_lighting.emplace(std::string { asset }, diagnostic.model, diagnostic.node_index, diagnostic.reason).second) {
             continue;
         }
-        std::ostringstream message;
-        message << "Ambient lighting fallback: ";
+        std::string message { "Ambient lighting fallback: " };
         lighting_owner(message, asset, instance);
-        message << " model=" << diagnostic.model << " node=" << diagnostic.node_index << " (" << diagnostic.node << ") matrix=";
+        std::format_to(std::back_inserter(message), " model={} node={} ({}) matrix=", diagnostic.model, diagnostic.node_index, diagnostic.node);
         for (const auto value : diagnostic.transform) {
-            message << value << ',';
+            std::format_to(std::back_inserter(message), "{:.6g},", value);
         }
-        sources_->lighting_warnings.push_back(message.str());
+        sources_->lighting_warnings.push_back(message);
         std::ofstream log(root_ / "simcoaster-render.log", std::ios::app);
         if (log) {
-            log << message.str() << '\n';
+            log.write(message.data(), static_cast<std::streamsize>(message.size())).put('\n');
         }
     }
 }
@@ -126,10 +126,10 @@ void WorldMeshScene::append_model(MeshScene& scene, const MeshModel& model, Mesh
     try {
         append_mesh_scene(scene, model, source, lighting, nullptr, {}, whiten);
     } catch (const std::exception& error) {
-        std::ostringstream message;
+        std::string message;
         lighting_owner(message, asset, instance);
-        message << ": " << error.what();
-        throw std::runtime_error(message.str());
+        std::format_to(std::back_inserter(message), ": {}", error.what());
+        throw std::runtime_error(message);
     }
     report_lighting(scene, first, asset, instance);
 }

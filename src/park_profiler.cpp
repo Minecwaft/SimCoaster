@@ -5,12 +5,13 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "simcoaster/world_ui_runtime.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
 #include <fstream>
-#include <iomanip>
-#include <iostream>
+#include <iterator>
 #include <map>
 #include <numeric>
 
@@ -114,7 +115,7 @@ int run_park_profiler(std::span<const std::string_view> args, const std::filesys
         const auto option = args[i];
         const auto next = [&]() {
             if (++i >= args.size()) {
-                throw std::invalid_argument("Missing value for " + std::string { option });
+                throw std::invalid_argument(std::format("Missing value for {}", option));
             }
             return std::string { args[i] };
         };
@@ -154,7 +155,7 @@ int run_park_profiler(std::span<const std::string_view> args, const std::filesys
         } else if (!option.starts_with("--") && positional == 2) {
             root = option;
         } else {
-            throw std::invalid_argument("Unknown profile option: " + std::string { option });
+            throw std::invalid_argument(std::format("Unknown profile option: {}", option));
         }
     }
     if (frames < 1 || frames > 10000 || warmup < 0 || warmup > 10000 || !width || !height || width > 16384 || height > 16384 || capture >= frames) {
@@ -251,41 +252,44 @@ int run_park_profiler(std::span<const std::string_view> args, const std::filesys
     for (const auto& row : gpu) {
         gpu_totals.push_back(row.total_ms);
     }
-    std::cout << "Profile=" << profile_index << " procedural=" << profile->graphics.procedural_texturing << " sky_shadow=" << profile->graphics.sky_shadow << " sprite_shadow=" << profile->graphics.sprite_shadow << " lighting=" << profile->graphics.lighting << " resolution=" << width << 'x' << height << " adapter=" << (renderer ? renderer->adapter_name() : "CPU only") << " sweep=" << sweep << " paused=" << paused << '\n';
-    std::cout << std::fixed << std::setprecision(4) << "CPU frame median=" << percentile(totals, .5) << " p95=" << percentile(totals, .95) << " GPU median=" << percentile(gpu_totals, .5) << " p95=" << percentile(gpu_totals, .95) << " samples=" << gpu.size() << '\n';
+    print_text(stdout, "Profile={} procedural={} sky_shadow={} sprite_shadow={} lighting={} resolution={}x{} adapter={} sweep={:d} paused={:d}\n", profile_index, profile->graphics.procedural_texturing, profile->graphics.sky_shadow, profile->graphics.sprite_shadow, profile->graphics.lighting, width, height, renderer ? renderer->adapter_name() : "CPU only", sweep, paused);
+    print_text(stdout, "CPU frame median={:.4f} p95={:.4f} GPU median={:.4f} p95={:.4f} samples={}\n", percentile(totals, .5), percentile(totals, .95), percentile(gpu_totals, .5), percentile(gpu_totals, .95), gpu.size());
     for (std::size_t stage = 0; stage < frame_stage_names.size(); ++stage) {
         double sum {};
         for (const auto& row : results) {
             sum += row.cpu_ms[stage];
         }
-        std::cout << frame_stage_names[stage] << '=' << sum / static_cast<double>(results.size()) << ' ';
+        print_text(stdout, "{}={:.4f} ", frame_stage_names[stage], sum / static_cast<double>(results.size()));
     }
-    std::cout << "\nGameplay digest=" << gameplay_hash(park.context()) << " entity digest=" << entity_hash(park.context()) << " image digest=" << image_hash << '\n';
+    print_text(stdout, "\nGameplay digest={} entity digest={} image digest={}\n", gameplay_hash(park.context()), entity_hash(park.context()), image_hash);
     if (!output.empty()) {
         std::ofstream csv(output.native_encoded_string() + ".csv");
-        csv << "frame,total_ms";
+        std::string line { "frame,total_ms" };
         for (auto name : frame_stage_names) {
-            csv << ',' << name;
+            std::format_to(std::back_inserter(line), ",{}", name);
         }
-        template for (constexpr auto member : counter_members) csv << ',' << std::meta::identifier_of(member);
-        csv << ",gpu_ms,gpu_background,gpu_world,gpu_sprites,gpu_foreground,gpu_ui,gpu_screen\n";
+        template for (constexpr auto member : counter_members) std::format_to(std::back_inserter(line), ",{}", std::meta::identifier_of(member));
+        line += ",gpu_ms,gpu_background,gpu_world,gpu_sprites,gpu_foreground,gpu_ui,gpu_screen\n";
+        csv.write(line.data(), static_cast<std::streamsize>(line.size()));
         for (std::size_t i = 0; i < results.size(); ++i) {
             const auto& row = results[i];
-            csv << row.frame << ',' << totals[i];
+            line.clear();
+            std::format_to(std::back_inserter(line), "{},{:.6g}", row.frame, totals[i]);
             for (auto time : row.cpu_ms) {
-                csv << ',' << time;
+                std::format_to(std::back_inserter(line), ",{:.6g}", time);
             }
-            template for (constexpr auto member : counter_members) csv << ',' << row.counters.[:member:];
+            template for (constexpr auto member : counter_members) std::format_to(std::back_inserter(line), ",{}", row.counters.[:member:]);
             const auto found = std::ranges::find(gpu, row.frame, &GpuFrameProfile::frame);
             if (found == gpu.end()) {
-                csv << ",,,,,,,";
+                line += ",,,,,,,";
             } else {
-                csv << ',' << found->total_ms;
+                std::format_to(std::back_inserter(line), ",{:.6g}", found->total_ms);
                 for (auto time : found->pass_ms) {
-                    csv << ',' << time;
+                    std::format_to(std::back_inserter(line), ",{:.6g}", time);
                 }
             }
-            csv << '\n';
+            line += '\n';
+            csv.write(line.data(), static_cast<std::streamsize>(line.size()));
         }
         if (!csv) {
             throw std::runtime_error("Cannot write profiling CSV");

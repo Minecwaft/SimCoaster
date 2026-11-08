@@ -4,6 +4,7 @@
 #include "simcoaster/world_grid.hpp"
 #include "simcoaster/rsse_actions.hpp"
 #include "simcoaster/world_research.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -41,7 +42,7 @@ TextureImagePtr load_texture(WeatherWorld& c, std::string_view path) {
     const auto data = std::as_bytes(std::span { bytes->data(), bytes->size() });
     auto decoded = data.size() >= 4 && std::string_view { bytes->data(), 4 } == "SHPI" ? decode_fsh_image(data) : decode_tga_image(data);
     if (!decoded) {
-        throw std::runtime_error(describe_texture_error(decoded.error()) + " in " + std::string { path });
+        throw std::runtime_error(std::format("{} in {}", describe_texture_error(decoded.error()), path));
     }
     decoded->source_mode = TextureSourceMode::alpha_low;
     return std::make_shared<TextureImage>(std::move(*decoded));
@@ -337,12 +338,12 @@ void initialize_weather_sky_objects(WeatherWorld& c, WeatherEffectsRuntime& runt
     for (std::int32_t i = 0; i < count; ++i) {
         const auto& config = c.balance.standard_supplement.sky_objects[static_cast<std::size_t>(i)];
         if (!config.filename || config.filename->empty()) {
-            throw std::runtime_error("SkyObjects[" + std::to_string(i) + "].Filename is empty");
+            throw std::runtime_error(std::format("SkyObjects[{}].Filename is empty", i));
         }
         const auto path = directory + config.filename.value_or("");
         auto texture = load_texture(c, path);
         if (!texture) {
-            throw std::runtime_error("Cannot load sky object texture: " + path);
+            throw std::runtime_error(std::format("Cannot load sky object texture: {}", path));
         }
         loaded.push_back({ { config.x, config.y, config.z }, config.size, config.front_flag != 0, std::move(texture) });
     }

@@ -2,6 +2,7 @@
 #include "simcoaster/world_grid.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "world_person_internal.hpp"
+#include <format>
 #include <cmath>
 #include <stdexcept>
 
@@ -44,7 +45,7 @@ MobileRenderPose mobile_resource_pose(VisitorWorld& c, const MobileEntityState& 
             const auto* state = h->kind == ThingKind::person ? &reinterpret_cast<const PersonRuntimeView*>(h)->mobile : is_staff_record_kind(h->kind) ? &reinterpret_cast<const StaffRuntimeRecord*>(h)->mobile : nullptr;
             if (state == &mobile) {
                 const auto activity = h->kind == ThingKind::person ? std::to_underlying(reinterpret_cast<const PersonRuntimeView*>(h)->state) : std::to_underlying(reinterpret_cast<const StaffRuntimeRecord*>(h)->state);
-                throw std::invalid_argument(std::string { error.what() } + ": thing " + std::to_string(h->id) + ", kind " + std::to_string(std::to_underlying(h->kind)) + ", state " + std::to_string(activity) + ", resource " + std::to_string(mobile.animation.sprite_script));
+                throw std::invalid_argument(std::format("{}: thing {}, kind {}, state {}, resource {}", error.what(), h->id, std::to_underlying(h->kind), activity, mobile.animation.sprite_script));
             }
         }
         throw;

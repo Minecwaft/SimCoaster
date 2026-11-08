@@ -1,5 +1,7 @@
 #include "park_runtime_codec.hpp"
 #include "park_runtime_state.hpp"
+#include <iterator>
+#include <format>
 
 namespace simcoaster {
 using namespace park_detail;
@@ -11,7 +13,7 @@ void ParkRuntime::State::open(ParkRuntime& park, const std::filesystem::path& ro
     if (request.saved_park) {
         auto preferences = load_ui_preferences(std::filesystem::absolute(root), std::filesystem::absolute(file));
         if (!preferences) {
-            throw std::runtime_error("UI profile " + preferences.error().path.native_encoded_string() + " at byte " + std::to_string(preferences.error().offset) + ": " + preferences.error().reason);
+            throw std::runtime_error(std::format("UI profile {} at byte {}: {}", preferences.error().path.native_encoded_string(), preferences.error().offset, preferences.error().reason));
         }
         s.configuration.preferences = std::move(*preferences);
     } else {
@@ -57,16 +59,16 @@ void ParkRuntime::State::open(ParkRuntime& park, const std::filesystem::path& ro
         MemoryByteStream input;
         input.bytes.assign(prefix->world_and_later_sections.begin(), prefix->world_and_later_sections.end());
         const auto failed = [&](std::string_view stage) {
-            auto message = std::string { stage } + " [" + std::filesystem::absolute(file).native_encoded_string() + "] at section byte " + std::to_string(input.cursor) + ", last World field=" + s.bindings.last_field;
+            auto message = std::format("{} [{}] at section byte {}, last World field={}", stage, std::filesystem::absolute(file).native_encoded_string(), input.cursor, s.bindings.last_field);
             if (s.rendering.meshes.last_error) {
                 message += "; " + describe_mesh_error(*s.rendering.meshes.last_error);
             }
             if (const auto& failure = s.rendering.meshes.last_mesh_restore_failure; failure) {
-                message += "; mesh " + std::string { failure->stage } + " at body byte " + std::to_string(failure->body_offset) + ", ordinal=" + std::to_string(failure->ordinal) + ", slot=" + std::to_string(failure->slot) + ", key=" + std::to_string(failure->definition_key);
+                std::format_to(std::back_inserter(message), "; mesh {} at body byte {}, ordinal={}, slot={}, key={}", failure->stage, failure->body_offset, failure->ordinal, failure->slot, failure->definition_key);
             }
             for (std::size_t i = s.rendering.meshes.slot_limit(); i > 1; --i) {
                 if (const auto* last = s.rendering.meshes.instance(static_cast<std::uint32_t>(i - 1))) {
-                    message += "; last mesh slot=" + std::to_string(i - 1) + " key=" + std::to_string(last->metadata.definition_key);
+                    std::format_to(std::back_inserter(message), "; last mesh slot={} key={}", i - 1, last->metadata.definition_key);
                     break;
                 }
             }

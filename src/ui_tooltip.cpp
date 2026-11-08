@@ -6,6 +6,7 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/ui_font.hpp"
 #include "simcoaster/world.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -60,7 +61,7 @@ struct UiTooltipController::State {
     std::shared_ptr<const UiBitmapFont> font(std::uint32_t width) {
         auto result = fonts.slot(7, width);
         if (!result) {
-            throw std::runtime_error("Original tooltip font: " + result.error().reason);
+            throw std::runtime_error(std::format("Original tooltip font: {}", result.error().reason));
         }
         return *result;
     }
@@ -138,7 +139,7 @@ struct UiTooltipController::State {
         const auto layout_width = 700u * width / 2048u;
         auto measured = fonts.measure(*face, cached_text, { 0, 0, static_cast<float>(layout_width), 1536 }, style);
         if (!measured) {
-            throw std::runtime_error("Original tooltip layout: " + measured.error().reason);
+            throw std::runtime_error(std::format("Original tooltip layout: {}", measured.error().reason));
         }
         const auto measured_width = static_cast<std::int32_t>(measured->bounds[2] - measured->bounds[0]);
         const auto measured_height = static_cast<std::int32_t>(measured->bounds[3] - measured->bounds[1]);
@@ -259,7 +260,7 @@ void UiTooltipController::update_help(UiControl* source, UiPoint pointer, std::u
     }
     auto text = format_bfst_wide_string(s.context.messages.mail_language.ui_help, s.context.messages.mail_language.conversion, query.index, 16383);
     if (!text) {
-        throw std::runtime_error("Original tooltip UIHELPTEXT row " + std::to_string(query.index) + ": " + text.error().reason);
+        throw std::runtime_error(std::format("Original tooltip UIHELPTEXT row {}: {}", query.index, text.error().reason));
     }
     s.update(*text, pointer, width, height);
 }

@@ -1,4 +1,6 @@
 #pragma once
+#include <iterator>
+#include <format>
 #include <cstddef>
 #include <cstdint>
 #include <expected>
@@ -34,12 +36,12 @@ inline std::string describe_error(std::string_view file, const Error& error) {
     result += ": ";
     result += error.group.empty() ? "SAM" : error.group;
     if (error.index) {
-        result += '[' + std::to_string(*error.index) + ']';
+        std::format_to(std::back_inserter(result), "[{}]", *error.index);
     }
     if (!error.field.empty()) {
         result += '.' + error.field;
     }
-    result += " at offset " + std::to_string(error.offset) + ": ";
+    std::format_to(std::back_inserter(result), " at offset {}: ", error.offset);
     result += match (error.reason) -> std::string_view {
         case Failure::path          => "invalid field path";
         case Failure::unknown_field => "unknown field";

@@ -7,6 +7,8 @@
 #include "simcoaster/world_staff.hpp"
 #include "world_ui_staff_internal.hpp"
 #include "world_ui_staff_columns.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -70,17 +72,12 @@ ParkObjectRuntimeView& park_object(WorldRuntime& c, ThingId id) {
     return *c.entities.payload<ParkObjectRuntimeView>(id);
 }
 
-std::u16string integer_text(std::int32_t value) {
-    const auto bytes = std::to_string(value);
-    return { bytes.begin(), bytes.end() };
-}
-
 std::u16string currency(WorldRuntime& c, std::int32_t value) {
     const bool negative = value < 0;
     const std::array argument { BfstSignedIntegerArgument { negative ? 44u : 39u, negative ? fixed::negate(value) : value } };
     auto text = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, negative ? 958u : 957u, 16383, {}, argument);
     if (!text) {
-        throw std::runtime_error("Staff Room scrap value: " + text.error().reason);
+        throw std::runtime_error(std::format("Staff Room scrap value: {}", text.error().reason));
     }
     return std::move(*text);
 }
@@ -174,7 +171,7 @@ void WorldStaffUiController::State::refresh_room() {
     auto& closed = required(root, 26004);
     closed.visual_flags = room.can_load ? 0 : 1;
     closed.help_index = room.can_load ? 12u : 11u;
-    caption(required(root, 26009), integer_text(c.staff.recruitment.balance.all.StaffRoomCapacity), 6, 0, 1);
+    caption(required(root, 26009), number_text(c.staff.recruitment.balance.all.StaffRoomCapacity), 6, 0, 1);
     const auto* definition = get_park_object_definition(c, &room);
     if (!definition) {
         throw std::logic_error("Staff Room has no object definition");
@@ -393,7 +390,7 @@ void WorldStaffUiController::State::open_selector() {
     selector_shifted = true;
     const auto parsed = ui.parse_template(root, std::as_bytes(std::span { selector_template }), panel_callback<&State::selector_event>());
     if (!parsed) {
-        throw std::runtime_error("Staff selector template: " + parsed.error().reason);
+        throw std::runtime_error(std::format("Staff selector template: {}", parsed.error().reason));
     }
     selector = ui.find(root, 44000);
     if (!selector) {

@@ -4,6 +4,7 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <stdexcept>
@@ -104,7 +105,7 @@ struct ApplicationDebugSelectorController::State {
     UiControl& required(UiControl* root, std::uint32_t id) {
         auto* p = ui.find_recursive(root, id);
         if (!p) {
-            throw std::runtime_error("Developer control is absent: " + std::to_string(id));
+            throw std::runtime_error(std::format("Developer control is absent: {}", id));
         }
         return *p;
     }
@@ -112,7 +113,7 @@ struct ApplicationDebugSelectorController::State {
     UiControl* parse(std::span<const unsigned char> bytes, UiControl* parent = nullptr) {
         auto p = ui.parse_template(parent ? parent : primary, std::as_bytes(bytes));
         if (!p) {
-            throw std::runtime_error("Developer template word " + std::to_string(p.error().word) + ": " + p.error().reason);
+            throw std::runtime_error(std::format("Developer template word {}: {}", p.error().word, p.error().reason));
         }
         if (!*p) {
             throw std::runtime_error("Developer template has no root");
@@ -163,7 +164,7 @@ struct ApplicationDebugSelectorController::State {
             }
             const auto slot = debug_detail::pages[static_cast<std::size_t>(*page)][index];
             const auto page_name = application_debug_page_name(*page);
-            const auto action = "Developer " + std::string { page_name.begin(), page_name.end() } + " command " + std::to_string(index + 1) + ": ";
+            const auto action = std::format("Developer {} command {}: ", std::string { page_name.begin(), page_name.end() }, index + 1);
             if (slot.close == debug_detail::Close::before) {
                 close_page();
             }
@@ -297,7 +298,7 @@ struct ApplicationDebugSelectorController::State {
                 const std::array argument { BfstSignedIntegerArgument { 6, 24 } };
                 auto percent = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, 959, 63, {}, argument);
                 if (!percent) {
-                    throw std::runtime_error("Developer percentage: " + percent.error().reason);
+                    throw std::runtime_error(std::format("Developer percentage: {}", percent.error().reason));
                 }
                 for (auto& row : rows) {
                     row.cells[4].display_text = *percent;

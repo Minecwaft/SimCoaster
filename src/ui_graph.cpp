@@ -1,4 +1,6 @@
 #include "simcoaster/ui_graph.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -25,11 +27,6 @@ struct GraphKey {
     std::vector<UiGraphSeriesStyle> styles;
     bool operator==(const GraphKey&) const = default;
 };
-
-std::u16string integer(std::int32_t value) {
-    const auto text = std::to_string(value);
-    return { text.begin(), text.end() };
-}
 
 constexpr RgbaPixel axis { 0, 200, 0, 255 }, grid { 0, 100, 0, 255 };
 } //namespace
@@ -92,7 +89,7 @@ struct UiGraphPresenter::State {
             if (interval % skip == 0) {
                 const auto at = static_cast<std::int32_t>(x);
                 line(at, top, at, bottom, grid);
-                labels.push_back({ integer(interval), std::max(at, 2), std::max(bottom + 4, 2), next.width, next.height, axis, false });
+                labels.push_back({ number_text(interval), std::max(at, 2), std::max(bottom + 4, 2), next.width, next.height, axis, false });
             }
             x += horizontal_step;
         }
@@ -141,7 +138,7 @@ struct UiGraphPresenter::State {
                 }
                 current_x += horizontal_step;
             }
-            labels.push_back({ integer(samples.back()), std::max(left, 2), std::max(end_y - 6, 2), end_x, bottom, style->color, true });
+            labels.push_back({ number_text(samples.back()), std::max(left, 2), std::max(end_y - 6, 2), end_x, bottom, style->color, true });
         }
         texture = std::make_shared<const TextureImage>(std::move(image));
         key = std::move(next);
@@ -199,7 +196,7 @@ void UiGraphPresenter::append(UiDrawList& draw, const UiControl& control, const 
     draw.commands.push_back(std::move(command));
     auto font = state_->fonts.slot(10, pixel_width);
     if (!font) {
-        throw std::runtime_error("Statistics graph bitmap font: " + font.error().reason);
+        throw std::runtime_error(std::format("Statistics graph bitmap font: {}", font.error().reason));
     }
     const auto sx = static_cast<float>(rectangle.width()) / static_cast<float>(state_->texture->width);
     const auto sy = static_cast<float>(rectangle.height()) / static_cast<float>(state_->texture->height);
@@ -217,13 +214,13 @@ void UiGraphPresenter::append(UiDrawList& draw, const UiControl& control, const 
         if (label.right_aligned) {
             const auto measured = state_->fonts.measure(**font, label.text, area, style);
             if (!measured) {
-                throw std::runtime_error("Statistics endpoint label metrics: " + measured.error().reason);
+                throw std::runtime_error(std::format("Statistics endpoint label metrics: {}", measured.error().reason));
             }
             area[2] = std::max(area[2], area[0] + measured->bounds[2] - measured->bounds[0]);
         }
         const auto rendered = state_->fonts.append(draw, **font, label.text, area, style, bounds(clip));
         if (!rendered) {
-            throw std::runtime_error("Statistics graph label: " + rendered.error().reason);
+            throw std::runtime_error(std::format("Statistics graph label: {}", rendered.error().reason));
         }
     }
 }

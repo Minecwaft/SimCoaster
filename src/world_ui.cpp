@@ -3,6 +3,7 @@
 #include "simcoaster/world_fixed_point.hpp"
 #include "simcoaster/world_mail.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <limits>
@@ -26,7 +27,7 @@ T& required_record(WorldRuntime& c, ThingId id) {
 std::u16string literal(WorldRuntime& c, const std::vector<std::byte>& table, std::uint32_t row) {
     auto result = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383);
     if (!result) {
-        throw std::runtime_error("World UI caption: " + result.error().reason);
+        throw std::runtime_error(std::format("World UI caption: {}", result.error().reason));
     }
     return std::move(*result);
 }

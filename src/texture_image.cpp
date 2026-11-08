@@ -1,4 +1,5 @@
 #include "simcoaster/texture_image.hpp"
+#include <format>
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
@@ -152,7 +153,7 @@ std::string describe_texture_error(const TextureError& error) {
         case TextureFailure::compression => "invalid compressed FSH pixels";
         case TextureFailure::missing     => "texture resource is missing";
     };
-    return error.resource + ": " + std::string { message } + " at byte " + std::to_string(error.offset);
+    return std::format("{}: {} at byte {}", error.resource, message, error.offset);
 }
 
 std::expected<TextureImage, TextureError> decode_tga_image(std::span<const std::byte> bytes, TextureRowOrigin origin) {

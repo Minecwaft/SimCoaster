@@ -1,10 +1,11 @@
 #pragma once
 #include "simcoaster/application_movie.hpp"
+#include <format>
 #include <stdexcept>
 
 namespace simcoaster::application_movie_detail {
 [[noreturn]] inline void fail(std::string_view message, std::size_t offset) {
-    throw std::runtime_error("Original movie: " + std::string(message) + " at byte " + std::to_string(offset));
+    throw std::runtime_error(std::format("Original movie: {} at byte {}", message, offset));
 }
 
 inline std::uint32_t little(std::span<const std::byte> bytes, std::size_t offset, std::size_t width = 4) {

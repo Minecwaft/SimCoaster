@@ -3,6 +3,7 @@
 #include "simcoaster/world_particle_scene.hpp"
 #include "simcoaster/sprite_geometry.hpp"
 #include "simcoaster/world.hpp"
+#include <format>
 #include <bit>
 #include <cmath>
 #include <limits>
@@ -124,7 +125,7 @@ void WorldParticleScene::append_effects(WorldRuntime& c, const ParticleRuntime& 
                 const auto selector = effect.sprite_set_id;
                 const auto& range = catalog->variants[17];
                 if (selector < 0 || range.first_loaded_resource_index < 0 || selector / 16 >= range.loaded_resource_count) {
-                    throw std::out_of_range("particle sprite selector " + std::to_string(selector));
+                    throw std::out_of_range(std::format("particle sprite selector {}", selector));
                 }
                 const auto resource = static_cast<std::size_t>(range.first_loaded_resource_index + selector / 16);
                 const auto& asset = catalog->resources.at(resource);
@@ -135,7 +136,7 @@ void WorldParticleScene::append_effects(WorldRuntime& c, const ParticleRuntime& 
                 if (!textures_.contains(key)) {
                     const auto decoded = decode_sprite_image(payload, frame);
                     if (!decoded) {
-                        throw std::runtime_error("Unable to decode particle sprite " + asset.pixel_path + " frame " + std::to_string(frame) + " at byte " + std::to_string(decoded.error().offset));
+                        throw std::runtime_error(std::format("Unable to decode particle sprite {} frame {} at byte {}", asset.pixel_path, frame, decoded.error().offset));
                     }
                     auto image = std::make_shared<TextureImage>();
                     image->width = decoded->width;

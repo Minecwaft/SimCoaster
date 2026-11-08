@@ -5,6 +5,7 @@
 #include "simcoaster/world_bank.hpp"
 #include "simcoaster/world_theme.hpp"
 #include "world_ui_management_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
@@ -15,17 +16,17 @@ namespace {
 std::vector<std::byte> read_resource(const std::filesystem::path& path) {
     std::ifstream input { path, std::ios::binary | std::ios::ate };
     if (!input) {
-        throw std::runtime_error("Management UI resource unavailable: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Management UI resource unavailable: {}", path.native_encoded_string()));
     }
     const auto length = input.tellg();
     if (length < 0) {
-        throw std::runtime_error("Management UI resource size: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Management UI resource size: {}", path.native_encoded_string()));
     }
     std::vector<std::byte> result(static_cast<std::size_t>(length));
     input.seekg(0);
     input.read(reinterpret_cast<char*>(result.data()), static_cast<std::streamsize>(result.size()));
     if (!input) {
-        throw std::runtime_error("Management UI resource read: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Management UI resource read: {}", path.native_encoded_string()));
     }
     return result;
 }

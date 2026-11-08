@@ -1,6 +1,7 @@
 #include "application_session_internal.hpp"
 #include "simcoaster/application_world_entry.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <algorithm>
 
 namespace simcoaster {
@@ -235,7 +236,7 @@ void ApplicationSession::State::load_named(const ApplicationLoadParkRequest& req
             transaction.copy(restart, target);
             next = std::make_unique<ParkRuntime>(root, ParkRuntimeOpen { sources[static_cast<std::size_t>(source_index)], transaction.read(target), &*imported, false, nullptr, host.resource_pump, host.hardware_profile ? std::optional { host.hardware_profile() } : std::nullopt });
         } catch (const std::exception& fallback) {
-            fail(ApplicationSessionFailure::load, target, std::string { primary.what() } + "; native restart fallback: " + fallback.what());
+            fail(ApplicationSessionFailure::load, target, std::format("{}; native restart fallback: {}", primary.what(), fallback.what()));
         }
     }
     set_retained_save(*next, *imported);

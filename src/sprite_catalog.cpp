@@ -1,4 +1,5 @@
 #include "simcoaster/sprite_catalog.hpp"
+#include <format>
 
 namespace simcoaster {
 namespace {
@@ -100,7 +101,7 @@ std::string sprite_pixel_sidecar_path(std::string_view descriptor_path, const Sp
 
 std::string describe_sprite_catalog_error(const SpriteCatalogError& error) {
     const auto detail = match (error.cause) -> std::string {
-        case { const AssetError& cause } => std::string { asset_failure_name(cause.reason) } + " at byte " + std::to_string(cause.offset);
+        case { const AssetError& cause } => std::format("{} at byte {}", asset_failure_name(cause.reason), cause.offset);
         case {
             const SpriteMetadataError& cause
         } => do {
@@ -109,10 +110,10 @@ std::string describe_sprite_catalog_error(const SpriteCatalogError& error) {
                 case SpriteMetadataFailure::incomplete_components => "incomplete ESP component metadata";
                 case SpriteMetadataFailure::resource_capacity     => "sprite catalog exceeds512 resources";
             };
-            do_return std::string { text } + " at byte " + std::to_string(cause.offset);
+            do_return std::format("{} at byte {}", text, cause.offset);
         };
     };
-    return error.path + ": " + detail;
+    return std::format("{}: {}", error.path, detail);
 }
 
 std::expected<LoadedSpriteCatalog, SpriteCatalogError> load_sprite_catalog(const DwfbArchive& archive, std::string_view source, const SpriteCatalogSettings& settings) {

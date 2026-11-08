@@ -4,6 +4,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_objects.hpp"
 #include "simcoaster/world_ui_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <array>
 #include <fstream>
@@ -122,7 +123,7 @@ constexpr std::array<Entry, 19> game_rows { { { 0, 27, 0, Callback::cancel },
 std::vector<std::byte> read_keyboard(const std::filesystem::path& path) {
     std::ifstream file { path, std::ios::binary | std::ios::ate };
     if (!file) {
-        throw std::runtime_error("Keyboard shortcuts unavailable: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Keyboard shortcuts unavailable: {}", path.native_encoded_string()));
     }
     const auto length = file.tellg();
     if (length < 0 || static_cast<std::uint64_t>(length) > std::numeric_limits<std::size_t>::max()) {
@@ -167,7 +168,7 @@ struct WorldUiShortcuts::State {
             }
             auto text = format_bfst_wide_string(bytes, c.messages.mail_language.conversion, row, 2);
             if (!text) {
-                throw std::runtime_error("Keyboard shortcut row " + std::to_string(row) + ": " + text.error().reason);
+                throw std::runtime_error(std::format("Keyboard shortcut row {}: {}", row, text.error().reason));
             }
             found->key = text->empty() ? 0 : static_cast<std::uint16_t>((*text)[0]);
         };

@@ -1,5 +1,6 @@
 #include "simcoaster/ui_font.hpp"
 #include "simcoaster/bfst_strings.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -522,7 +523,7 @@ UiFontLibrary::UiFontLibrary(const std::filesystem::path& root, std::string lang
         s.directory = root / "Data/Language" / language;
         const auto decoded = parse_mb_to_unicode_map(read_file(s.directory / "MBToUni.dat"));
         if (!decoded) {
-            throw std::runtime_error("UI font MBToUni.dat: " + decoded.error().reason);
+            throw std::runtime_error(std::format("UI font MBToUni.dat: {}", decoded.error().reason));
         }
         s.decoder = *decoded;
         s.encoder = read_file(s.directory / "UniToMB.dat");
@@ -563,7 +564,7 @@ UiFontLibrary::UiFontLibrary(const std::filesystem::path& root, std::string lang
             s.resources.emplace(record.id, std::move(path));
         }
     } catch (const UiFontError& error) {
-        throw std::runtime_error("UI font resources: " + error.resource + ": " + error.reason + " at byte " + std::to_string(error.offset));
+        throw std::runtime_error(std::format("UI font resources: {}: {} at byte {}", error.resource, error.reason, error.offset));
     }
 }
 

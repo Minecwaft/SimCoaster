@@ -12,6 +12,8 @@
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_ui_runtime.hpp"
 #include "world_ui_build_catalog.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -29,11 +31,6 @@ static_assert(sizeof(build_template) == 1414 && sizeof(coaster_template) == 418)
 constexpr std::array<std::int32_t, 5> categories { 0, 1, 2, 3, 5 };
 constexpr std::array<std::uint32_t, 5> category_buttons { 13023, 13022, 13021, 13024, 13025 };
 constexpr std::array<std::uint32_t, 4> weather_controls { 13007, 13008, 13009, 13017 };
-
-std::u16string integer_text(std::uint32_t number) {
-    const auto value = std::to_string(number);
-    return { value.begin(), value.end() };
-}
 
 std::uint32_t draw_index(std::size_t value) {
     if (!std::in_range<std::uint32_t>(value)) {
@@ -81,7 +78,7 @@ struct WorldBuildUiController::State {
     UiControl& required(std::uint32_t id) {
         auto* control = ui.find_recursive(root, id);
         if (!control) {
-            throw std::runtime_error("Original Build template missing control " + std::to_string(id));
+            throw std::runtime_error(std::format("Original Build template missing control {}", id));
         }
         return *control;
     }
@@ -89,7 +86,7 @@ struct WorldBuildUiController::State {
     std::u16string localized(std::span<const std::byte> data, std::uint32_t row) {
         const auto result = format_bfst_wide_string(data, c.messages.mail_language.conversion, row, 16383);
         if (!result) {
-            throw std::runtime_error("Build UI text " + std::to_string(row) + ": " + result.error().reason);
+            throw std::runtime_error(std::format("Build UI text {}: {}", row, result.error().reason));
         }
         return *result;
     }
@@ -105,7 +102,7 @@ struct WorldBuildUiController::State {
         const auto path = (game_root / "Data/Language/American" / name).native_encoded_string();
         const auto contents = c.ports.assets.read_balance_asset(c, path);
         if (!contents) {
-            throw std::runtime_error("Missing original Build language table: " + path);
+            throw std::runtime_error(std::format("Missing original Build language table: {}", path));
         }
         const auto raw = std::as_bytes(std::span { contents->data(), contents->size() });
         return language.emplace(std::move(name), std::vector<std::byte> { raw.begin(), raw.end() }).first->second;
@@ -164,7 +161,7 @@ struct WorldBuildUiController::State {
         const auto previous = primary->children;
         const auto result = ui.parse_template(primary, std::as_bytes(bytes));
         if (!result) {
-            throw std::runtime_error("Original Build template word " + std::to_string(result.error().word) + ": " + result.error().reason);
+            throw std::runtime_error(std::format("Original Build template word {}: {}", result.error().word, result.error().reason));
         }
         for (auto* child : primary->children) {
             if (std::ranges::find(previous, child) == previous.end()) {
@@ -392,7 +389,7 @@ struct WorldBuildUiController::State {
         }
         const auto& balance = *definition->balance;
         const auto* control = find_world_object_control(c.simulation.current->object_controls, selected);
-        caption(required(13012), control && control->live_instance_count ? integer_text(control->live_instance_count) : text(284));
+        caption(required(13012), control && control->live_instance_count ? number_text(control->live_instance_count) : text(284));
         if (category == 0 || category == 2) {
             ui.set_value(required(13004), balance.UsageInfo.ExcitementLevel * 1024 / 100);
         }
@@ -408,7 +405,7 @@ struct WorldBuildUiController::State {
             const auto truncated = std::isfinite(wear) ? fixed::truncate_integer(wear) : 0;
             ui.set_value(required(13005), (100 - static_cast<std::uint8_t>(truncated)) * 1024 / 100);
             ui.set_value(required(13006), balance.Info.WorkingLife * 1024 / 100);
-            caption(required(13015), integer_text(upgrade.RedLineCapacity));
+            caption(required(13015), number_text(static_cast<std::uint32_t>(upgrade.RedLineCapacity)));
         }
         const auto& weather = balance.WeatherModifier;
         const std::array values { weather.RainPercentage, weather.SnowPercentage, weather.HeatWavePercentage, weather.StormPercentage };

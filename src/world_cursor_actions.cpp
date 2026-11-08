@@ -26,6 +26,7 @@
 #include "simcoaster/world_ui_runtime.hpp"
 #include "simcoaster/world_ui_staff.hpp"
 #include "simcoaster/world_ui_visitors.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -142,7 +143,7 @@ struct WorldCursorActions::State {
         const std::array integers { BfstSignedIntegerArgument { 1, number.value_or(0) } };
         auto text = format_bfst_wide_string(c.messages.mail_language.ui_help, c.messages.mail_language.conversion, row, 16383, strings, number ? std::span<const BfstSignedIntegerArgument> { integers } : std::span<const BfstSignedIntegerArgument> {});
         if (!text) {
-            throw std::runtime_error("World cursor help: " + text.error().reason);
+            throw std::runtime_error(std::format("World cursor help: {}", text.error().reason));
         }
         help = std::move(*text);
     }

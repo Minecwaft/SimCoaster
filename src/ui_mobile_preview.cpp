@@ -5,6 +5,7 @@
 #include "simcoaster/sprite_geometry.hpp"
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -46,10 +47,10 @@ class PreviewLease {
 public:
     PreviewLease(WorldRuntime& c, std::unique_ptr<ResourceVariant>& owner, std::string_view family) : c_(c), owner_(owner), saved_active_(c.resources.variants.active), index_(c.resources.variants.slots.size()) {
         if (!owner || !c.resources.variants.initialized) {
-            throw std::logic_error(std::string(family) + " preview resource lease is unavailable");
+            throw std::logic_error(std::format("{} preview resource lease is unavailable", family));
         }
         if (index_ >= static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) {
-            throw std::length_error(std::string(family) + " preview resource handle capacity");
+            throw std::length_error(std::format("{} preview resource handle capacity", family));
         }
         c.resources.variants.slots.push_back(std::move(owner));
         c.resources.variants.slots[index_]->handle = handle();
@@ -126,7 +127,7 @@ struct SpritePreviewState {
 
     void require_thread() const {
         if (thread != std::this_thread::get_id()) {
-            throw std::logic_error(std::string(family) + " previews require their owning UI thread");
+            throw std::logic_error(std::format("{} previews require their owning UI thread", family));
         }
     }
 
@@ -157,14 +158,14 @@ struct SpritePreviewState {
 
     void validate_variant() {
         if (category >= catalog->variants.size() || catalog->variants[category].loaded_resource_count < 0 || variant >= static_cast<std::uint32_t>(catalog->variants[category].loaded_resource_count)) {
-            throw std::runtime_error(std::string(family) + " preview selects an absent sprite variant");
+            throw std::runtime_error(std::format("{} preview selects an absent sprite variant", family));
         }
     }
 
     std::unique_ptr<ResourceVariant> take_resource(std::uint32_t handle) {
         auto* resource = find_resource_variant(c, handle);
         if (!resource) {
-            throw std::runtime_error("Unable to create original " + std::string(family) + " preview resource");
+            throw std::runtime_error(std::format("Unable to create original {} preview resource", family));
         }
         auto owned = std::move(c.resources.variants.slots[handle]);
         if (c.resources.variants.active == resource) {
@@ -176,7 +177,7 @@ struct SpritePreviewState {
 
     std::uint32_t narrow_index(std::size_t index) {
         if (index > std::numeric_limits<std::uint32_t>::max()) {
-            throw std::length_error(std::string(family) + " preview draw index capacity");
+            throw std::length_error(std::format("{} preview draw index capacity", family));
         }
         return static_cast<std::uint32_t>(index);
     }
@@ -264,7 +265,7 @@ struct SpritePreviewState {
         }
         const auto image = decode_sprite_image(pixels.payload(frame.resource), frame.frame);
         if (!image) {
-            throw std::runtime_error("Original " + std::string(family) + " sprite decode failed at byte " + std::to_string(image.error().offset));
+            throw std::runtime_error(std::format("Original {} sprite decode failed at byte {}", family, image.error().offset));
         }
         auto output = std::make_shared<TextureImage>();
         output->width = image->width;
@@ -292,7 +293,7 @@ struct SpritePreviewState {
                                     })
             || placement.bounds[2] < placement.bounds[0]
             || placement.bounds[3] < placement.bounds[1]) {
-            throw std::invalid_argument("Invalid " + std::string(family) + " UI preview placement");
+            throw std::invalid_argument(std::format("Invalid {} UI preview placement", family));
         }
         auto clip = placement.clip;
         clip[0] = std::max({ clip[0], static_cast<float>(placement.bounds[0]), 0.f });
@@ -366,7 +367,7 @@ struct SpritePreviewState {
                 if (!std::ranges::all_of(position, [](float value) {
                         return std::isfinite(value);
                     })) {
-                    throw std::runtime_error("Nonfinite original " + std::string(family) + " preview geometry");
+                    throw std::runtime_error(std::format("Nonfinite original {} preview geometry", family));
                 }
                 output.vertices.push_back({ position, uv[i], color });
             }

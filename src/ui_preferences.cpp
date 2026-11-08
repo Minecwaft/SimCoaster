@@ -2,6 +2,7 @@
 #include "simcoaster/file_platform.hpp"
 #include "simcoaster/save_schema.hpp"
 #include "simcoaster/world_sound_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -55,7 +56,7 @@ struct Reader {
 
     void records(std::int32_t count, std::size_t width, std::string_view description) {
         if (count < 0 || static_cast<std::size_t>(count) > (bytes.size() - position) / width) {
-            fail("Invalid " + std::string { description } + " count");
+            fail(std::format("Invalid {} count", description));
         }
         (void)take(static_cast<std::size_t>(count) * width);
     }

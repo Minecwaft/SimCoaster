@@ -2,6 +2,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_advisor.hpp"
 #include "world_ui_visitors_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -19,7 +20,7 @@ WorldVisitorsUiController::State::~State() {
 std::u16string WorldVisitorsUiController::State::thought(std::uint32_t row) const {
     auto value = format_bfst_wide_string(c.messages.mail_language.ui_thoughts, c.messages.mail_language.conversion, row, 16383);
     if (!value) {
-        throw std::runtime_error("Visitors thought: " + value.error().reason);
+        throw std::runtime_error(std::format("Visitors thought: {}", value.error().reason));
     }
     return std::move(*value);
 }

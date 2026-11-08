@@ -1,6 +1,7 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/mesh_transform.hpp"
 #include "simcoaster/simulation_sine.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -195,11 +196,11 @@ struct UiAssetLibrary::State {
             }
             auto& model = models.templates[*id - 1].model;
             if (!model.root || *model.root >= model.nodes.size()) {
-                throw std::runtime_error("UI asset has no model root: " + name);
+                throw std::runtime_error(std::format("UI asset has no model root: {}", name));
             }
             const auto registry_name = type == UiModelAssetKind::slider ? std::string { "!slider" } : model.nodes[*model.root].name;
             if (registry_name.empty()) {
-                throw std::runtime_error("UI asset has no root debug name: " + name);
+                throw std::runtime_error(std::format("UI asset has no root debug name: {}", name));
             }
             const auto hash = ui_model_asset_hash(registry_name);
             if (registry.contains(hash)) {
@@ -237,10 +238,10 @@ struct UiAssetLibrary::State {
             asset.pose = std::move(*pose);
             for (auto part = model.root; part; part = model.nodes[*part].first_child) {
                 if (asset.parts.size() >= model.nodes.size() || *part >= model.nodes.size()) {
-                    throw std::runtime_error("Invalid UI part chain: " + registry_name);
+                    throw std::runtime_error(std::format("Invalid UI part chain: {}", registry_name));
                 }
                 if (!model.nodes[*part].drawable) {
-                    throw std::runtime_error("UI part has no bounded drawable: " + registry_name);
+                    throw std::runtime_error(std::format("UI part has no bounded drawable: {}", registry_name));
                 }
                 asset.parts.push_back(*part);
             }
@@ -352,7 +353,7 @@ bool UiAssetLibrary::append(UiDrawList& list, std::uint32_t hash, const UiModelP
         deform.slider = info.kind == UiModelAssetKind::slider;
         const auto& bounds = model.nodes[*deform.node].drawable->bounds;
         if (deform.slider && model.nodes[*deform.node].drawable->positions.size() < 8) {
-            throw std::runtime_error("UI slider requires eight root positions: " + info.name);
+            throw std::runtime_error(std::format("UI slider requires eight root positions: {}", info.name));
         }
         const auto width = bounds.maximum[0] - bounds.minimum[0];
         const auto height = bounds.maximum[1] - bounds.minimum[1];
@@ -371,7 +372,7 @@ bool UiAssetLibrary::append(UiDrawList& list, std::uint32_t hash, const UiModelP
     }
     const auto width = maximum[0] - minimum[0], height = maximum[1] - minimum[1];
     if (!std::isfinite(width) || !std::isfinite(height) || width <= 0 || height <= 0) {
-        throw std::runtime_error("Degenerate UI model layout: " + info.name);
+        throw std::runtime_error(std::format("Degenerate UI model layout: {}", info.name));
     }
     Layout layout { placement, minimum, maximum, width / (placement.bounds[2] - placement.bounds[0] + .5f), height / (placement.bounds[3] - placement.bounds[1] + .5f) };
     layout.normalize_depth = asset.normalize_depth;
@@ -416,14 +417,14 @@ bool UiAssetLibrary::append(UiDrawList& list, std::uint32_t hash, const UiModelP
             for (std::size_t corner = 0; corner < drawable.position_indices.size(); ++corner) {
                 const auto position = drawable.position_indices[corner];
                 if (position >= drawable.positions.size()) {
-                    throw std::runtime_error("Invalid UI model corner: " + info.name);
+                    throw std::runtime_error(std::format("Invalid UI model corner: {}", info.name));
                 }
                 UiDrawVertex vertex;
                 vertex.position = layout.point(mesh_transform::point(asset.pose[node_index], deform.point(node_index, position, drawable.positions[position])));
                 if (!std::ranges::all_of(vertex.position, [](float value) {
                         return std::isfinite(value);
                     })) {
-                    throw std::runtime_error("Nonfinite UI model geometry: " + info.name);
+                    throw std::runtime_error(std::format("Nonfinite UI model geometry: {}", info.name));
                 }
                 if (corner < drawable.texture_coordinates.size()) {
                     vertex.uv = drawable.texture_coordinates[corner];
@@ -451,12 +452,12 @@ bool UiAssetLibrary::append(UiDrawList& list, std::uint32_t hash, const UiModelP
                 command.material.flags |= 0x40000u;
                 const auto end = static_cast<std::size_t>(group.first_triangle) + group.triangle_count;
                 if (end > drawable.triangles.size()) {
-                    throw std::runtime_error("Invalid UI triangle group: " + info.name);
+                    throw std::runtime_error(std::format("Invalid UI triangle group: {}", info.name));
                 }
                 for (std::size_t triangle = group.first_triangle; triangle < end; ++triangle) {
                     for (const auto corner : drawable.triangles[triangle].corners) {
                         if (corner >= drawable.position_indices.size()) {
-                            throw std::runtime_error("Invalid UI triangle corner: " + info.name);
+                            throw std::runtime_error(std::format("Invalid UI triangle corner: {}", info.name));
                         }
                         list.indices.push_back(narrow_index(base + corner));
                     }

@@ -21,6 +21,7 @@
 #include "simcoaster/world_staff.hpp"
 #include "simcoaster/world_theme.hpp"
 #include "simcoaster/world_weather.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <ctime>
@@ -98,7 +99,7 @@ void apply_share_defaults(WorldRuntime& c, const ShareStartupParameters& balance
     if (price.company_title.empty()) {
         auto title = format_bfst_wide_string(c.messages.mail_language.tag_system, c.messages.mail_language.conversion, 172, 30);
         if (!title) {
-            throw std::runtime_error("Initial company title: " + title.error().reason);
+            throw std::runtime_error(std::format("Initial company title: {}", title.error().reason));
         }
         price.company_title = std::move(*title);
     }

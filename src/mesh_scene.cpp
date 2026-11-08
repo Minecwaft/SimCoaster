@@ -3,10 +3,11 @@
 #include "simcoaster/mesh_scene.hpp"
 #include "simcoaster/coaster_mesh.hpp"
 #include "simcoaster/mesh_transform.hpp"
+#include <iterator>
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
-#include <sstream>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -226,12 +227,11 @@ void append_mesh_drawables(MeshScene& scene, const MeshModel& model, MeshTexture
                     } else {
                         scene.lighting_diagnostics.push_back({ transformed_lights.error(), model.name, node.name, index, (*poses)[index] });
                         if (transformed_lights.error() == MeshLightingTransformFailure::nonfinite) {
-                            std::ostringstream error;
-                            error << "Nonfinite mesh lighting transform: model=" << model.name << " node=" << index << " (" << node.name << ") matrix=";
+                            auto error = std::format("Nonfinite mesh lighting transform: model={} node={} ({}) matrix=", model.name, index, node.name);
                             for (const auto value : (*poses)[index]) {
-                                error << value << ',';
+                                std::format_to(std::back_inserter(error), "{:.6g},", value);
                             }
-                            throw std::runtime_error(error.str());
+                            throw std::runtime_error(error);
                         }
                         //Approved repair: native6E03C0/6E0110 has no safe singular
                         //inverse. Keep geometry and ambient/mask for this frame only.

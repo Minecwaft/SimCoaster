@@ -1,5 +1,6 @@
 #include "application_movie_internal.hpp"
 #include "simcoaster/sound_output_win32.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -12,7 +13,7 @@ using namespace application_movie_detail;
 std::vector<std::byte> read_movie(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary | std::ios::ate);
     if (!input) {
-        throw std::runtime_error("Cannot open original movie " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Cannot open original movie {}", path.native_encoded_string()));
     }
     const auto length = input.tellg();
     if (length < 8 || length > 536870912) {
@@ -165,7 +166,7 @@ TextureImagePtr ApplicationMovieDecoder::decode_video(std::uint32_t frame) const
     try {
         return application_movie_detail::decode_tqi_picture(std::span<const std::byte>(state_->bytes).subspan(picture.offset, picture.size));
     } catch (const std::exception& error) {
-        throw std::runtime_error("Original movie frame " + std::to_string(frame) + " (file byte " + std::to_string(picture.offset) + "): " + error.what());
+        throw std::runtime_error(std::format("Original movie frame {} (file byte {}): {}", frame, picture.offset, error.what()));
     }
 }
 

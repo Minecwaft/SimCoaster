@@ -1,6 +1,7 @@
 #include "park_construction_internal.hpp"
 #include "simcoaster/sam_record.hpp"
 #include "simcoaster/world_mesh_runtime.hpp"
+#include <format>
 #include <bitset>
 #include <filesystem>
 
@@ -170,7 +171,7 @@ void sync_land_boundary_meshes(ConstructionWorld& c) {
         }
         cell.common.mesh_instance = create_or_refresh_hoarding_mesh_instance(c, p.x, p.y, cell.common.render_data, false);
         if (!cell.common.mesh_instance) {
-            throw std::runtime_error("land boundary drawable creation failed at " + std::to_string(p.x) + "," + std::to_string(p.y) + " member " + std::to_string(cell.common.render_data.texture_member) + " template " + std::to_string(c.construction.hoarding_mesh_templates.at(cell.common.render_data.texture_member).definition_index) + (c.resources.meshes && c.resources.meshes->last_error ? ": " + describe_mesh_error(*c.resources.meshes->last_error) : ""));
+            throw std::runtime_error(std::format("land boundary drawable creation failed at {},{} member {} template {}{}", p.x, p.y, cell.common.render_data.texture_member, c.construction.hoarding_mesh_templates.at(cell.common.render_data.texture_member).definition_index, (c.resources.meshes && c.resources.meshes->last_error ? ": " + describe_mesh_error(*c.resources.meshes->last_error) : "")));
         }
     }
 }
@@ -338,7 +339,7 @@ void ParkConstructionRuntime::apply_land_boundary_ownership(ConstructionWorld& c
                     break;
                 }
                 if (!bounds(scan) || steps >= map_cell_count) {
-                    throw std::out_of_range("land interior ray from " + std::to_string(p.x) + "," + std::to_string(p.y) + " direction " + std::to_string(inward) + " has no marked boundary");
+                    throw std::out_of_range(std::format("land interior ray from {},{} direction {} has no marked boundary", p.x, p.y, inward));
                 }
                 auto& interior = track(c, cell_id(scan)).base;
                 const bool marked = (interior.common.flags & 32u) != 0;

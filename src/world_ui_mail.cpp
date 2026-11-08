@@ -6,6 +6,7 @@
 #include "simcoaster/world_fixed_point.hpp"
 #include "simcoaster/world_mail.hpp"
 #include "simcoaster/world_ui_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <limits>
@@ -75,13 +76,13 @@ struct WorldMailUiController::State {
         if (auto* control = ui.find_recursive(root, id)) {
             return *control;
         }
-        throw std::runtime_error("Original Message Center template missing control " + std::to_string(id));
+        throw std::runtime_error(std::format("Original Message Center template missing control {}", id));
     }
 
     std::u16string text(std::uint32_t row) {
         auto value = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, row, 16383);
         if (!value) {
-            throw std::runtime_error("Message Center text: " + value.error().reason);
+            throw std::runtime_error(std::format("Message Center text: {}", value.error().reason));
         }
         return std::move(*value);
     }

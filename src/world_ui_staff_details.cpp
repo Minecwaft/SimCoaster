@@ -4,6 +4,7 @@
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "world_ui_staff_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -382,14 +383,14 @@ void WorldStaffUiController::State::open_activity(ThingId id) {
     const auto path = (game_root / "Data/Language/American/STAFFSTATES.str").native_encoded_string();
     const auto states = c.ports.assets.read_balance_asset(c, path);
     if (!states) {
-        throw std::runtime_error("Missing Staff Activity language resource: " + path);
+        throw std::runtime_error(std::format("Missing Staff Activity language resource: {}", path));
     }
     const auto bytes = std::as_bytes(std::span { states->data(), states->size() });
     for (std::size_t i = 0; i < activity_rows.size(); ++i) {
         const auto& row = activity_rows[i];
         auto label = format_bfst_wide_string(bytes, c.messages.mail_language.conversion, row.state_row, 16383);
         if (!label) {
-            throw std::runtime_error("Staff Activity state text: " + label.error().reason);
+            throw std::runtime_error(std::format("Staff Activity state text: {}", label.error().reason));
         }
         caption(required(root, row.label), *label, 6, 0, 1);
         auto& percentage = required(root, row.percentage);

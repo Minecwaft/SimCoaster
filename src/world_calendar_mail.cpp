@@ -4,6 +4,7 @@
 #include "simcoaster/world_fixed_point.hpp"
 #include "simcoaster/world_mail.hpp"
 #include "simcoaster/world_research.hpp"
+#include <format>
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -29,7 +30,7 @@ TagMessageVariant* variant(EconomyWorld& c, std::int32_t id) {
 std::u16string text(EconomyWorld& c, std::int32_t row, std::size_t capacity = 255, std::span<const BfstWideStringArgument> strings = {}, std::span<const BfstSignedIntegerArgument> integers = {}) {
     auto value = format_bfst_wide_string(c.messages.mail_language.tag_system, c.messages.mail_language.conversion, static_cast<std::uint32_t>(row), capacity, strings, integers);
     if (!value) {
-        throw std::runtime_error("calendar mail BFST: " + value.error().reason);
+        throw std::runtime_error(std::format("calendar mail BFST: {}", value.error().reason));
     }
     return std::move(*value);
 }

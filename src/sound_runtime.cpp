@@ -1,4 +1,5 @@
 #include "sound_runtime_internal.hpp"
+#include <format>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -560,7 +561,7 @@ std::string SoundRuntime::output_diagnostic() const {
         return "Audio output is disabled";
     }
     const auto status = state_->output->status();
-    return status.available ? std::string {} : "WASAPI unavailable (HRESULT " + std::to_string(status.hresult) + ")";
+    return status.available ? std::string {} : std::format("WASAPI unavailable (HRESULT {})", status.hresult);
 }
 
 void SoundRuntime::advance(std::chrono::milliseconds elapsed) {

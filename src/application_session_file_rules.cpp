@@ -1,4 +1,5 @@
 #include "application_session_internal.hpp"
+#include <format>
 #include <algorithm>
 
 namespace simcoaster::application_session_detail {
@@ -7,7 +8,7 @@ namespace simcoaster::application_session_detail {
 }
 
 ApplicationSessionError profile_error(const CampaignProfileError& error) {
-    return { ApplicationSessionFailure::profile, error.path, error.reason + " at " + std::to_string(error.offset) };
+    return { ApplicationSessionFailure::profile, error.path, std::format("{} at {}", error.reason, error.offset) };
 }
 
 bool valid_basename(std::u16string_view name) {

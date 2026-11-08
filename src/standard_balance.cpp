@@ -1,6 +1,7 @@
 #include "simcoaster/standard_balance.hpp"
 #include "simcoaster/world.hpp"
 #include "simcoaster/ui_control.hpp"
+#include <format>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -10,7 +11,7 @@ void load_world_source_sam_storage(WorldRuntime& c, const std::filesystem::path&
         const auto path = directory / name;
         const auto text = c.ports.assets.read_balance_asset(c, path.native_encoded_string());
         if (!text) {
-            throw std::runtime_error("Missing SAM: " + path.native_encoded_string());
+            throw std::runtime_error(std::format("Missing SAM: {}", path.native_encoded_string()));
         }
         if (!text->empty()) {
             const auto parsed = sam::parse_record(value, *text);
@@ -57,7 +58,7 @@ const StandardUiBalance& ensure_world_standard_ui_balance(WorldRuntime& c, const
         [&](std::string_view text, bool preserve, const auto& path) {
             const auto result = sam::parse_record<StandardUiBalance, true>(balance, text, preserve);
             if (!result) {
-                throw std::runtime_error("Invalid UI balance in " + path.native_encoded_string() + " at byte " + std::to_string(result.error().offset));
+                throw std::runtime_error(std::format("Invalid UI balance in {} at byte {}", path.native_encoded_string(), result.error().offset));
             }
         });
     if (!loaded) {

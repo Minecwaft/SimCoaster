@@ -1,4 +1,5 @@
 #include "application_host_win32.hpp"
+#include "simcoaster/text_format.hpp"
 
 namespace simcoaster {
 using namespace win32_host;
@@ -55,7 +56,7 @@ int run_mesh_viewer(const std::filesystem::path& source, std::string_view name, 
     WindowState state;
     state.camera.fit(playback.model.terrain ? terrain_grid_bounds(playback.model.terrain->view()) : scene.bounds);
     for (const auto& missing : scene.missing_textures) {
-        std::cerr << "Unresolved texture (flat material): " << missing << '\n';
+        print_text(stderr, "Unresolved texture (flat material): {}\n", missing);
     }
     if (output) {
         MeshRenderer renderer { 1100, 760 };
@@ -64,13 +65,13 @@ int run_mesh_viewer(const std::filesystem::path& source, std::string_view name, 
             std::filesystem::create_directories(output->parent_path());
         }
         write_texture_png(renderer.capture(), *output);
-        std::cout << "Rendered " << scene.indices.size() / 3 << " triangles, " << scene.draws.size() << " materials and " << textures.loaded_count() << " texture sources using " << renderer.adapter_name() << (renderer.software_adapter() ? " (software)" : " (hardware)") << "\nSaved " << output->native_encoded_string() << '\n';
+        print_text(stdout, "Rendered {} triangles, {} materials and {} texture sources using {}{}\nSaved {}\n", scene.indices.size() / 3, scene.draws.size(), textures.loaded_count(), renderer.adapter_name(), (renderer.software_adapter() ? " (software)" : " (hardware)"), output->native_encoded_string());
         return 0;
     }
     Window window { state };
     MeshRenderer renderer { state.width, state.height, window.handle };
     ShowWindow(window.handle, SW_SHOW);
-    std::cout << "Renderer: " << renderer.adapter_name() << '\n';
+    print_text(stdout, "Renderer: {}\n", renderer.adapter_name());
     auto previous = std::chrono::steady_clock::now(), begin = previous;
     std::chrono::steady_clock::duration simulation {};
     auto width = state.width, height = state.height;
@@ -173,9 +174,9 @@ int run_park_viewer(const std::filesystem::path& save, std::string theme, const 
     UiDrawList ui_draw;
     park.build_scene(scene, state.camera, static_cast<float>(state.width) / static_cast<float>(state.height));
     const auto& stats = park.statistics();
-    std::cout << "Restored " << stats.things << " World records, " << stats.mesh_instances << " real mesh instances, " << stats.scripts << " RSSE states, " << stats.event_subscriptions << " subscriptions, " << stats.coaster_records << " coasters, " << stats.train_slots << " train slots and " << stats.car_slots << " car slots from " << stats.restored_bytes << " section bytes\n";
+    print_text(stdout, "Restored {} World records, {} real mesh instances, {} RSSE states, {} subscriptions, {} coasters, {} train slots and {} car slots from {} section bytes\n", stats.things, stats.mesh_instances, stats.scripts, stats.event_subscriptions, stats.coaster_records, stats.train_slots, stats.car_slots, stats.restored_bytes);
     for (const auto& name : scene.missing_textures) {
-        std::cerr << "Unresolved texture (flat material): " << name << '\n';
+        print_text(stderr, "Unresolved texture (flat material): {}\n", name);
     }
     if (output) {
         MeshRenderer renderer { state.width, state.height };
@@ -188,7 +189,7 @@ int run_park_viewer(const std::filesystem::path& save, std::string theme, const 
             std::filesystem::create_directories(output->parent_path());
         }
         write_texture_png(renderer.capture(), *output);
-        std::cout << "Rendered " << scene.indices.size() / 3 << " triangles in " << scene.draws.size() << " world draws and " << ui_draw.commands.size() << " UI draws across " << park.ui().controls().size() << " controls using " << renderer.adapter_name() << "\nSaved " << output->native_encoded_string() << '\n';
+        print_text(stdout, "Rendered {} triangles in {} world draws and {} UI draws across {} controls using {}\nSaved {}\n", scene.indices.size() / 3, scene.draws.size(), ui_draw.commands.size(), park.ui().controls().size(), renderer.adapter_name(), output->native_encoded_string());
         return 0;
     }
     UiCursorWin32 cursors { root };

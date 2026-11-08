@@ -9,6 +9,7 @@
 #include "simcoaster/world_visitor_ui.hpp"
 #include "world_ui_park_map_internal.hpp"
 #include "simcoaster/world_advisor.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -30,7 +31,7 @@ constexpr std::array<std::uint32_t, 4> overlay_masks { 128, 256, 512, 1024 };
 TextureImage load_map_image(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file) {
-        throw std::runtime_error("Missing original Park Map art: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Missing original Park Map art: {}", path.native_encoded_string()));
     }
     const auto length = file.tellg();
     if (length < 18 || static_cast<std::uint64_t>(length) > std::numeric_limits<std::size_t>::max()) {
@@ -43,7 +44,7 @@ TextureImage load_map_image(const std::filesystem::path& path) {
     }
     auto image = decode_tga_image(bytes);
     if (!image) {
-        throw std::runtime_error("Original Park Map art: " + describe_texture_error(image.error()));
+        throw std::runtime_error(std::format("Original Park Map art: {}", describe_texture_error(image.error())));
     }
     return std::move(*image);
 }
@@ -88,13 +89,13 @@ UiControl& WorldParkMapUiController::State::required(std::uint32_t id) {
     if (auto* control = ui.find_recursive(root, id)) {
         return *control;
     }
-    throw std::runtime_error("Original Park Map template missing control " + std::to_string(id));
+    throw std::runtime_error(std::format("Original Park Map template missing control {}", id));
 }
 
 std::u16string WorldParkMapUiController::State::text(std::uint32_t row) const {
     auto value = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, row, 16383);
     if (!value) {
-        throw std::runtime_error("Park Map caption: " + value.error().reason);
+        throw std::runtime_error(std::format("Park Map caption: {}", value.error().reason));
     }
     return std::move(*value);
 }

@@ -1,6 +1,7 @@
 #include "simcoaster/world_normal_camera_input.hpp"
 #include "simcoaster/sam_record.hpp"
 #include "simcoaster/world.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -67,7 +68,7 @@ std::string camera_projection(std::string_view text, bool preserve) {
     if (!preserve) {
         for (std::size_t i = 0; i < found.size(); ++i) {
             if (!found[i]) {
-                throw std::runtime_error("Missing original normal-camera field " + std::string { camera_keys[i] });
+                throw std::runtime_error(std::format("Missing original normal-camera field {}", camera_keys[i]));
             }
         }
     }
@@ -140,7 +141,7 @@ void WorldNormalCameraInputRuntime::configure_balance(std::string_view text, boo
     const auto selected = camera_projection(text, preserve);
     const auto parsed = sam::parse_record<Balance, true>(candidate, selected, preserve);
     if (!parsed) {
-        throw std::runtime_error("Invalid original normal-camera SAM at byte " + std::to_string(parsed.error().offset));
+        throw std::runtime_error(std::format("Invalid original normal-camera SAM at byte {}", parsed.error().offset));
     }
     if (candidate.pointer.held_time < 0 || !std::isfinite(candidate.pointer.speed_x) || !std::isfinite(candidate.pointer.speed_y) || candidate.extents.min_x > candidate.extents.max_x || candidate.extents.min_z > candidate.extents.max_z) {
         throw std::runtime_error("Invalid original normal-camera balance");

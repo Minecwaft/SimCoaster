@@ -1,5 +1,7 @@
 #include "simcoaster/ui_control_presenter.hpp"
 #include "simcoaster/simulation_sine.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -34,11 +36,6 @@ UiRect inset(UiRect rectangle, UiPoint amount) {
     return rectangle;
 }
 
-std::u16string integer_text(std::int32_t value) {
-    const auto text = std::to_string(value);
-    return { text.begin(), text.end() };
-}
-
 void append_meter(UiDrawList& draw, UiAssetLibrary& assets, const UiMeterPresentation& presentation, UiRect rectangle, UiRect clip, std::int32_t value, std::int32_t z, std::int32_t rotation, UiPoint pivot) {
     if (presentation.texture.empty()) {
         throw std::invalid_argument("UI meter has no original texture binding");
@@ -50,7 +47,7 @@ void append_meter(UiDrawList& draw, UiAssetLibrary& assets, const UiMeterPresent
     }
     const auto texture = assets.texture(presentation.texture);
     if (!texture) {
-        throw std::runtime_error("UI meter: " + describe_texture_error(texture.error()));
+        throw std::runtime_error(std::format("UI meter: {}", describe_texture_error(texture.error())));
     }
     const auto fraction = static_cast<float>(std::clamp(value, 0, 1024)) / 1024.f;
     const auto left = static_cast<float>(rectangle.left);
@@ -113,7 +110,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
     }
     const auto font = fonts_.slot(control.font, pixel_width);
     if (!font) {
-        throw std::runtime_error("UI list font: " + font.error().resource + ": " + font.error().reason);
+        throw std::runtime_error(std::format("UI list font: {}: {}", font.error().resource, font.error().reason));
     }
     if (control.row_height_font_padding) {
         //520B90 and the other native row factories use the actual bitmap
@@ -140,7 +137,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
         placement.depth = static_cast<std::int16_t>(std::clamp(control.render_depth + 2, 1, 256));
         placement.rotation = static_cast<std::int16_t>(control.secondary_placement.rotation);
         if (!assets_.append(draw, control.list_highlight_asset_hash, placement)) {
-            throw std::runtime_error("UI list original highlight asset is missing: " + std::to_string(control.list_highlight_asset_hash));
+            throw std::runtime_error(std::format("UI list original highlight asset is missing: {}", control.list_highlight_asset_hash));
         }
     }
     for (auto row = first; row < last; ++row) {
@@ -191,7 +188,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
                 //A registered model's missing part and the shipped staffstat binding
                 //are native null attachments. Other absent models remain errors.
                 if (!assets_.append(draw, presentation.model_asset_hash, placement) && !assets_.find(presentation.model_asset_hash) && !assets_.is_original_null_binding(presentation.model_asset_hash)) {
-                    throw std::runtime_error("UI list original model asset is missing: " + std::to_string(presentation.model_asset_hash));
+                    throw std::runtime_error(std::format("UI list original model asset is missing: {}", presentation.model_asset_hash));
                 }
                 continue;
             }
@@ -209,7 +206,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
                         if (!cell.numeric()) {
                             throw std::invalid_argument("UI numeric column requires a numeric cell");
                         }
-                        formatted = integer_text(cell.number());
+                        formatted = number_text(cell.number());
                         text = formatted;
                     }
                     case UiListCellFormat::signed_currency => {
@@ -242,7 +239,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
                 column_font = fonts_.slot(*presentation.font, pixel_width);
             }
             if (!column_font) {
-                throw std::runtime_error("UI list cell font: " + column_font.error().resource + ": " + column_font.error().reason);
+                throw std::runtime_error(std::format("UI list cell font: {}: {}", column_font.error().resource, column_font.error().reason));
             }
             UiTextStyle style;
             style.color = cell.color.value_or(presentation.color.value_or(control.rows[row].color.value_or(control.color)));
@@ -277,7 +274,7 @@ void UiControlPresenter::append(UiDrawList& draw, UiControl& control, UiRect cli
             }
             const auto rendered = fonts_.append(draw, **column_font, text, bounds(area), style, bounds(cell_clip));
             if (!rendered) {
-                throw std::runtime_error("UI list cell text: " + rendered.error().resource + ": " + rendered.error().reason);
+                throw std::runtime_error(std::format("UI list cell text: {}: {}", rendered.error().resource, rendered.error().reason));
             }
         }
     }

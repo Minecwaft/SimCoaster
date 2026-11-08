@@ -56,10 +56,11 @@
 #include "simcoaster/world_theme.hpp"
 #include "simcoaster/world_ui_runtime.hpp"
 #include "world_research_balance.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-#include <iostream>
 #include <limits>
 #include <new>
 
@@ -173,10 +174,8 @@ void ParkRuntimeBindings::send_ui_count_value(WorldRuntime&, UiControl* control,
     if (!control) {
         return;
     }
-    const auto text = std::to_string(value);
     control->value = value; //Numeric attachment value, not a0..1024 bar.
-    const std::u16string wide { text.begin(), text.end() };
-    ui_runtime().controls().set_text(*control, wide);
+    ui_runtime().controls().set_text(*control, number_text(value));
 }
 
 void ParkRuntimeBindings::start_mail_count_animation(WorldRuntime&, UiControl* control, MailCountAnimation kind, int interval) {
@@ -779,7 +778,7 @@ std::optional<std::vector<std::byte>> ParkRuntimeBindings::read_asset(std::strin
     if (std::filesystem::is_regular_file(path)) {
         std::ifstream file(path, std::ios::binary | std::ios::ate);
         if (!file) {
-            throw std::runtime_error("Cannot open " + path.native_encoded_string());
+            throw std::runtime_error(std::format("Cannot open {}", path.native_encoded_string()));
         }
         const auto end = file.tellg();
         if (end < 0) {
@@ -788,7 +787,7 @@ std::optional<std::vector<std::byte>> ParkRuntimeBindings::read_asset(std::strin
         std::vector<std::byte> data(static_cast<std::size_t>(end));
         file.seekg(0);
         if (!data.empty() && !file.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(data.size()))) {
-            throw std::runtime_error("Cannot read " + path.native_encoded_string());
+            throw std::runtime_error(std::format("Cannot read {}", path.native_encoded_string()));
         }
         return data;
     }
@@ -855,7 +854,7 @@ int ParkRuntimeBindings::load_quickload_index_files(WorldRuntime&, std::string_v
 }
 
 void ParkRuntimeBindings::log_debug_message(WorldRuntime&, std::string_view message) {
-    std::clog << message << '\n';
+    print_text(stderr, "{}\n", message);
 }
 
 void ParkRuntimeBindings::refresh_world_interaction_origin_state(WorldRuntime& c, bool record_action) {
@@ -902,7 +901,7 @@ int ParkRuntimeBindings::selected_resource_source(WorldRuntime& c) {
             return static_cast<int>(i);
         }
     }
-    throw std::invalid_argument("Unknown selected park theme: " + c.source.selected_resource_source_name);
+    throw std::invalid_argument(std::format("Unknown selected park theme: {}", c.source.selected_resource_source_name));
 }
 
 void ParkRuntimeBindings::set_mesh_runtime_speed(WorldRuntime& c, std::uint32_t id, std::int32_t speed) {

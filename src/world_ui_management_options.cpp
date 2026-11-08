@@ -1,5 +1,7 @@
 #include "simcoaster/world_advisor.hpp"
 #include "world_ui_management_internal.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
@@ -12,8 +14,7 @@ constexpr unsigned char option_words[] {
 };
 
 std::u16string percent(std::int32_t value) {
-    const auto ascii = std::to_string(std::max(0, value));
-    return u" " + std::u16string { ascii.begin(), ascii.end() } + u" %";
+    return number_text(std::max(0, value), " {} %");
 }
 } //namespace
 

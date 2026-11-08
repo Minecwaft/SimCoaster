@@ -9,6 +9,7 @@
 #include "simcoaster/world_mesh_runtime.hpp"
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <chrono>
@@ -93,7 +94,7 @@ void ApplicationFrontendController::State::bind_lobby(bool intro_mode) {
         [&](std::string_view text, bool preserve, const auto& file) {
             const auto parsed = sam::parse_record<LobbyBalance, true>(balance, text, preserve);
             if (!parsed) {
-                throw std::runtime_error("Original ATM AllThemes balance in " + file.native_encoded_string() + " at byte " + std::to_string(parsed.error().offset));
+                throw std::runtime_error(std::format("Original ATM AllThemes balance in {} at byte {}", file.native_encoded_string(), parsed.error().offset));
             }
         });
     if (balance.extent != 15) {

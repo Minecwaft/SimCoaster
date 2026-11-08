@@ -1,4 +1,5 @@
 #include "application_session_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -19,14 +20,14 @@ bool equal_path(const std::filesystem::path& a, const std::filesystem::path& b) 
 std::array<std::uint32_t, 7> file_stamp(const std::filesystem::path& path) {
     const auto handle = CreateFileW(path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (handle == INVALID_HANDLE_VALUE) {
-        fail(ApplicationSessionFailure::load, path, "Cannot inspect file identity: " + std::to_string(GetLastError()));
+        fail(ApplicationSessionFailure::load, path, std::format("Cannot inspect file identity: {}", GetLastError()));
     }
     BY_HANDLE_FILE_INFORMATION info {};
     const auto success = GetFileInformationByHandle(handle, &info);
     const auto error = GetLastError();
     CloseHandle(handle);
     if (!success || (info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-        fail(ApplicationSessionFailure::load, path, "Invalid save-file identity: " + std::to_string(error));
+        fail(ApplicationSessionFailure::load, path, std::format("Invalid save-file identity: {}", error));
     }
     return { info.dwVolumeSerialNumber, info.nFileIndexHigh, info.nFileIndexLow, info.nFileSizeHigh, info.nFileSizeLow, info.ftLastWriteTime.dwHighDateTime, info.ftLastWriteTime.dwLowDateTime };
 }
@@ -45,7 +46,7 @@ FileTransaction::FileTransaction(const std::filesystem::path& root) {
     static std::atomic<std::uint64_t> counter {};
     const auto parent = std::filesystem::absolute(root / "save").lexically_normal();
     std::filesystem::create_directories(parent);
-    directory_ = parent / (".application-stage-" + std::to_string(GetCurrentProcessId()) + "-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + "-" + std::to_string(++counter));
+    directory_ = parent / (std::format(".application-stage-{}-{}-{}", GetCurrentProcessId(), std::chrono::steady_clock::now().time_since_epoch().count(), ++counter));
     if (directory_.parent_path() != parent || !std::filesystem::create_directory(directory_)) {
         fail(ApplicationSessionFailure::save, directory_, "Cannot create owned save staging directory");
     }
@@ -66,7 +67,7 @@ std::filesystem::path FileTransaction::stage(const std::filesystem::path& destin
             return entry.staged;
         }
     }
-    const auto index = std::to_string(entries_.size());
+    const auto index = std::format("{}", entries_.size());
     auto path = directory_ / (index + destination.extension().native_encoded_string());
     entries_.push_back({ destination, path, directory_ / (index + ".backup") });
     return path;
@@ -109,7 +110,7 @@ void FileTransaction::commit() {
             entry.published = true;
             continue;
         }
-        auto reason = "Cannot publish staged save: " + std::to_string(GetLastError());
+        auto reason = std::format("Cannot publish staged save: {}", GetLastError());
         for (auto& previous : entries_) {
             if (!previous.published) {
                 continue;

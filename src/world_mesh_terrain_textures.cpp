@@ -1,8 +1,8 @@
 #include "simcoaster/frame_profile.hpp"
 #include "simcoaster/terrain_texture.hpp"
 #include "simcoaster/world_scene.hpp"
+#include "simcoaster/text_format.hpp"
 #include <algorithm>
-#include <iostream>
 
 namespace simcoaster {
 namespace {
@@ -98,7 +98,7 @@ bool WorldMeshScene::prepare_mesh_base(WorldMeshInstance& instance, const WorldM
         //escape. Retain covered cells, as the native factory marks them first.
         instance.terrain_texture_error = error;
         instance.terrain_texture_cells = std::move(*placed);
-        std::clog << "Could not blend base for ride " << source.resource_name << ": " << describe_mesh_error(error) << '\n';
+        print_text(stderr, "Could not blend base for ride {}: {}\n", source.resource_name, describe_mesh_error(error));
         return false;
     }
     instance.playback.model.textures = std::move(slots);

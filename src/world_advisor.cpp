@@ -17,6 +17,7 @@
 #include "advisor_scalar_scores.hpp"
 #include "advisor_response_catalog.hpp"
 #include "coaster_editor_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
@@ -246,14 +247,14 @@ void world_operations::builtin::load_advisor_behavior_configuration(WorldRuntime
     }
     const auto parsed = sam::parse_record<AdvisorBalance, true>(*c.advisor.balance, *text);
     if (!parsed) {
-        throw std::runtime_error("Invalid advisor balance at byte " + std::to_string(parsed.error().offset));
+        throw std::runtime_error(std::format("Invalid advisor balance at byte {}", parsed.error().offset));
     }
     c.advisor.queue_policy.general = c.advisor.balance->GeneralAdvisor;
     c.advisor.queue_policy.groups = c.advisor.balance->MessageGroups;
     c.advisor.queue_policy.group_count = c.advisor.balance->MessageGroups_count;
     const auto visitor = load_visitor_advisor_balance(c.visitors.visitor_advisor_balance, *text);
     if (!visitor) {
-        throw std::runtime_error("Invalid advisor visitor policy at byte " + std::to_string(visitor.error().offset));
+        throw std::runtime_error(std::format("Invalid advisor visitor policy at byte {}", visitor.error().offset));
     }
 }
 
@@ -431,7 +432,7 @@ std::int32_t world_operations::builtin::evaluate_advisor_action_score(WorldRunti
         }
         return rooms && !count_linked_staff_by_kind(c, 20) ? 10000 : 0;
     }
-    throw std::logic_error("Unported advisor scoring callback for action " + std::to_string(action));
+    throw std::logic_error(std::format("Unported advisor scoring callback for action {}", action));
 }
 
 std::uint32_t ClockPort::read_advisor_ui_delay_clock(WorldRuntime&) {

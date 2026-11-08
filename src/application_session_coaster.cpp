@@ -6,6 +6,7 @@
 #include "simcoaster/world_mesh_runtime.hpp"
 #include "simcoaster/world_object_ui.hpp"
 #include "simcoaster/world_save.hpp"
+#include <format>
 #include <algorithm>
 #include <fstream>
 #include <limits>
@@ -75,7 +76,7 @@ void ApplicationSession::State::save_coaster(const ApplicationSaveCoasterRequest
     DesignStream output;
     const auto encoded = write_coaster_design(output, *design);
     if (!encoded) {
-        fail(ApplicationSessionFailure::save, destination, "Cannot serialize complete coaster design at record " + std::to_string(encoded.error().record));
+        fail(ApplicationSessionFailure::save, destination, std::format("Cannot serialize complete coaster design at record {}", encoded.error().record));
     }
     FileTransaction transaction(root);
     {
@@ -105,7 +106,7 @@ void ApplicationSession::State::delete_file(const ApplicationFileSelection& requ
     const auto selected_file = files.at(*request.file_identity).path;
     if (kind == ApplicationFileKind::coaster) {
         if (auto removal = file_platform::remove_file(selected_file); !removal) {
-            fail(ApplicationSessionFailure::remove, selected_file, "Cannot delete coaster file: " + std::to_string(removal.error()));
+            fail(ApplicationSessionFailure::remove, selected_file, std::format("Cannot delete coaster file: {}", removal.error()));
         }
         files.erase(*request.file_identity);
         return;
@@ -114,11 +115,11 @@ void ApplicationSession::State::delete_file(const ApplicationFileSelection& requ
     //744EF0 short-circuits after TPWS failure. The following GMS deletion is
     //deliberately separate: a partial pair deletion must report its real error.
     if (auto removal = file_platform::remove_file(world); !removal) {
-        fail(ApplicationSessionFailure::remove, world, "Cannot delete park file: " + std::to_string(removal.error()));
+        fail(ApplicationSessionFailure::remove, world, std::format("Cannot delete park file: {}", removal.error()));
     }
     files.erase(*request.file_identity);
     if (auto removal = file_platform::remove_file(selected_file); !removal) {
-        fail(ApplicationSessionFailure::remove, selected_file, "Park deleted but metadata deletion failed: " + std::to_string(removal.error()));
+        fail(ApplicationSessionFailure::remove, selected_file, std::format("Park deleted but metadata deletion failed: {}", removal.error()));
     }
 }
 } //namespace simcoaster

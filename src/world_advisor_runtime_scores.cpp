@@ -12,6 +12,7 @@
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_special_rides.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 
 namespace simcoaster {
 namespace {
@@ -294,7 +295,7 @@ int delegated(AdvisorWorld& c, int action) {
     if (auto s = evaluate_advisor_staff_decision_score(c, action)) {
         return *s;
     }
-    throw std::logic_error("Advisor reminder target " + std::to_string(action));
+    throw std::logic_error(std::format("Advisor reminder target {}", action));
 }
 } //namespace
 

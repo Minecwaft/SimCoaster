@@ -1,5 +1,8 @@
 #include "application_host_win32.hpp"
 #include "simcoaster/require_bound.hpp"
+#include "simcoaster/text_format.hpp"
+#include <iterator>
+#include <format>
 
 namespace simcoaster::win32_host {
 ApplicationUiError application_error(const ApplicationSessionError& error) {
@@ -16,7 +19,7 @@ ParkRuntime& ApplicationWindow::park() {
 
 void ApplicationWindow::require_bound_views() const {
     if (!view_recovery_failure.empty()) {
-        throw std::runtime_error("Cannot recover the previous application view: " + view_recovery_failure);
+        throw std::runtime_error(std::format("Cannot recover the previous application view: {}", view_recovery_failure));
     }
 }
 
@@ -854,7 +857,7 @@ void ApplicationWindow::release_world(ParkRuntime* old) noexcept {
         try {
             operation();
         } catch (const std::exception& error) {
-            std::cerr << "Application view teardown: " << error.what() << '\n';
+            print_text(stderr, "Application view teardown: {}\n", error.what());
         }
     };
     auto& ui = old->ui();
@@ -1460,7 +1463,7 @@ std::expected<void, ApplicationSessionError> ApplicationWindow::save_configurati
             }
         }
         if (!MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
-            throw std::runtime_error("Cannot publish native Config.tcf (Win32 " + std::to_string(GetLastError()) + ")");
+            throw std::runtime_error(std::format("Cannot publish native Config.tcf (Win32 {})", GetLastError()));
         }
         return {};
     } catch (const std::exception& error) {
@@ -1657,7 +1660,7 @@ void ApplicationWindow::boot() {
             } catch (const std::exception& error) {
                 //6A1780/6A1930 ignore a failed native playback start. Report the
                 //actual decoder/I/O error and continue to the application frontend.
-                std::cerr << "Original startup movie " << path->native_encoded_string() << ": " << error.what() << '\n';
+                print_text(stderr, "Original startup movie {}: {}\n", path->native_encoded_string(), error.what());
                 movie.stop(ApplicationMovieStop::failed);
                 continue;
             }
@@ -1669,7 +1672,7 @@ void ApplicationWindow::boot() {
                 try {
                     movie.advance(std::chrono::duration_cast<std::chrono::milliseconds>(now - previous));
                 } catch (const std::exception& error) {
-                    std::cerr << "Original startup movie " << path->native_encoded_string() << ": " << error.what() << '\n';
+                    print_text(stderr, "Original startup movie {}: {}\n", path->native_encoded_string(), error.what());
                     movie.stop(ApplicationMovieStop::failed);
                     break;
                 }
@@ -1713,7 +1716,7 @@ void ApplicationWindow::report_runtime_failure(std::exception_ptr failure) const
         } catch (const SoundError& error) {
             reason = describe_sound_error(error);
         } catch (const UiTemplateError& error) {
-            reason = "UI template word " + std::to_string(error.word) + ": " + error.reason;
+            reason = std::format("UI template word {}: {}", error.word, error.reason);
         } catch (const std::exception& error) {
             reason = error.what();
         } catch (...) {
@@ -1721,18 +1724,17 @@ void ApplicationWindow::report_runtime_failure(std::exception_ptr failure) const
         }
         SYSTEMTIME time {};
         GetSystemTime(&time);
-        std::ostringstream record;
-        record << "SimCoaster runtime failure, UTC " << time.wYear << '-' << time.wMonth << '-' << time.wDay << ' ' << time.wHour << ':' << time.wMinute << ':' << time.wSecond << '\n' << "Stage: " << frame_stage << "\nError: " << reason << '\n' << "Pointer: " << window.mouse_x << ',' << window.mouse_y << "; buttons left/right: " << window.world_buttons_down[0] << '/' << window.world_buttons_down[1] << '\n';
+        auto record = std::format("SimCoaster runtime failure, UTC {}-{}-{} {}:{}:{}\nStage: {}\nError: {}\nPointer: {},{}; buttons left/right: {:d}/{:d}\n", time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond, frame_stage, reason, window.mouse_x, window.mouse_y, window.world_buttons_down[0], window.world_buttons_down[1]);
         if (window.park) {
             const auto& c = window.park->context();
             const auto& camera = c.view.camera;
-            record << "Camera flags: " << c.view.flags << "; focus: " << camera.focus_position[0] << ',' << camera.focus_position[1] << ',' << camera.focus_position[2] << "; heading/pitch: " << camera.heading_radians << '/' << camera.pitch_radians << "; pan: " << camera.damped_pan_x << ',' << camera.damped_pan_z << "; zoom: " << c.view.mobile.camera_zoom << "; RMB pan preference: " << (window.park->preferences().rmb_scroll_on != 0) << '\n';
+            std::format_to(std::back_inserter(record), "Camera flags: {}; focus: {:.6g},{:.6g},{:.6g}; heading/pitch: {:.6g}/{:.6g}; pan: {:.6g},{:.6g}; zoom: {:.6g}; RMB pan preference: {:d}\n", c.view.flags, camera.focus_position[0], camera.focus_position[1], camera.focus_position[2], camera.heading_radians, camera.pitch_radians, camera.damped_pan_x, camera.damped_pan_z, c.view.mobile.camera_zoom, window.park->preferences().rmb_scroll_on != 0);
         }
-        record << '\n';
-        std::cerr << record.str();
+        record += '\n';
+        print_text(stderr, "{}", record);
         const auto path = root / "simcoaster-error.log";
         std::ofstream log(path, std::ios::app);
-        log << record.str();
+        log.write(record.data(), static_cast<std::streamsize>(record.size()));
         log.flush();
         const auto body = reason + "\n\nStage: " + frame_stage + (log ? "\n\nDetails saved to: " + path.native_encoded_string() : "\n\nThe error log could not be written.");
         MessageBoxA(handle, body.c_str(), "SimCoaster runtime error", MB_OK | MB_ICONERROR);

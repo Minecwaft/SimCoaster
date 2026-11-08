@@ -1,6 +1,7 @@
 #include "simcoaster/bfst_strings.hpp"
 #include "simcoaster/world_staff_interaction.hpp"
 #include "world_staff_internal.hpp"
+#include <format>
 
 namespace simcoaster {
 using namespace staff_detail;
@@ -27,7 +28,7 @@ void open_staff_training_picker(StaffWorld& c, StaffRuntimeRecord& s) {
     picker.open = true;
     const auto names = parse_bfst_literals(c.messages.mail_language.abilities, c.messages.mail_language.conversion);
     if (!names) {
-        throw std::runtime_error("Staff ability labels: " + names.error().reason);
+        throw std::runtime_error(std::format("Staff ability labels: {}", names.error().reason));
     }
     for (int i = 0; i < 15; ++i) {
         const auto ability = static_cast<ThemeAbility>(i);

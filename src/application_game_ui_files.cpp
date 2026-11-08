@@ -1,5 +1,7 @@
 #include "application_game_ui_internal.hpp"
 #include "simcoaster/ui_assets.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <set>
@@ -31,8 +33,7 @@ std::intptr_t row_identity(std::uint64_t id) {
 }
 
 std::u16string two_digits(std::int32_t value) {
-    const auto ascii = std::to_string(value);
-    return (value >= 0 && value < 10 ? u"0" : u"") + std::u16string { ascii.begin(), ascii.end() };
+    return number_text(value, "{:02}");
 }
 } //namespace
 

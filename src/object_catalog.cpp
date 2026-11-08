@@ -1,6 +1,7 @@
 #include "simcoaster/object_catalog.hpp"
 #include "simcoaster/coaster_mesh.hpp"
 #include "simcoaster/resource_key.hpp"
+#include <format>
 #include <fstream>
 
 namespace simcoaster {
@@ -359,8 +360,8 @@ std::expected<RsseProgram, ObjectScriptError> load_relative_rsse_script(const Rs
 std::string describe_catalog_error(const ObjectCatalogError& error) {
     const auto detail = match (error.cause) -> std::string {
         case { const MeshError& cause }  => describe_mesh_error(cause);
-        case { const AssetError& cause } => std::string { asset_failure_name(cause.reason) } + " at byte " + std::to_string(cause.offset);
-        case { const sam::Error& cause } => "SAM parse failure " + std::to_string(std::to_underlying(cause.reason)) + " at byte " + std::to_string(cause.offset);
+        case { const AssetError& cause } => std::format("{} at byte {}", asset_failure_name(cause.reason), cause.offset);
+        case { const sam::Error& cause } => std::format("SAM parse failure {} at byte {}", std::to_underlying(cause.reason), cause.offset);
         case { const CatalogFailure& cause } =>
             match (cause) -> std::string {
                 case CatalogFailure::io               => "file I/O failed";
@@ -370,7 +371,7 @@ std::string describe_catalog_error(const ObjectCatalogError& error) {
                 case CatalogFailure::category_archive => "category-level archive provider remains unported";
             };
     };
-    return error.path + ": " + detail;
+    return std::format("{}: {}", error.path, detail);
 }
 
 ObjectCatalogManager LoadedObjectCatalog::runtime_view() const {

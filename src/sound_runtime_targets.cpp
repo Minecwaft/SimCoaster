@@ -1,5 +1,6 @@
 #include "sound_frequency.hpp"
 #include "sound_runtime_internal.hpp"
+#include <format>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
@@ -329,7 +330,7 @@ void SoundRuntime::State::update_controls(Target& t, bool level) {
     } else {
         //A live voice retains its last valid pitch. Native out-of-table reads
         //have no defined coefficient; do not replace it with an invented ratio.
-        error({ SoundFailure::selection, t.sample()->token, t.catalog->path + ": frequency parameter " + std::to_string(frequency_parameter) });
+        error({ SoundFailure::selection, t.sample()->token, std::format("{}: frequency parameter {}", t.catalog->path, frequency_parameter) });
     }
     const auto& position = t.parent ? t.parent->position : t.position;
     for (std::size_t i = 0; i < 3; ++i) {
@@ -374,7 +375,7 @@ bool SoundRuntime::State::start_voice(Target& t, bool continuation) {
         const auto frequency_parameter = choose_sound_frequency_parameter(*t.descriptor, values, random);
         const auto ratio = sound_detail::frequency_ratio(frequency_parameter);
         if (!ratio) {
-            error({ SoundFailure::selection, record->token, t.catalog->path + ": frequency parameter " + std::to_string(frequency_parameter) });
+            error({ SoundFailure::selection, record->token, std::format("{}: frequency parameter {}", t.catalog->path, frequency_parameter) });
             t.set(Flag::recycle);
             return false;
         }

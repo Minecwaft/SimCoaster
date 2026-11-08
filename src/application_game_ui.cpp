@@ -2,6 +2,7 @@
 #include "simcoaster/advisor_speech.hpp"
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world_fixed_point.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -92,7 +93,7 @@ void ApplicationGameUiController::State::dialog(std::span<const unsigned char> b
     wrapper->secondary_asset_hash = ui_model_asset_hash("lolight");
     auto parsed = ui.parse_template(wrapper, std::as_bytes(bytes));
     if (!parsed) {
-        throw std::runtime_error("Application template: " + parsed.error().reason);
+        throw std::runtime_error(std::format("Application template: {}", parsed.error().reason));
     }
     root = &required(wrapper, id);
     bind(*root, [this](auto& sender, const auto& e) {

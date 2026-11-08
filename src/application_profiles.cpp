@@ -3,6 +3,7 @@
 #include "simcoaster/sam_integer.hpp"
 #include "simcoaster/sam_record.hpp"
 #include "simcoaster/world_startup.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <fstream>
@@ -128,7 +129,7 @@ struct ApplicationProfiles::State {
         const auto standard_path = root / "Data/levels/Standard.sam";
         const auto standard = read_text(standard_path);
         if (!standard) {
-            throw std::runtime_error("Cannot load original ShareInfo profile defaults: " + standard_path.native_encoded_string() + ": " + standard.error().reason);
+            throw std::runtime_error(std::format("Cannot load original ShareInfo profile defaults: {}: {}", standard_path.native_encoded_string(), standard.error().reason));
         }
         //Standard.sam is a mixed float/grid/string/integer receiver. Select its
         //actual ShareInfo group, retaining all five original leaves; the strict
@@ -136,7 +137,7 @@ struct ApplicationProfiles::State {
         ShareDefaults parsed_shares;
         const auto parsed = sam::parse_record<ShareDefaults, true>(parsed_shares, *standard);
         if (!parsed) {
-            throw std::runtime_error("Invalid original ShareInfo profile defaults: " + standard_path.native_encoded_string() + " at byte " + std::to_string(parsed.error().offset));
+            throw std::runtime_error(std::format("Invalid original ShareInfo profile defaults: {} at byte {}", standard_path.native_encoded_string(), parsed.error().offset));
         }
         shares = parsed_shares.values;
         constexpr std::array<std::string_view, 3> themes { "arabian", "science", "water" };
@@ -147,7 +148,7 @@ struct ApplicationProfiles::State {
             //ParkInfo; do not feed the whole file to a one-field strict projection.
             ThemeGlobalBalance balance;
             if (!text || !sam::parse_integer_record(balance, *text)) {
-                throw std::runtime_error("Cannot load original profile theme availability: " + balance_path.native_encoded_string());
+                throw std::runtime_error(std::format("Cannot load original profile theme availability: {}", balance_path.native_encoded_string()));
             }
             available[index] = balance.available_from_start == 1;
         }
@@ -174,11 +175,7 @@ struct ApplicationProfiles::State {
         if (!profile.theme) {
             return std::unexpected(error(root, "Campaign has no theme manager"));
         }
-        auto number = std::to_string(profile.theme->mission_number);
-        if (number.size() < 2) {
-            number.insert(number.begin(), '0');
-        }
-        const auto path = root / "Data/missions" / ("Miss" + number + ".sam");
+        const auto path = root / "Data/missions" / std::format("Miss{:02}.sam", profile.theme->mission_number);
         //Native activation retains decoded data even when the loader returns
         //false for Miss-1.sam. Completed campaigns have no such installed SAM.
         if (profile.theme->mission_number == -1 && !std::filesystem::exists(path)) {

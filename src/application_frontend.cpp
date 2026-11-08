@@ -3,6 +3,7 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world_advisor.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <stdexcept>
@@ -27,7 +28,7 @@ UiControl* ApplicationFrontendController::State::parse(std::span<const unsigned 
     const auto previous = parent->children;
     const auto parsed = ui.parse_template(parent, std::as_bytes(bytes));
     if (!parsed) {
-        throw std::runtime_error("Original application template word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
+        throw std::runtime_error(std::format("Original application template word {}: {}", parsed.error().word, parsed.error().reason));
     }
     UiControl* result {};
     for (auto* child : parent->children) {
@@ -40,7 +41,7 @@ UiControl* ApplicationFrontendController::State::parse(std::span<const unsigned 
         }
     }
     if (!result) {
-        throw std::runtime_error("Original application template has no root " + std::to_string(id));
+        throw std::runtime_error(std::format("Original application template has no root {}", id));
     }
     return result;
 }
@@ -198,7 +199,7 @@ std::intptr_t ApplicationFrontendController::State::event(UiControl& control, co
 std::u16string ApplicationFrontendController::State::format(std::span<const std::byte> data, std::uint32_t row, std::span<const BfstWideStringArgument> strings, std::span<const BfstSignedIntegerArgument> integers) {
     const auto result = format_bfst_wide_string(data, c.messages.mail_language.conversion, row, 16383, strings, integers);
     if (!result) {
-        throw std::runtime_error("Original application text " + std::to_string(row) + ": " + result.error().reason);
+        throw std::runtime_error(std::format("Original application text {}: {}", row, result.error().reason));
     }
     return *result;
 }
@@ -214,7 +215,7 @@ const std::vector<std::byte>& ApplicationFrontendController::State::table(std::s
     const auto path = (game_root / "Data/Language" / language / name).native_encoded_string();
     const auto contents = c.ports.assets.read_balance_asset(c, path);
     if (!contents) {
-        throw std::runtime_error("Missing original application language table " + path);
+        throw std::runtime_error(std::format("Missing original application language table {}", path));
     }
     const auto bytes = std::as_bytes(std::span(contents->data(), contents->size()));
     return tables.emplace(std::string(name), std::vector<std::byte>(bytes.begin(), bytes.end())).first->second;

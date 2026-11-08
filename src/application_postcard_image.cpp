@@ -1,5 +1,6 @@
 #include "application_postcard_image.hpp"
 #include "simcoaster/ui_control.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -11,7 +12,7 @@ namespace {
 TextureImage load_art(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file) {
-        throw std::runtime_error("Missing original postcard decoration: " + path.native_encoded_string());
+        throw std::runtime_error(std::format("Missing original postcard decoration: {}", path.native_encoded_string()));
     }
     const auto length = file.tellg();
     if (length < 18) {
@@ -24,7 +25,7 @@ TextureImage load_art(const std::filesystem::path& path) {
     }
     auto image = decode_tga_image(bytes);
     if (!image) {
-        throw std::runtime_error("Original postcard decoration: " + describe_texture_error(image.error()));
+        throw std::runtime_error(std::format("Original postcard decoration: {}", describe_texture_error(image.error())));
     }
     return std::move(*image);
 }
@@ -92,7 +93,7 @@ void overlay(TextureImage& destination, const TextureImage& source, std::uint32_
 void draw_text(TextureImage& destination, UiFontLibrary& fonts, std::u16string_view text, bool hires) {
     const auto selected = fonts.slot(12, 640);
     if (!selected) {
-        throw std::runtime_error("Original postcard BF4 font: " + selected.error().reason);
+        throw std::runtime_error(std::format("Original postcard BF4 font: {}", selected.error().reason));
     }
     UiTextStyle style;
     style.color = { 0, 0, 204, 255 };
@@ -103,7 +104,7 @@ void draw_text(TextureImage& destination, UiFontLibrary& fonts, std::u16string_v
     UiDrawList draw;
     const auto layout = fonts.append(draw, **selected, text, bounds, style, clip);
     if (!layout) {
-        throw std::runtime_error("Postcard BF4 message layout: " + layout.error().reason);
+        throw std::runtime_error(std::format("Postcard BF4 message layout: {}", layout.error().reason));
     }
     for (const auto& command : draw.commands) {
         if (!command.texture) {

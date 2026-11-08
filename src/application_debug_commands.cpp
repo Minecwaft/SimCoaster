@@ -11,6 +11,7 @@
 #include "simcoaster/world_theme.hpp"
 #include "world_staff_internal.hpp"
 #include "world_staff_mail.hpp"
+#include <format>
 #include <memory>
 
 namespace simcoaster {
@@ -23,7 +24,7 @@ template <class T>
 T& require(WorldRuntime& c, ThingId id, ThingKind kind) {
     auto* p = id && id < c.entities.size() ? c.entities[id].payload : nullptr;
     if (!p || p->kind != kind || p->retirement_pending) {
-        throw std::runtime_error("Developer target is missing (id " + std::to_string(id) + ")");
+        throw std::runtime_error(std::format("Developer target is missing (id {})", id));
     }
     return *reinterpret_cast<T*>(p);
 }

@@ -1,5 +1,6 @@
 #include "simcoaster/sound_catalog.hpp"
 #include "sound_io.hpp"
+#include <format>
 #include <charconv>
 #include <cmath>
 #include <limits>
@@ -38,7 +39,7 @@ std::string describe_sound_error(const SoundError& error) {
         case SoundFailure::reference     => "invalid catalog reference";
         case SoundFailure::configuration => "invalid audio configuration";
     };
-    return error.resource + ": " + std::string { reason } + " at " + std::to_string(error.offset) + (error.sample_token ? " (sample " + std::to_string(*error.sample_token) + ")" : "");
+    return std::format("{}: {} at {}{}", error.resource, reason, error.offset, (error.sample_token ? std::format(" (sample {})", *error.sample_token) : ""));
 }
 
 std::expected<SoundBankMap, SoundError> parse_sound_bank_map(std::span<const std::byte> bytes) {

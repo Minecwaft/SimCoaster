@@ -2,6 +2,7 @@
 #ifndef NOMINMAX
 #    define NOMINMAX
 #endif
+#include <format>
 #include <cstdlib>
 #include "simcoaster/mesh_renderer.hpp"
 #include "simcoaster/ui_draw.hpp"
@@ -25,7 +26,7 @@ using Microsoft::WRL::ComPtr;
 
 void check(HRESULT result, const char* action) {
     if (FAILED(result)) {
-        throw std::runtime_error(std::string { action } + " failed (HRESULT " + std::to_string(result) + ")");
+        throw std::runtime_error(std::format("{} failed (HRESULT {})", action, result));
     }
 }
 

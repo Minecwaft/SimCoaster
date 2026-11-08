@@ -14,6 +14,7 @@
 #include "simcoaster/world_sound_runtime.hpp"
 #include "simcoaster/world_startup.hpp"
 #include "world_research_balance.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
@@ -89,7 +90,7 @@ std::span<const NamedSamContract> sam_schema_catalog() {
         for (auto it = fields.begin(); it != fields.end(); ++it) {
             if (output != fields.begin() && key(*(output - 1)) == key(*it)) {
                 if (!same((output - 1)->field, it->field)) {
-                    throw std::logic_error("Conflicting compiled SAM projections: " + std::string { it->schema } + " " + it->field.group + "." + it->field.name);
+                    throw std::logic_error(std::format("Conflicting compiled SAM projections: {} {}.{}", it->schema, it->field.group, it->field.name));
                 }
             } else {
                 *output++ = *it;

@@ -3,6 +3,7 @@
 #include "simcoaster/company_email.hpp"
 #include "simcoaster/standard_balance.hpp"
 #include "simcoaster/world_research.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
@@ -47,7 +48,7 @@ struct ApplicationTipUiController::State {
         if (auto* control = ui.find_recursive(dialog, id)) {
             return *control;
         }
-        throw std::runtime_error("Original tip template missing control " + std::to_string(id));
+        throw std::runtime_error(std::format("Original tip template missing control {}", id));
     }
 
     std::u16string text(std::uint32_t row) {
@@ -55,14 +56,14 @@ struct ApplicationTipUiController::State {
             const auto path = (game_root / "Data/Language" / language / "TOTD.str").native_encoded_string();
             const auto contents = c.ports.assets.read_balance_asset(c, path);
             if (!contents) {
-                throw std::runtime_error("Missing original Tip of the Day table " + path);
+                throw std::runtime_error(std::format("Missing original Tip of the Day table {}", path));
             }
             const auto bytes = std::as_bytes(std::span(contents->data(), contents->size()));
             table.assign(bytes.begin(), bytes.end());
         }
         const auto result = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383);
         if (!result) {
-            throw std::runtime_error("Original tip text " + std::to_string(row) + ": " + result.error().reason);
+            throw std::runtime_error(std::format("Original tip text {}: {}", row, result.error().reason));
         }
         return *result;
     }
@@ -74,7 +75,7 @@ struct ApplicationTipUiController::State {
             if (const auto input = c.ports.assets.read_balance_asset(c, path.native_encoded_string())) {
                 const auto parsed = sam::parse_record<TipBalance, true>(balance, *input, configured);
                 if (!parsed) {
-                    throw std::runtime_error("Invalid Tip of the Day balance at byte " + std::to_string(parsed.error().offset));
+                    throw std::runtime_error(std::format("Invalid Tip of the Day balance at byte {}", parsed.error().offset));
                 }
                 configured = true;
             }
@@ -221,7 +222,7 @@ struct ApplicationTipUiController::State {
             host.panels.dismiss();
             const auto parsed = ui.parse_template(primary, std::as_bytes(std::span(tip_template)));
             if (!parsed) {
-                throw std::runtime_error("Original tip template at word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
+                throw std::runtime_error(std::format("Original tip template at word {}: {}", parsed.error().word, parsed.error().reason));
             }
             dialog = *parsed;
             if (!dialog || dialog->id != 61000) {

@@ -17,6 +17,7 @@
 #include "simcoaster/world_events.hpp"
 #include "simcoaster/native_coaster_editor.hpp"
 #include "world_ui_objects_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -619,7 +620,7 @@ void WorldParkObjectUiController::State::message_text(std::u16string body, std::
     };
     const auto parsed = ui.parse_template(message_wrapper, std::as_bytes(ui_message_template()));
     if (!parsed) {
-        throw std::runtime_error("Original message template: " + parsed.error().reason);
+        throw std::runtime_error(std::format("Original message template: {}", parsed.error().reason));
     }
     message_root = ui.find(message_wrapper, 60000);
     if (!message_root) {

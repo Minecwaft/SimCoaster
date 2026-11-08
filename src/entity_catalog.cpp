@@ -16,6 +16,7 @@
 #include "simcoaster/world_save_fields.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "simcoaster/world_weather.hpp"
+#include <format>
 #include <memory>
 #include <meta>
 #include <utility>
@@ -367,7 +368,7 @@ struct EntityEntry {
 };
 
 void event_required(ThingHeader* record, WorldEvent* event) {
-    throw std::logic_error("World event handler is required: kind " + std::to_string(record ? std::to_underlying(record->kind) : 0) + ", event " + std::to_string(event ? event->type() : -1));
+    throw std::logic_error(std::format("World event handler is required: kind {}, event {}", record ? std::to_underlying(record->kind) : 0, event ? event->type() : -1));
 }
 
 void handle_mechanic_hq_event(WorldRuntime& c, MechanicHqRecord&, const WorldEvent& original) {
@@ -581,7 +582,7 @@ consteval {
             const auto operation = step.operation;
             const auto function = step.handler;
             token_sequence perform = function == std::meta::info {} ? ^^{
-                throw std::logic_error("entity update has not been reconstructed: operation " + std::to_string(std::to_underlying(${operation})) + ", kind " + std::to_string(std::to_underlying(record->kind)) + ", ID " + std::to_string(record->id));
+                throw std::logic_error(std::format("entity update has not been reconstructed: operation {}, kind {}, ID {}", std::to_underlying(${operation}), std::to_underlying(record->kind), record->id));
             }
                                                                     : ^^{ invoke_payload<(${function})>(c, typed); };
             if (step.intercepted) {
@@ -702,7 +703,7 @@ consteval {
         void world_operations::builtin::record_update(WorldRuntime& c, RecordUpdate operation, ThingHeader* record) {
             match (operation) {
                 ${update_cases} case _ => {}
-            } throw std::logic_error("entity update has not been reconstructed: operation " + std::to_string(std::to_underlying(operation)) + ", kind " + std::to_string(std::to_underlying(record->kind)) + ", ID " + std::to_string(record->id));
+            } throw std::logic_error(std::format("entity update has not been reconstructed: operation {}, kind {}, ID {}", std::to_underlying(operation), std::to_underlying(record->kind), record->id));
         }
 
         void world_operations::builtin::record_event(WorldRuntime& c, ThingHeader* record, WorldEvent* event) {

@@ -3,6 +3,7 @@
 #    define NOMINMAX
 #endif
 #include "application_startup_image.hpp"
+#include <format>
 #include <stdexcept>
 #include <wincodec.h>
 #include <windows.h>
@@ -14,7 +15,7 @@ using Microsoft::WRL::ComPtr;
 
 void check(HRESULT result, std::string_view operation) {
     if (FAILED(result)) {
-        throw std::runtime_error(std::string(operation) + " (HRESULT " + std::to_string(static_cast<std::int32_t>(result)) + ")");
+        throw std::runtime_error(std::format("{} (HRESULT {})", operation, static_cast<std::int32_t>(result)));
     }
 }
 

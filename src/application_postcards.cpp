@@ -1,5 +1,6 @@
 #include "simcoaster/application_postcards.hpp"
 #include "simcoaster/world_fixed_point.hpp"
+#include <iterator>
 #include <algorithm>
 #include <bit>
 #include <charconv>
@@ -7,7 +8,6 @@
 #include <ctime>
 #include <format>
 #include <fstream>
-#include <sstream>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -149,7 +149,7 @@ std::string encode_postcard_outbox_index(const PostcardOutboxIndex& index) {
             result += '\n';
         }
         for (const auto id : *group) {
-            result += std::to_string(std::bit_cast<std::int32_t>(id)) + "\n";
+            std::format_to(std::back_inserter(result), "{}\n", std::bit_cast<std::int32_t>(id));
         }
     }
     return result;
@@ -169,7 +169,7 @@ std::expected<PostcardRecord, PostcardError> decode_postcard_record(std::string_
 }
 
 std::string encode_postcard_record(const PostcardRecord& record) {
-    auto result = std::to_string(record.date.day) + "\n" + std::to_string(record.date.month) + "\n" + std::to_string(record.date.year) + "\n" + record.from + "\n" + record.subject + "\n";
+    auto result = std::format("{}\n{}\n{}\n{}\n{}\n", record.date.day, record.date.month, record.date.year, record.from, record.subject);
     for (const auto& recipient : record.recipients) {
         result += recipient + "\n";
     }

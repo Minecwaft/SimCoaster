@@ -8,6 +8,7 @@
 #include "simcoaster/park_object_context_geometry.hpp"
 #include "simcoaster/world_mesh_runtime.hpp"
 #include "simcoaster/mesh_runtime_queries.hpp"
+#include <format>
 #include <algorithm>
 #include <array>
 #include <stdexcept>
@@ -80,7 +81,7 @@ struct WorldCoasterEditorUiController::State {
         for (const auto& tool : tools) {
             auto* button = ui.find(group, tool.id);
             if (!button) {
-                throw std::runtime_error("Original coaster toolbar lacks control " + std::to_string(tool.id));
+                throw std::runtime_error(std::format("Original coaster toolbar lacks control {}", tool.id));
             }
             button->help_index = button->template_metadata = tool.help;
         }

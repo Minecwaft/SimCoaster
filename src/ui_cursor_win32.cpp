@@ -3,6 +3,7 @@
 #    define NOMINMAX
 #endif
 #include "simcoaster/ui_cursor_win32.hpp"
+#include <format>
 #include <algorithm>
 #include <array>
 #include <stdexcept>
@@ -62,14 +63,14 @@ std::filesystem::path child(const std::filesystem::path& parent, std::string_vie
         for (const auto& entry : std::filesystem::directory_iterator(parent)) {
             if (lower(entry.path().filename().native_encoded_string()) == name && matches_type(entry.path())) {
                 if (found) {
-                    throw std::runtime_error("Ambiguous UI cursor path: " + expected.native_encoded_string());
+                    throw std::runtime_error(std::format("Ambiguous UI cursor path: {}", expected.native_encoded_string()));
                 }
                 found = entry.path();
             }
         }
     }
     if (!found) {
-        throw std::runtime_error("Missing UI cursor path: " + expected.native_encoded_string());
+        throw std::runtime_error(std::format("Missing UI cursor path: {}", expected.native_encoded_string()));
     }
     return *found;
 }
@@ -77,13 +78,13 @@ std::filesystem::path child(const std::filesystem::path& parent, std::string_vie
 std::size_t cursor_index(UiCursorId id) {
     const auto index = static_cast<std::size_t>(id);
     if (index >= specs.size()) {
-        throw std::out_of_range("Unknown native UI cursor ID " + std::to_string(static_cast<std::uint32_t>(id)));
+        throw std::out_of_range(std::format("Unknown native UI cursor ID {}", static_cast<std::uint32_t>(id)));
     }
     return index;
 }
 
 [[noreturn]] void win32_failure(const std::filesystem::path& path, DWORD error) {
-    throw std::runtime_error("Cannot load UI cursor " + path.native_encoded_string() + " (Win32 error " + std::to_string(error) + ")");
+    throw std::runtime_error(std::format("Cannot load UI cursor {} (Win32 error {})", path.native_encoded_string(), error));
 }
 } //namespace
 

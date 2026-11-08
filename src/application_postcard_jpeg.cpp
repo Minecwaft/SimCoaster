@@ -3,6 +3,7 @@
 #    define NOMINMAX
 #endif
 #include "simcoaster/application_postcards.hpp"
+#include <format>
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -29,7 +30,7 @@ struct Apartment {
 };
 
 PostcardError failed(const std::filesystem::path& path, std::string_view operation, HRESULT status) {
-    return { path, std::string(operation) + " (HRESULT " + std::to_string(static_cast<std::int32_t>(status)) + ")" };
+    return { path, std::format("{} (HRESULT {})", operation, static_cast<std::int32_t>(status)) };
 }
 } //namespace
 

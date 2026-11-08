@@ -7,6 +7,7 @@
 #include "simcoaster/world_objects.hpp"
 #include "simcoaster/world_person.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -15,7 +16,7 @@ namespace {
 std::u16string localized(WorldRuntime& c, const std::vector<std::byte>& table, std::uint32_t row, std::span<const BfstWideStringArgument> strings = {}, std::span<const BfstSignedIntegerArgument> numbers = {}) {
     auto value = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383, strings, numbers);
     if (!value) {
-        throw std::runtime_error("Visitor UI language row " + std::to_string(row) + ": " + value.error().reason);
+        throw std::runtime_error(std::format("Visitor UI language row {}: {}", row, value.error().reason));
     }
     return std::move(*value);
 }

@@ -1,5 +1,6 @@
 #include "simcoaster/application_configuration.hpp"
 #include "simcoaster/save_schema.hpp"
+#include <format>
 #include <bit>
 #include <fstream>
 #include <stdexcept>
@@ -45,7 +46,7 @@ std::array<std::byte, 32> encode_application_configuration(const ApplicationConf
 std::expected<ApplicationHardwareProfile, ApplicationConfigurationError> load_application_hardware_profile(const std::filesystem::path& root, std::uint32_t index) {
     constexpr std::array names { "low.sam", "med.sam", "high.sam" };
     if (index >= names.size()) {
-        return std::unexpected(ApplicationConfigurationError { 0, "Unknown native hardware profile " + std::to_string(index) });
+        return std::unexpected(ApplicationConfigurationError { 0, std::format("Unknown native hardware profile {}", index) });
     }
     const auto path = root / "Data" / names[index];
     std::ifstream input { path, std::ios::binary | std::ios::ate };

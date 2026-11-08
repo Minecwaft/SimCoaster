@@ -1,4 +1,6 @@
 #include "ui_runtime_internal.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <charconv>
@@ -151,11 +153,6 @@ std::int32_t integer(std::u16string_view text) {
         n = std::min<std::int64_t>(n * 10 + text[i++] - u'0', 2147483648LL);
     }
     return bounded(negative ? -n : n);
-}
-
-std::u16string integer_text(std::int32_t n) {
-    const auto ascii = std::to_string(n);
-    return { ascii.begin(), ascii.end() };
 }
 
 void assign_rect(UiControl& c, UiRect rect) {
@@ -981,7 +978,7 @@ void UiRuntime::set_value(UiControl& c, std::int32_t value, bool notify) {
         scroll_geometry(c);
     }
     if (c.kind == UiControlKind::numeric_stepper && owns(c.associated_edit)) {
-        set_text(*c.associated_edit, integer_text(value));
+        set_text(*c.associated_edit, number_text(value));
     }
     if (old != value || c.initial_value_pending) {
         c.initial_value_pending = false;
@@ -2051,7 +2048,7 @@ std::intptr_t UiRuntime::widget_event(UiControl& c, const UiEvent& e) {
                 if (e.value == 13) {
                     set_value(c, integer(c.associated_edit->text), true);
                 } else {
-                    set_text(*c.associated_edit, integer_text(c.value));
+                    set_text(*c.associated_edit, number_text(c.value));
                 }
             }
             set_focus(nullptr);

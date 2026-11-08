@@ -1,5 +1,6 @@
 #include "simcoaster/numeric_word.hpp"
 #include "simcoaster/scape_runtime.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <fstream>
@@ -103,7 +104,7 @@ void ScapeOmpRuntime::upsert(std::uint32_t event, std::uint32_t handle) {
 void ScapeOmpRuntime::load(const std::filesystem::path& path) {
     const auto file = load_scape_omp(path);
     if (!file) {
-        throw std::runtime_error("Original Scape byte " + std::to_string(file.error().offset) + ": " + file.error().reason);
+        throw std::runtime_error(std::format("Original Scape byte {}: {}", file.error().offset, file.error().reason));
     }
     load(*file);
 }
@@ -132,7 +133,7 @@ void ScapeOmpRuntime::load(const ScapeOmpFile& file) {
             const auto handle = context_.ports.effects.create_particle_effect(context_, record.option_or_template, record.position, 0);
             particles_.push_back(handle);
             if (!handle) {
-                diagnostics_.push_back("Scape particle record " + std::to_string(index) + " did not create a live effect");
+                diagnostics_.push_back(std::format("Scape particle record {} did not create a live effect", index));
             }
             continue;
         }
@@ -146,7 +147,7 @@ void ScapeOmpRuntime::load(const ScapeOmpFile& file) {
         if (handle) {
             sounds_.push_back(handle);
         } else {
-            diagnostics_.push_back("Scape sound record " + std::to_string(index) + " returned no retained target handle (catalog " + std::to_string(catalog) + ", event " + std::to_string(record.event_id) + ")");
+            diagnostics_.push_back(std::format("Scape sound record {} returned no retained target handle (catalog {}, event {})", index, catalog, record.event_id));
         }
         if (record.kind == ScapeOmpRecordKind::ambient) {
             if (record.option_or_template) {
@@ -193,7 +194,7 @@ void ScapeOmpRuntime::adopt_saved_ambient(std::span<const CampaignAmbientRecord>
             }
         }
         if (!valid && entry.sound_handle) {
-            diagnostics_.push_back("Saved local ambience event " + std::to_string(entry.event_id) + " has no matching live source/catalog target");
+            diagnostics_.push_back(std::format("Saved local ambience event {} has no matching live source/catalog target", entry.event_id));
             entry.sound_handle = 0;
         }
         if (entry.sound_handle && std::ranges::find(sounds_, entry.sound_handle) == sounds_.end()) {

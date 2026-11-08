@@ -2,6 +2,8 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/world_bank.hpp"
 #include "simcoaster/world_fixed_point.hpp"
+#include "simcoaster/text_format.hpp"
+#include <format>
 #include <algorithm>
 
 namespace simcoaster {
@@ -30,7 +32,7 @@ std::u16string wide(std::string_view input) {
 std::u16string localized(WorldRuntime& c, const std::vector<std::byte>& table, std::uint32_t row, std::size_t capacity, std::span<const BfstWideStringArgument> strings = {}, std::span<const BfstSignedIntegerArgument> integers = {}) {
     auto text = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, capacity, strings, integers);
     if (!text) {
-        throw std::runtime_error("calendar UI BFST: " + text.error().reason);
+        throw std::runtime_error(std::format("calendar UI BFST: {}", text.error().reason));
     }
     return std::move(*text);
 }
@@ -111,15 +113,11 @@ void calendar_ui::refresh_calendar_date_label(WorldRuntime& c, CalendarReportFie
         return;
     }
     if (label.debug_counts) {
-        label.text = wide("P:" + std::to_string(fixed::word(c.visitors.count)) + " O:" + std::to_string(fixed::word(c.attractions.park_object_record_count)));
+        label.text = wide(std::format("P:{} O:{}", fixed::word(c.visitors.count), fixed::word(c.attractions.park_object_record_count)));
     } else {
         const auto month = localized(c, c.messages.mail_language.months, static_cast<std::uint32_t>(report.zero_based_month), 512);
         const auto year = fixed::add(report.year_since_1900, 1900) % 100;
-        auto digits = std::to_string(year);
-        if (year >= 0 && year < 10) {
-            digits.insert(digits.begin(), '0');
-        }
-        const auto year_text = wide(digits);
+        const auto year_text = number_text(year, "{:02}");
         const std::array strings { BfstWideStringArgument { 42, month }, BfstWideStringArgument { 43, year_text } };
         const std::array integers { BfstSignedIntegerArgument { 41, report.day_of_month } };
         label.text = localized(c, c.messages.mail_language.ui_text, 956, 16383, strings, integers);

@@ -3,6 +3,7 @@
 #include "simcoaster/world.hpp"
 #include "simcoaster/simulation_sine.hpp"
 #include "coaster_station_geometry.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -15,7 +16,7 @@ constexpr std::array categories { 3u, 10u, 2u, 9u, 10u }, variants { 0u, 0u, 0u,
 
 void require(bool value, std::size_t index = 0, std::source_location where = std::source_location::current()) {
     if (!value) {
-        throw MeshError { MeshFailure::configuration, index, "Coaster geometry restoration, line " + std::to_string(where.line()), {} };
+        throw MeshError { MeshFailure::configuration, index, std::format("Coaster geometry restoration, line {}", where.line()), {} };
     }
 }
 

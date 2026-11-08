@@ -1,5 +1,6 @@
 #include "park_runtime_codec.hpp"
 #include "park_runtime_state.hpp"
+#include <format>
 
 namespace simcoaster {
 using namespace park_detail;
@@ -48,7 +49,7 @@ void ParkRuntime::save(const std::filesystem::path& file) {
             c.view.mobile.camera_zoom = *s.frame.native_camera_zoom;
         }
         if (!write_world_through_camera(c, *c.simulation.current, output, s.bindings, *s.simulation.particles, clocks, s.simulation.rides, s.rendering.meshes)) {
-            throw std::runtime_error("World-through-camera capture failed at " + s.bindings.last_field);
+            throw std::runtime_error(std::format("World-through-camera capture failed at {}", s.bindings.last_field));
         }
     }
     const auto limits = [&](std::uint16_t slot) -> std::optional<CoasterTrainLimits> {
@@ -77,7 +78,7 @@ void ParkRuntime::save(const std::filesystem::path& file) {
     header.version = 500;
     const auto result = write_park_save_file(file, header, output.bytes);
     if (!result) {
-        throw std::runtime_error(std::string { save_container_failure_name(result.error().reason) } + " writing " + file.native_encoded_string());
+        throw std::runtime_error(std::format("{} writing {}", save_container_failure_name(result.error().reason), file.native_encoded_string()));
     }
 }
 } //namespace simcoaster

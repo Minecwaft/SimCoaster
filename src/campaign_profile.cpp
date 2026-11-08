@@ -1,6 +1,7 @@
 #include "campaign_profile_archive.hpp"
 #include "campaign_profile_io.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <fstream>
 #include <meta>
 #include <stdexcept>
@@ -104,7 +105,7 @@ void apply_campaign_profile_to_lobby(WorldRuntime& c, const CampaignProfile& pro
     if (c.mode.game != GameMode::code_3) {
         for (std::size_t i = 0; i + 1 < theme_global_source_names.size(); ++i) {
             if (!get_or_create_theme_global_info_for_source(c, manager, theme_global_source_names[i])) {
-                throw std::runtime_error("Cannot initialize campaign theme " + std::string { theme_global_source_names[i] });
+                throw std::runtime_error(std::format("Cannot initialize campaign theme {}", theme_global_source_names[i]));
             }
         }
     }

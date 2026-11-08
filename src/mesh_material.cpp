@@ -1,6 +1,7 @@
 #include "simcoaster/standard_balance.hpp"
 #include "simcoaster/mesh_material.hpp"
 #include "simcoaster/sam_record.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -223,14 +224,14 @@ ThemeRenderSettings load_installed_theme_render_settings(const std::filesystem::
             }
             std::ifstream stream(path, std::ios::binary);
             if (!stream) {
-                throw std::runtime_error("Cannot read " + path.native_encoded_string());
+                throw std::runtime_error(std::format("Cannot read {}", path.native_encoded_string()));
             }
             return std::string { std::istreambuf_iterator<char> { stream }, {} };
         },
         [&](std::string_view text, bool preserve, const auto& path) {
             const auto parsed = sam::parse_record<ThemeSettings, true>(settings, text, preserve);
             if (!parsed) {
-                throw std::runtime_error("Invalid render settings in " + path.native_encoded_string() + " at byte " + std::to_string(parsed.error().offset));
+                throw std::runtime_error(std::format("Invalid render settings in {} at byte {}", path.native_encoded_string(), parsed.error().offset));
             }
         });
     ThemeRenderSettings result;

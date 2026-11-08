@@ -3,6 +3,8 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world_runtime.hpp"
 #include "ui_panel_presentation.hpp"
+#include <iterator>
+#include <format>
 #include <algorithm>
 #include <meta>
 #include <ranges>
@@ -31,7 +33,7 @@ UiControl& UiPanelBindings::required(UiControl* root, std::uint32_t id, std::str
     if (auto* control = find(root, id)) {
         return *control;
     }
-    throw std::runtime_error(std::string(missing) + std::to_string(id));
+    throw std::runtime_error(std::format("{}{}", missing, id));
 }
 
 namespace {
@@ -121,7 +123,7 @@ std::u16string localize_ui_panel(const WorldRuntime& world, std::optional<std::s
     if (!value) {
         auto error = std::string(policy.text_error);
         if (policy.text_error_row) {
-            error += std::to_string(row) + ": ";
+            std::format_to(std::back_inserter(error), "{}: ", row);
         }
         throw std::runtime_error(error + value.error().reason);
     }
@@ -134,7 +136,7 @@ UiControl& ui_panel_detail::parse(UiRuntime& ui, UiControl* parent, std::span<co
     if (!parsed) {
         auto message = std::string(policy.parse_error);
         if (policy.include_word) {
-            message += std::to_string(parsed.error().word) + ": ";
+            std::format_to(std::back_inserter(message), "{}: ", parsed.error().word);
         }
         throw std::runtime_error(message + parsed.error().reason);
     }
@@ -153,7 +155,7 @@ UiControl& ui_panel_detail::parse(UiRuntime& ui, UiControl* parent, std::span<co
         }
     }
     if (!selected) {
-        throw std::runtime_error(std::string(policy.missing_root) + (policy.include_root_id ? std::to_string(root_id) : ""));
+        throw std::runtime_error(std::string(policy.missing_root) + (policy.include_root_id ? std::format("{}", root_id) : ""));
     }
     return *selected;
 }

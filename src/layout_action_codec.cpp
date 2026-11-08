@@ -1,6 +1,8 @@
 #include "simcoaster/save_stream.hpp"
 #include "simcoaster/layout_replay.hpp"
 #include "simcoaster/save_schema.hpp"
+#include <iterator>
+#include <format>
 #include <algorithm>
 #include <limits>
 #include <ranges>
@@ -245,9 +247,9 @@ std::expected<void,LayoutError> write_layout_action(Stream& stream,const LayoutA
 // clang-format on
 
 std::string describe_layout_error(const LayoutError& error) {
-    auto message = std::string { "Layout action at byte " } + std::to_string(error.offset);
+    auto message = std::format("Layout action at byte {}", error.offset);
     if (error.action) {
-        message += " (event " + std::to_string(std::to_underlying(*error.action)) + ")";
+        std::format_to(std::back_inserter(message), " (event {})", std::to_underlying(*error.action));
     }
     if (!error.detail.empty()) {
         message += ": " + error.detail;

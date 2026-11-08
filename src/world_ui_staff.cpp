@@ -4,6 +4,7 @@
 #include "simcoaster/world_advisor.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "world_ui_staff_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -359,7 +360,7 @@ void WorldStaffUiController::State::message_text(std::u16string body, std::funct
     };
     const auto parsed = ui.parse_template(message_wrapper, std::as_bytes(ui_message_template()));
     if (!parsed) {
-        throw std::runtime_error("Original message template: " + parsed.error().reason);
+        throw std::runtime_error(std::format("Original message template: {}", parsed.error().reason));
     }
     confirmation = ui.find(message_wrapper, 60000);
     if (!confirmation) {

@@ -5,6 +5,7 @@
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_staff.hpp"
 #include "world_ui_objects_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <ranges>
 #include <stdexcept>
@@ -52,7 +53,7 @@ std::int32_t current_project(const ResearchLabRecord& owner, std::size_t slot) {
 std::u16string localized(WorldRuntime& c, std::span<const std::byte> table, std::uint32_t row) {
     auto value = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383);
     if (!value) {
-        throw std::runtime_error("Research UI localized row " + std::to_string(row) + ": " + value.error().reason);
+        throw std::runtime_error(std::format("Research UI localized row {}: {}", row, value.error().reason));
     }
     return std::move(*value);
 }

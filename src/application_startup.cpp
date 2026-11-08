@@ -2,6 +2,7 @@
 #include "application_movie_internal.hpp"
 #include "application_startup_image.hpp"
 #include "simcoaster/save_schema.hpp"
+#include <format>
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -31,7 +32,7 @@ std::optional<std::filesystem::path> child(const std::filesystem::path& parent, 
         for (const auto& entry : std::filesystem::directory_iterator(parent)) {
             if (lower(entry.path().filename().native_encoded_string()) == lower(std::string(name)) && correct(entry.path())) {
                 if (found) {
-                    throw std::runtime_error("Ambiguous original startup path " + expected.native_encoded_string());
+                    throw std::runtime_error(std::format("Ambiguous original startup path {}", expected.native_encoded_string()));
                 }
                 found = entry.path();
             }
@@ -43,7 +44,7 @@ std::optional<std::filesystem::path> child(const std::filesystem::path& parent, 
 std::filesystem::path required_child(const std::filesystem::path& parent, std::string_view name, bool directory) {
     const auto result = child(parent, name, directory);
     if (!result) {
-        throw std::runtime_error("Missing original startup path " + (parent / name).native_encoded_string());
+        throw std::runtime_error(std::format("Missing original startup path {}", (parent / name).native_encoded_string()));
     }
     return *result;
 }
@@ -93,7 +94,7 @@ struct ApplicationStartupPresentation::State {
         if (w == 400 || w == 512 || w == 640 || w == 800 || w == 1024 || w == 1280) {
             resolution = w;
         }
-        directory = required_child(required_child(required_child(root, "data", true), "init", true), std::to_string(resolution), true);
+        directory = required_child(required_child(required_child(root, "data", true), "init", true), std::format("{}", resolution), true);
     }
 
     void load(ApplicationStartupStage next, std::uint32_t ticks) {

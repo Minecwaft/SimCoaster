@@ -11,6 +11,7 @@
 #include "simcoaster/object_catalog.hpp"
 #include "tag_message_catalog.hpp"
 #include "simcoaster/bfst_output.hpp"
+#include <format>
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
@@ -35,7 +36,7 @@ constexpr std::array<ChallengeMailMetadata, 7> metadata { {
 std::u16string text(MissionWorld& c, std::span<const std::byte> resource, std::int32_t row, std::size_t capacity, std::span<const BfstWideStringArgument> arguments = {}, std::span<const BfstSignedIntegerArgument> integers = {}) {
     const auto formatted = format_bfst_wide_string(resource, c.messages.mail_language.conversion, static_cast<std::uint32_t>(row), capacity, arguments, integers);
     if (!formatted) {
-        throw std::runtime_error("Mail BFST: " + formatted.error().reason + " at byte " + std::to_string(formatted.error().offset));
+        throw std::runtime_error(std::format("Mail BFST: {} at byte {}", formatted.error().reason, formatted.error().offset));
     }
     return *formatted;
 }
@@ -257,7 +258,7 @@ void company_notice(MissionWorld& c, MailMessage& message, CompanyEmailMessage& 
             heading = tag_text(c, email.reason == CompanyEmailMessageKind::staff_training_complete ? 78 : 80);
             const auto table = parse_bfst_literals(c.messages.mail_language.abilities, c.messages.mail_language.conversion);
             if (!table) {
-                throw std::runtime_error("Abilities BFST: " + table.error().reason);
+                throw std::runtime_error(std::format("Abilities BFST: {}", table.error().reason));
             }
             const std::array arguments { BfstWideStringArgument { 1, staff_name }, BfstWideStringArgument { 2, table->strings.at(email.staff_argument) } };
             body = tag_text(c, email.reason == CompanyEmailMessageKind::staff_training_complete ? 79 : 81, 1024, arguments);

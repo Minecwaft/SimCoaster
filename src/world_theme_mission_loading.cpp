@@ -1,4 +1,5 @@
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <stdexcept>
 #include <string>
 
@@ -6,11 +7,7 @@ namespace simcoaster {
 std::string mission_balance_asset_path(const MissionQuery& c, std::int32_t mission) {
     //Native Miss%02d has a minimum width, including the sign, rather than a
     //mission-number range restriction: -1,00,09,100 are all valid spellings.
-    auto number = std::to_string(mission);
-    if (number.size() < 2) {
-        number.insert(number.begin(), '0');
-    }
-    return c.missions.missions_directory + "/Miss" + number + ".sam";
+    return std::format("{}/Miss{:02}.sam", c.missions.missions_directory, mission);
 }
 
 bool load_mission_balance_data(MissionWorld& c, ThemeGlobalInfoManager* manager) {

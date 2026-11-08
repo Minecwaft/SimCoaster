@@ -1,4 +1,5 @@
 #include "campaign_profile_io.hpp"
+#include <format>
 #include <algorithm>
 #include <limits>
 #include <system_error>
@@ -20,10 +21,10 @@ std::expected<void, CampaignProfileError> write_campaign_profile(const std::file
     //Stage a complete image beside the destination, then publish with Windows'
     //replace operation. A short write cannot destroy an existing named profile.
     auto temporary = path;
-    temporary += L".pending-" + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64());
+    temporary += std::format(L".pending-{}-{}", GetCurrentProcessId(), GetTickCount64());
     HANDLE file = CreateFileW(temporary.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
     if (file == INVALID_HANDLE_VALUE) {
-        return std::unexpected(io_error(path, "Cannot create staged campaign profile: " + std::system_category().message(static_cast<int>(GetLastError()))));
+        return std::unexpected(io_error(path, std::format("Cannot create staged campaign profile: {}", std::system_category().message(static_cast<int>(GetLastError())))));
     }
     bool written = true;
     std::size_t offset {};
@@ -41,12 +42,12 @@ std::expected<void, CampaignProfileError> write_campaign_profile(const std::file
     CloseHandle(file);
     if (!written) {
         DeleteFileW(temporary.c_str());
-        return std::unexpected(io_error(path, "Cannot write staged campaign profile: " + std::system_category().message(static_cast<int>(write_error))));
+        return std::unexpected(io_error(path, std::format("Cannot write staged campaign profile: {}", std::system_category().message(static_cast<int>(write_error)))));
     }
     if (!MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)) {
         const auto error = GetLastError();
         DeleteFileW(temporary.c_str());
-        return std::unexpected(io_error(path, "Cannot publish campaign profile: " + std::system_category().message(static_cast<int>(error))));
+        return std::unexpected(io_error(path, std::format("Cannot publish campaign profile: {}", std::system_category().message(static_cast<int>(error)))));
     }
     return {};
 }

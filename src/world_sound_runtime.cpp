@@ -6,6 +6,7 @@
 #include "simcoaster/world_mesh_runtime.hpp"
 #include "simcoaster/world_objects.hpp"
 #include "simcoaster/world_person.hpp"
+#include <format>
 #include <bit>
 #include <cmath>
 #include <stdexcept>
@@ -56,7 +57,7 @@ WorldSoundRuntime::WorldSoundRuntime(WorldRuntime& context, SoundAssetReader rea
         throw std::runtime_error(describe_sound_error(bytes.error()));
     }
     if (!*bytes) {
-        throw std::runtime_error("Missing sound.sam: " + settings_path);
+        throw std::runtime_error(std::format("Missing sound.sam: {}", settings_path));
     }
     const auto parsed = sam::parse_record<WorldSoundBalance, true>(balance_, text_bytes(**bytes));
     if (!parsed) {
@@ -114,7 +115,7 @@ std::uint32_t WorldSoundRuntime::load_catalog(const std::filesystem::path& root,
     }
     if (!*present) {
         if (!optional) {
-            throw std::runtime_error("Missing sound catalog: " + map);
+            throw std::runtime_error(std::format("Missing sound catalog: {}", map));
         }
         return 0;
     }
@@ -136,14 +137,14 @@ void WorldSoundRuntime::configure_world_balance(std::string_view text, bool pres
     value.sound.preset = world_reverb_;
     const auto parsed = sam::parse_record<WorldReverbBalance, true>(value, text, preserve);
     if (!parsed) {
-        throw std::runtime_error("Invalid Sound.Reverb balance at " + std::to_string(parsed.error().offset));
+        throw std::runtime_error(std::format("Invalid Sound.Reverb balance at {}", parsed.error().offset));
     }
     world_reverb_ = value.sound.preset;
 }
 
 namespace {
 [[noreturn]] void curve_error(std::string_view file, std::string_view first, int low, std::string_view second, int high, int quality) {
-    throw std::runtime_error(std::string { file } + ": unusable sound curve at quality " + std::to_string(quality) + ": " + std::string { first } + "=" + std::to_string(low) + ", " + std::string { second } + "=" + std::to_string(high));
+    throw std::runtime_error(std::format("{}: unusable sound curve at quality {}: {}={}, {}={}", file, quality, first, low, second, high));
 }
 } //namespace
 
@@ -446,7 +447,7 @@ std::array<std::byte, 84> WorldSoundRuntime::capture_globals() {
 void WorldSoundRuntime::restore_backend(std::span<const std::byte> bytes) {
     auto snapshot = parse_sound_backend_snapshot(bytes);
     if (!snapshot) {
-        throw std::runtime_error("Sound backend decode: " + describe_sound_error(snapshot.error()));
+        throw std::runtime_error(std::format("Sound backend decode: {}", describe_sound_error(snapshot.error())));
     }
     const auto paths = runtime_->catalogs().reference_paths();
     for (auto& saved : snapshot->catalogs.paths) {
@@ -462,14 +463,14 @@ void WorldSoundRuntime::restore_backend(std::span<const std::byte> bytes) {
     }
     const auto restored = runtime_->restore(*snapshot);
     if (!restored) {
-        throw std::runtime_error("Sound backend restore: " + describe_sound_error(restored.error()));
+        throw std::runtime_error(std::format("Sound backend restore: {}", describe_sound_error(restored.error())));
     }
 }
 
 std::vector<std::byte> WorldSoundRuntime::capture_backend() const {
     auto snapshot = runtime_->snapshot();
     if (!snapshot) {
-        throw std::runtime_error("Sound backend snapshot: " + describe_sound_error(snapshot.error()));
+        throw std::runtime_error(std::format("Sound backend snapshot: {}", describe_sound_error(snapshot.error())));
     }
     //8A6C60 stores the installation-independent suffix from "\\data\\".
     //Keep absolute paths in the live owner, never in the native save block.
@@ -481,7 +482,7 @@ std::vector<std::byte> WorldSoundRuntime::capture_backend() const {
     }
     auto bytes = encode_sound_backend_snapshot(*snapshot);
     if (!bytes) {
-        throw std::runtime_error("Sound backend encode: " + describe_sound_error(bytes.error()));
+        throw std::runtime_error(std::format("Sound backend encode: {}", describe_sound_error(bytes.error())));
     }
     return std::move(*bytes);
 }

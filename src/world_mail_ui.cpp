@@ -3,6 +3,7 @@
 #include "simcoaster/world_fixed_point.hpp"
 #include "simcoaster/world_mail.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <stdexcept>
@@ -68,7 +69,7 @@ std::vector<WorldMailUiRow> world_mail_ui_rows(WorldRuntime& c) {
         const std::array arguments { BfstSignedIntegerArgument { 41, static_cast<std::int32_t>(date & 255u) }, BfstSignedIntegerArgument { 42, static_cast<std::int32_t>((date >> 8) & 255u) + 1 }, BfstSignedIntegerArgument { 43, std::bit_cast<std::int32_t>(date) >> 16 } };
         auto formatted = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, 956, 63, {}, arguments);
         if (!formatted) {
-            throw std::runtime_error("Message Center calendar date: " + formatted.error().reason);
+            throw std::runtime_error(std::format("Message Center calendar date: {}", formatted.error().reason));
         }
         result.push_back({ { message->tag_id, message->creation_sequence }, text(message->text_buffer_3), std::move(*formatted), date, message->skip_counter_update != 0, message->counter_slot });
     }

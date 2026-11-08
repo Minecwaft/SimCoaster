@@ -1,6 +1,7 @@
 #include "application_postcard_ui_internal.hpp"
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world_fixed_point.hpp"
+#include <format>
 #include <algorithm>
 
 namespace simcoaster {
@@ -109,7 +110,7 @@ void ApplicationPostcardUiController::State::outbox_scroll() {
     auto &body = control(570001), &scroll = control(570002);
     const auto selected = fonts.slot(6, pixel_width);
     if (!selected) {
-        throw std::runtime_error("Original outbox body font: " + selected.error().reason);
+        throw std::runtime_error(std::format("Original outbox body font: {}", selected.error().reason));
     }
     UiTextStyle style;
     style.wrap = true;
@@ -117,7 +118,7 @@ void ApplicationPostcardUiController::State::outbox_scroll() {
     const auto& rect = body.attachment_rect;
     const auto measured = fonts.measure(**selected, body.text, { 0, 0, static_cast<float>(rect.width()), static_cast<float>(rect.height()) }, style);
     if (!measured) {
-        throw std::runtime_error("Original outbox recipient layout: " + measured.error().reason);
+        throw std::runtime_error(std::format("Original outbox recipient layout: {}", measured.error().reason));
     }
     const auto overflow = std::max(0, fixed::truncate_integer(measured->bounds[3]) - rect.height());
     ui.set_visible(scroll, overflow > 0);

@@ -6,6 +6,7 @@
 #include "simcoaster/world_object_ui.hpp"
 #include "simcoaster/world_objects.hpp"
 #include "simcoaster/world_surface.hpp"
+#include <format>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -67,7 +68,7 @@ void set_help(WorldRuntime& c, RideTrackPickInteraction& state, std::uint32_t ro
     const auto strings = state.hovered_object ? std::span<const BfstWideStringArgument> { argument } : std::span<const BfstWideStringArgument> {};
     auto text = format_bfst_wide_string(c.messages.mail_language.ui_help, c.messages.mail_language.conversion, row, 16383, strings);
     if (!text) {
-        throw std::runtime_error("Camera picker UIHELPTEXT: " + text.error().reason);
+        throw std::runtime_error(std::format("Camera picker UIHELPTEXT: {}", text.error().reason));
     }
     state.help_text = std::move(*text);
 }

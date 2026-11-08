@@ -1,6 +1,7 @@
 #include "simcoaster/ui_assets.hpp"
 #include "simcoaster/world.hpp"
 #include "world_ui_objects_internal.hpp"
+#include <format>
 #include <algorithm>
 #include <stdexcept>
 
@@ -19,7 +20,7 @@ constexpr unsigned char special_template[] = {
 std::u16string localized(WorldRuntime& c, std::span<const std::byte> table, std::uint32_t row) {
     auto result = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383);
     if (!result) {
-        throw std::runtime_error("Original special-ride caption: " + result.error().reason);
+        throw std::runtime_error(std::format("Original special-ride caption: {}", result.error().reason));
     }
     return std::move(*result);
 }

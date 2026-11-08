@@ -9,6 +9,7 @@
 #include "simcoaster/world_research.hpp"
 #include "simcoaster/world_save.hpp"
 #include "simcoaster/world_theme.hpp"
+#include <format>
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -181,7 +182,7 @@ struct ApplicationCoasterSourceController::State {
     UiControl& required(std::uint32_t id) {
         auto* control = ui.find_recursive(panel, id);
         if (!control) {
-            throw std::runtime_error("Original Coaster Source template missing control " + std::to_string(id));
+            throw std::runtime_error(std::format("Original Coaster Source template missing control {}", id));
         }
         return *control;
     }
@@ -189,7 +190,7 @@ struct ApplicationCoasterSourceController::State {
     std::u16string localized(std::span<const std::byte> data, std::uint32_t row) {
         const auto value = format_bfst_wide_string(data, c.messages.mail_language.conversion, row, 16383);
         if (!value) {
-            throw std::runtime_error("Coaster source text: " + value.error().reason);
+            throw std::runtime_error(std::format("Coaster source text: {}", value.error().reason));
         }
         return *value;
     }
@@ -244,7 +245,7 @@ struct ApplicationCoasterSourceController::State {
             name.resize(std::min<std::size_t>(name.find(u'.'), name.size()));
             return name;
         }
-        diagnostics.push_back("Original CDK source has no catalog or registration caption: " + std::to_string(id));
+        diagnostics.push_back(std::format("Original CDK source has no catalog or registration caption: {}", id));
         return {};
     }
 
@@ -310,7 +311,7 @@ struct ApplicationCoasterSourceController::State {
         wrapper->secondary_asset_hash = ui_model_asset_hash("lolight");
         const auto parsed = ui.parse_template(wrapper, std::as_bytes(std::span(source_template)));
         if (!parsed) {
-            throw std::runtime_error("Original coaster source template: " + parsed.error().reason);
+            throw std::runtime_error(std::format("Original coaster source template: {}", parsed.error().reason));
         }
         panel = ui.find_recursive(wrapper, 62000);
         if (!panel) {

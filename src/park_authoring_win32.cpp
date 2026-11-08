@@ -8,6 +8,8 @@
 #include "simcoaster/win32_input_capture.hpp"
 #include "simcoaster/world_cursor_pick.hpp"
 #include "simcoaster/world_staff_view.hpp"
+#include <iterator>
+#include <format>
 #include <algorithm>
 #include <array>
 #include <shobjidl.h>
@@ -274,14 +276,14 @@ struct ParkAuthoringFrontend::State {
             }
             const auto command = first_catalog + static_cast<UINT>(command_definitions.size());
             command_definitions.push_back(row.definition);
-            const auto label = wide(row.name) + L"  $" + std::to_wstring(row.cost) + availability_label(row.availability);
+            const auto label = std::format(L"{}  ${}{}", wide(row.name), row.cost, availability_label(row.availability));
             item(target, command, label.c_str(), row.availability == ParkCatalogAvailability::available);
         }
         if (GetMenuItemCount(upgrades) == 0) {
             item(upgrades, 0, L"No add-ons in this park", false);
         }
         const auto level = controller.level_upgrade();
-        std::wstring label = L"Request level " + std::to_wstring(level.level + 1u) + L" upgrade  $" + std::to_wstring(level.cost) + L" (charged on completion)";
+        std::wstring label = std::format(L"Request level {} upgrade  ${} (charged on completion)", level.level + 1u, level.cost);
         match (level.availability) {
             case ParkLevelUpgradeAvailability::no_selection       => label = L"Select an object for level upgrades";
             case ParkLevelUpgradeAvailability::not_upgradeable    => label = L"This object has no level upgrades";
@@ -750,16 +752,16 @@ void ParkAuthoringFrontend::frame(HWND window, std::uint32_t width, std::uint32_
     if (s.controller.tool() != ParkAuthoringTool::inspect) {
         const auto tool = s.controller.tool();
         if (tool == ParkAuthoringTool::object || tool == ParkAuthoringTool::path || tool == ParkAuthoringTool::queue || tool == ParkAuthoringTool::track) {
-            title += L" | Cost $" + std::to_wstring(feedback.cost);
+            std::format_to(std::back_inserter(title), L" | Cost ${}", feedback.cost);
         }
-        title += L" | Cash $" + std::to_wstring(feedback.balance);
+        std::format_to(std::back_inserter(title), L" | Cash ${}", feedback.balance);
         if (feedback.insufficient_funds) {
             title += L" | Insufficient funds";
         } else if (feedback.cursor && !feedback.accepted) {
             title += feedback.rejection.empty() ? L" | Cannot build here" : L" | " + wide(feedback.rejection);
         }
         if (s.controller.tool() == ParkAuthoringTool::object) {
-            title += L" | R: rotate " + std::to_wstring(feedback.rotation) + L" degrees";
+            std::format_to(std::back_inserter(title), L" | R: rotate {} degrees", feedback.rotation);
         }
         title += L" | Escape: finish | Alt+drag: camera";
         if (s.cursors) {

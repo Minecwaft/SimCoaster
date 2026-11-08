@@ -1,6 +1,7 @@
 #include "simcoaster/require_bound.hpp"
 #include "coaster_editor_internal.hpp"
 #include "world_object_ui_internal.hpp"
+#include <format>
 
 namespace simcoaster {
 using namespace object_ui_detail;
@@ -47,7 +48,7 @@ BankRecord& WorldParkObjectUiRuntime::State::bank() const {
 std::u16string WorldParkObjectUiRuntime::State::text(std::span<const std::byte> table, std::uint32_t row, std::span<const BfstSignedIntegerArgument> integers) const {
     auto result = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383, {}, integers);
     if (!result) {
-        throw std::runtime_error("Park-object UI localized row " + std::to_string(row) + ": " + result.error().reason);
+        throw std::runtime_error(std::format("Park-object UI localized row {}: {}", row, result.error().reason));
     }
     return std::move(*result);
 }

@@ -5,6 +5,7 @@
 #include "simcoaster/world_mesh_runtime.hpp"
 #include "simcoaster/world_object_controls.hpp"
 #include "simcoaster/world_staff.hpp"
+#include <format>
 #include <memory>
 
 namespace simcoaster {
@@ -228,7 +229,7 @@ std::optional<ParkPlacementResult> ParkConstructionRuntime::process_grid(Constru
             auto end = std::ranges::find(placed->name_b, char16_t {});
             std::u16string name { placed->name_b.begin(), end };
             name += u' ';
-            for (char digit : std::to_string(ordinal)) {
+            for (char digit : std::format("{}", ordinal)) {
                 name += static_cast<char16_t>(digit);
             }
             const auto count = std::min<std::size_t>(32, name.size());
