@@ -35,14 +35,12 @@ struct ApplicationFrontendController::State {
     std::int32_t speech_index = -1, speech_status = 0, pulse_deadline {}, selected_area = -1, previous_area = -1, profile_source = 1;
     std::uint32_t intro_script_id {}, lobby_script_id {}, lobby_mesh_slot {}, angle_tick {}, fade_tick {}, left_repeat {}, right_repeat {}, area_sound_deadline {}, area_sound {}, map_sound {}, intro_pulse_button {};
     std::uint64_t lobby_mesh_generation {};
-    std::uint32_t unavailable_color {};
     std::uint16_t mode {}, initial_mode {};
     float angle {}, spin_target {}, spin_origin {}, dolly {}, height_offset = -7;
     std::int32_t directional = 255, ambient = 85;
     std::int16_t saved_speed {};
     double saved_scale {};
     bool lobby_bound {}, lobby_intro {}, intro_sound_active {};
-    std::array<std::uint16_t, 320 * 240> mask {};
 
     struct AreaCamera {
         std::int32_t x {}, y {}, z {}, zoom {}, rotation {};
@@ -98,10 +96,11 @@ struct ApplicationFrontendController::State {
     void leave_lobby();
     void restore_nodes();
     void shade_nodes();
+    std::int32_t pick_area(const SceneCamera&);
     void select_mode(std::uint16_t, bool = true);
     void update_lobby();
     void update_area();
-    void publish_lobby_view();
+    SceneCamera publish_lobby_view();
     void begin_area();
     std::uint32_t clock();
     bool key(std::uint32_t, bool, std::uint32_t);

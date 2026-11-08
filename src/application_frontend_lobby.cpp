@@ -1,5 +1,7 @@
 #include "simcoaster/standard_balance.hpp"
 #include "application_frontend_internal.hpp"
+#include "mesh_traversal.hpp"
+#include "simcoaster/mesh_transform.hpp"
 #include "simcoaster/rsse_state.hpp"
 #include "simcoaster/sam_record.hpp"
 #include "simcoaster/world_advisor.hpp"
@@ -11,8 +13,6 @@
 #include <bit>
 #include <chrono>
 #include <cmath>
-#include <fstream>
-#include <numbers>
 #include <stdexcept>
 
 namespace simcoaster {
@@ -25,7 +25,10 @@ constexpr std::array<float, 3> angles { 0, 2.093f, 4.186f }; //Original93DC4C.
 constexpr float full_turn = 6.283f;
 constexpr std::array<std::uint32_t, 3> theme_requests { 308, 302, 305 };
 constexpr std::array<std::uint32_t, 15> area_requests { 274, 267, 275, 276, 283, 280, 278, 279, 269, 281, 271, 273, 272, 270, 268 };
-constexpr std::array<std::array<std::uint16_t, 5>, 3> mask_bits { { { 0x1000, 0x400, 0x4000, 0x2000, 0x800 }, { 0x200, 0x40, 0x80, 0x100, 0x20 }, { 8, 16, 4, 1, 2 } } };
+//Approved repair: keep locked areas at a stable level within the native64..192
+//range, rather than sampling a different brightness from the startup clock.
+constexpr std::uint32_t unavailable_level = 96;
+constexpr std::uint32_t unavailable_color = unavailable_level | (unavailable_level << 8) | (unavailable_level << 16);
 using LobbyBalance = StandardLobbyBalance;
 
 MeshMatrix multiply(const MeshMatrix& a, const MeshMatrix& b) {
@@ -80,19 +83,6 @@ void ApplicationFrontendController::State::bind_lobby(bool intro_mode) {
         node_backups.push_back({ *index, node.flags, node.drawable->packed_vertex_colors });
         index = node.next_sibling;
     }
-    const auto path = game_root / "Data/Mask.msk";
-    std::ifstream input(path, std::ios::binary | std::ios::ate);
-    if (!input || input.tellg() != static_cast<std::streamoff>(mask.size() * 2)) {
-        throw std::runtime_error("Original ATM Mask.msk must contain320×240 WORD cells");
-    }
-    input.seekg(0);
-    std::array<unsigned char, 320 * 240 * 2> raw {};
-    if (!input.read(reinterpret_cast<char*>(raw.data()), static_cast<std::streamsize>(raw.size()))) {
-        throw std::runtime_error("Cannot read original ATM mask");
-    }
-    for (std::size_t i = 0; i < mask.size(); ++i) {
-        mask[i] = static_cast<std::uint16_t>(raw[i * 2] | (std::uint16_t(raw[i * 2 + 1]) << 8));
-    }
     LobbyBalance balance;
     (void)load_standard_balance_overlays(
         game_root,
@@ -113,12 +103,6 @@ void ApplicationFrontendController::State::bind_lobby(bool intro_mode) {
         const auto& camera = balance.cameras[i];
         area_cameras[i] = { camera.x, camera.y, camera.z, camera.zoom, camera.rotation };
     }
-    //Native palette is sampled once at mask load from the2048-entry fixed sine
-    //table. Its ordinary active mode is0, producing one RGB gray fill.
-    const auto ticks = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
-    const auto sine = std::llround(std::sin(double(ticks & 2047) * 2.0 * std::numbers::pi / 2048.0) * 65536.0);
-    const auto level = static_cast<std::uint32_t>(((sine + 65536) >> 10) + 64);
-    unavailable_color = level | (level << 8) | (level << 16);
     saved_speed = c.timing.speed_percent;
     saved_scale = c.timing.scale;
     c.timing.speed_percent = 100;
@@ -351,28 +335,116 @@ void ApplicationFrontendController::State::shade_nodes() {
     }
 }
 
+std::int32_t ApplicationFrontendController::State::pick_area(const SceneCamera& camera) {
+    const auto pointer = ui.pointer_position();
+    if (mode >= 3 || pointer.x < 0 || pointer.y < 0 || pointer.x >= 2048 || pointer.y >= 1536) {
+        return -1;
+    }
+    auto* mesh = c.resources.meshes ? c.resources.meshes->instance(lobby_mesh_slot) : nullptr;
+    if (!mesh || mesh->generation != lobby_mesh_generation) {
+        throw std::runtime_error("ATM mesh owner changed during frontend selection");
+    }
+    const auto& model = mesh->playback.model;
+    const auto poses = evaluate_mesh_pose(model);
+    if (!poses) {
+        throw std::runtime_error(describe_mesh_error(poses.error()));
+    }
+    using Point = std::array<double, 3>;
+    const auto cross = [](const Point& a, const Point& b) -> Point {
+        return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+    };
+    const auto dot = [](const Point& a, const Point& b) {
+        return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    };
+    const auto tangent = std::tan(double(camera.vertical_fov) * .5);
+    const Point ray { (double(pointer.x) / 1024. - 1.) * tangent * pixel_width / pixel_height, (1. - double(pointer.y) / 768.) * tangent, 1. };
+    const auto view = camera.view();
+    auto closest = double(camera.far_plane);
+    std::int32_t selected = -1;
+    std::vector<std::int32_t> areas(model.nodes.size(), -1);
+    for (std::size_t i = 0; i < node_backups.size(); ++i) {
+        areas.at(node_backups[i].index) = static_cast<std::int32_t>(i);
+    }
+    const auto require = [](bool valid) {
+        if (!valid) {
+            throw std::runtime_error("ATM selection mesh hierarchy is invalid");
+        }
+    };
+    std::vector<std::size_t> pending;
+    for (auto root = model.root; root; root = model.nodes[*root].next_sibling) {
+        require(*root < model.nodes.size() && pending.size() < model.nodes.size());
+        pending.push_back(*root);
+    }
+    std::reverse(pending.begin(), pending.end());
+    std::vector<bool> visited(model.nodes.size());
+    std::vector<Point> positions;
+    while (!pending.empty()) {
+        const auto index = pending.back();
+        pending.pop_back();
+        require(index < model.nodes.size() && !visited[index]);
+        visited[index] = true;
+        const auto& node = model.nodes[index];
+        if (node.drawable && !(node.flags & 0x8210u)) {
+            const auto& drawable = *node.drawable;
+            const auto transform = multiply((*poses)[index], view);
+            positions.clear();
+            positions.reserve(drawable.positions.size());
+            for (const auto& source : drawable.positions) {
+                const auto p = mesh_transform::point(transform, source);
+                positions.push_back({ p[0], p[1], p[2] });
+            }
+            for (const auto& group : drawable.groups) {
+                for (std::size_t i = group.first_triangle; i < std::size_t(group.first_triangle) + group.triangle_count; ++i) {
+                    const auto& face = drawable.triangles.at(i);
+                    std::array<Point, 3> p;
+                    for (std::size_t corner = 0; corner < p.size(); ++corner) {
+                        p[corner] = positions.at(drawable.position_indices.at(face.corners[corner]));
+                    }
+                    Point a, b, origin;
+                    for (std::size_t axis = 0; axis < 3; ++axis) {
+                        a[axis] = p[1][axis] - p[0][axis];
+                        b[axis] = p[2][axis] - p[0][axis];
+                        origin[axis] = -p[0][axis];
+                    }
+                    const auto normal = cross(ray, b);
+                    const auto determinant = dot(a, normal);
+                    if (determinant == 0 || !std::isfinite(determinant)) {
+                        continue;
+                    }
+                    const auto u = dot(origin, normal) / determinant;
+                    const auto perpendicular = cross(origin, a);
+                    const auto v = dot(ray, perpendicular) / determinant;
+                    const auto distance = dot(b, perpendicular) / determinant;
+                    if (u >= 0 && v >= 0 && u + v <= 1 && distance >= camera.near_plane && distance < closest) {
+                        closest = distance;
+                        selected = areas[index];
+                    }
+                }
+            }
+        }
+        if (!(node.flags & 0x20u)) {
+            const auto first = pending.size();
+            append_mesh_children(model, node, pending, require);
+            for (auto i = first; i < pending.size(); ++i) {
+                if (areas[pending[i]] < 0) {
+                    areas[pending[i]] = areas[index];
+                }
+            }
+        }
+    }
+    const std::int32_t group = mode == 0 ? 10 : mode == 1 ? 5 : 0;
+    return selected >= group && selected < group + 5 ? selected : -1;
+}
+
 void ApplicationFrontendController::State::update_area() {
     auto* script = find_rsse_script_state_by_id(c, lobby_script_id);
     if (!script) {
         throw std::runtime_error("ATM program retired during chooser presentation");
     }
-    selected_area = -1;
-    const auto pointer = ui.pointer_position();
-    if (mode < 3 && pointer.x >= 0 && pointer.y >= 0 && pointer.x < 2048 && pointer.y < 1536) {
-        const auto px = static_cast<std::int64_t>(pointer.x) * pixel_width / 2048;
-        const auto py = static_cast<std::int64_t>(pointer.y) * pixel_height / 1536;
-        const auto x = static_cast<std::size_t>(double(px) / (double(pixel_width) * .003125));
-        const auto y = static_cast<std::size_t>(double(py) / (double(pixel_height) * .004166666666666667));
-        if (x < 320 && y < 240) {
-            const auto value = mask[y * 320 + x];
-            for (std::size_t candidate = 0; candidate < 5; ++candidate) {
-                if (value & mask_bits[mode][candidate]) {
-                    selected_area = static_cast<std::int32_t>(candidate) + (mode == 2 ? 0 : mode == 1 ? 5 : 10);
-                    break;
-                }
-            }
-        }
-    }
+    //Native5BD4A0 uses a fixed320x240 mask. Pick the displayed region with
+    //the actual camera instead, including ride/building children and occlusion.
+    //Publish this frame's rotation before picking, rather than using its old pose.
+    selected_area = pick_area(publish_lobby_view());
     const auto now = clock();
     if (selected_area < 0) {
         host.cursor(0);
@@ -425,7 +497,7 @@ void ApplicationFrontendController::State::begin_area() {
     phase = ApplicationFrontendPhase::area_transition;
 }
 
-void ApplicationFrontendController::State::publish_lobby_view() {
+SceneCamera ApplicationFrontendController::State::publish_lobby_view() {
     auto tilt = mesh_identity_matrix;
     const auto cosine = static_cast<float>(std::cos(-.8)), sine = static_cast<float>(std::sin(-.8));
     tilt[5] = tilt[10] = cosine;
@@ -454,7 +526,7 @@ void ApplicationFrontendController::State::publish_lobby_view() {
         const auto color = static_cast<std::uint32_t>(value);
         return color | (color << 8) | (color << 16);
     };
-    host.lobby_view(ApplicationLobbyView { pose, gray(directional), gray(ambient), mode, selected_area });
+    return host.lobby_view(ApplicationLobbyView { pose, gray(directional), gray(ambient), mode, selected_area });
 }
 
 void ApplicationFrontendController::State::update_lobby() {
@@ -560,7 +632,9 @@ void ApplicationFrontendController::State::update_lobby() {
         metric_complete = true;
         return;
     }
-    publish_lobby_view();
+    if (selection_locked || suppress_template) {
+        publish_lobby_view();
+    }
     if (metric_complete && !fade_ready) {
         const auto elapsed = fade_tick ? now - fade_tick : 0;
         fade_tick = now;

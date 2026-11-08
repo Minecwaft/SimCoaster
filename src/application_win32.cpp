@@ -339,6 +339,7 @@ void ApplicationWindow::bind_frontend() {
         }
         park().set_lobby_view(view ? &*view : nullptr);
         window.camera = park().render_camera();
+        return window.camera;
     };
     host.lobby_sound = [this](bool entering, bool intro) {
         park().set_lobby_audio(entering, intro);

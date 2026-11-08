@@ -1,5 +1,6 @@
 #pragma once
 #include "mesh_model.hpp"
+#include "scene_camera.hpp"
 #include "ui_control.hpp"
 #include <filesystem>
 #include <memory>
@@ -59,7 +60,8 @@ struct ApplicationFrontendHost {
     std::function<void()> resume_ui_transition;
     //Apply the shared actual camera/light presentation for rendering, picking
     //and audio. Nullopt restores the host's ordinary camera and theme lighting.
-    std::function<void(std::optional<ApplicationLobbyView>)> lobby_view;
+    //Return the actual camera so selection uses the same projection as drawing.
+    std::function<SceneCamera(std::optional<ApplicationLobbyView>)> lobby_view;
     //Native5BD890/5BE810 sound entry/exit: kids0/1; Intro music21;
     //ordinary chooser music0+mute1/0 and current-source retained ambient handles
     //level0/restored configured SFX percent. The session owns ambient records.
