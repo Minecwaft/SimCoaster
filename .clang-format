@@ -1,0 +1,156 @@
+# Requires the PrivateGCC17 clang-format fork, revision 4 or newer.
+# Approved project choices; remaining options inherit the private preset.
+---
+BasedOnStyle: PrivateGCC17
+Language: Cpp
+Standard: Latest
+DisableFormat: false
+SortIncludes:
+  Enabled: false
+SortUsingDeclarations: Never
+BreakStringLiterals: false
+BreakAdjacentStringLiterals: false
+IndentWidth: 4
+ColumnLimit: 500
+PointerAlignment: Left
+UseTab: Never
+TabWidth: 4
+ReferenceAlignment: Left
+TokenSequenceFormatting: Cpp
+TokenMacroArgumentFormatting: Cpp
+BreakBeforeBraces: Attach
+MatchBraceStyle: Inherit
+DoExpressionBraceStyle: Inherit
+ShortMatchExpressionStyle: Never
+ShortDoExpressionStyle: Never
+AllowShortCaseExpressionOnASingleLine: true
+SpaceAfterReflectionOperator: false
+SpacesInReflectionSplice: false
+SpaceAfterAnnotationEquals: false
+TokenMacroBangSpacing: Compact
+SpacesInTokenInterpolation: Tight
+BreakAfterAnnotations: Never
+MatchGuardBreakStyle: WhenNeeded
+SpacesInMatchPatternBrackets: Tight
+SpacesInPackIndexBrackets: Tight
+SpaceBeforeMatchParens: Inherit
+SpacesAroundMatchArrow: true
+ConstevalBlockBraceStyle: Inherit
+IndentCaseLabels: true
+IndentCaseBlocks: false
+IndentMatchCaseLabels: true
+NamespaceIndentation: None
+IndentAccessModifiers: Never
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine:
+  Empty: true
+  Inline: false
+  Other: false
+AllowShortLambdasOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: false
+AllowShortRecordOnASingleLine: EmptyAndAttached
+AllowShortNamespacesOnASingleLine: false
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
+CompactNamespaces: false
+FixNamespaceComments: true
+WrapNamespaceBodyWithEmptyLines: Never
+ShortNamespaceLines: 0
+EmptyLineBeforeAccessModifier: LogicalBlock
+EmptyLineAfterAccessModifier: Never
+KeepEmptyLines:
+  AtStartOfBlock: false
+  AtEndOfBlock: false
+  AtStartOfFile: false
+  AtEndOfFile: false
+MaxEmptyLinesToKeep: 1
+InsertNewlineAtEOF: true
+LineEnding: LF
+SeparateDefinitionBlocks: Always
+KeepFormFeed: false
+IndentPPDirectives: AfterHash
+PPIndentWidth: -1
+IndentExternBlock: NoIndent
+IndentGotoLabels: NoIndent
+IndentExportBlock: false
+IndentWrappedFunctionNames: false
+ContinuationIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
+BracedInitializerIndentWidth: 4
+AlignAfterOpenBracket: true
+AlignOperands: AlignAfterOperator
+AlignEscapedNewlines: Left
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: false
+AlignConsecutiveBitFields:
+  Enabled: false
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AcrossEmptyLines: true
+  AcrossComments: true
+  AlignCaseArrows: true
+AlignTrailingComments:
+  Kind: Always
+  AlignPPAndNotPP: true
+  OverEmptyLines: 0
+AlignArrayOfStructures: None
+CompactCaseLabels: false
+SpacesBeforeTrailingComments: 1
+ReflowComments: IndentOnly
+SpacesInLineCommentPrefix:
+  Minimum: 0
+  Maximum: 0
+SpacesInBlockComments: Always
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterOperatorKeyword: false
+SpaceBeforeParens: ControlStatements
+SpacesInParens: Never
+SpaceBeforeSquareBrackets: false
+SpacesInSquareBrackets: false
+SpacesInAngles: Never
+Cpp11BracedListStyle: Block
+SpaceInEmptyBraces: Never
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeEnumUnderlyingTypeColon: true
+SpaceBeforeCaseColon: false
+SpaceBeforeRangeBasedForLoopColon: true
+BitFieldColonSpacing: Both
+DerivePointerAlignment: false
+SpaceAroundPointerQualifiers: Default
+QualifierAlignment: Left
+SpaceAfterTemplateKeyword: true
+BreakTemplateDeclarations: "Yes"
+BreakBeforeConceptDeclarations: Always
+RequiresClausePosition: OwnLineWithBrace
+RequiresExpressionIndentation: OuterScope
+AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
+IndentRequiresClause: true
+BreakBeforeTemplateCloser: false
+BreakBeforeTernaryOperators: true
+BreakBeforeBinaryOperators: NonAssignment
+BreakBinaryOperations:
+  Default: RespectPrecedence
+  PerOperator: []
+BreakAfterAttributes: LeaveAll
+BreakBeforeReturnType: None
+BreakAfterReturnType: Automatic
+PackArguments:
+  BinPack: OnePerLine
+PackParameters:
+  BinPack: OnePerLine
+PackConstructorInitializers: CurrentLine
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+BreakConstructorInitializers: BeforeColon
+InsertBraces: true

@@ -1,0 +1,21 @@
+# Local runtime installation, including assets, settings and player saves.
+/Game/
+/assets/
+
+# Compiler outputs and local tooling state.
+/.build/
+/build*/
+/.vscode/
+/artifacts/
+__pycache__/
+
+# Binaries and reverse-engineering databases are not project source.
+*.exe
+*.dll
+*.i64
+*.idb
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
