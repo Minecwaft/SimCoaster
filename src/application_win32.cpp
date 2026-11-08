@@ -332,10 +332,7 @@ void ApplicationWindow::bind_frontend() {
     };
     host.lobby_view = [this](std::optional<ApplicationLobbyView> view) {
         if (!view) {
-            frontend_cursor.reset();
-            if (canvas) {
-                canvas->cursor_id = -1;
-            }
+            window.frontend_cursor.reset();
         }
         park().set_lobby_view(view ? &*view : nullptr);
         window.camera = park().render_camera();
@@ -348,12 +345,10 @@ void ApplicationWindow::bind_frontend() {
         if (value < 0 || static_cast<std::uint32_t>(value) >= UiCursorWin32::size()) {
             throw std::out_of_range("Unknown original frontend cursor");
         }
-        frontend_cursor = static_cast<UiCursorId>(value);
-        if (canvas) {
-            canvas->cursor_id = value;
-        }
+        auto* owner = frontend->root();
+        window.frontend_cursor = WindowCursorOverride { owner, park().ui().controls().lifetime_serial(owner), static_cast<UiCursorId>(value) };
         if (active && window.cursor_assets && client_owns_pointer(handle)) {
-            window.cursor_assets->set(*frontend_cursor);
+            install_ui_cursor(window);
         }
     };
     frontend = std::make_unique<ApplicationFrontendController>(context(), park().ui().controls(), canvas, root, std::move(host));
@@ -955,7 +950,7 @@ void ApplicationWindow::release_world(ParkRuntime* old) noexcept {
             ui.controls().destroy(canvas);
         }
     });
-    frontend_cursor.reset();
+    window.frontend_cursor.reset();
     canvas = nullptr;
     screen_particles = {};
     pauses = {};
@@ -1869,9 +1864,6 @@ int ApplicationWindow::run(const std::optional<std::filesystem::path>& initial, 
         sync_canvas();
         if (client_owns_pointer(handle)) {
             install_ui_cursor(window);
-            if (frontend_active() && frontend_cursor && window.cursor_assets) {
-                window.cursor_assets->set(*frontend_cursor);
-            }
         }
         resize_renderer();
         frame_stage = "World scene submission";

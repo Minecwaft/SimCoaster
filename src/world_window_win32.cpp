@@ -207,6 +207,17 @@ bool install_ui_cursor(WindowState& state) {
         state.cursor_assets->set(index < UiCursorWin32::size() ? static_cast<UiCursorId>(index) : UiCursorId::normal);
         return true;
     }
+    //The selector's default belongs to its live input tree. Resolve it here
+    //for both WM_SETCURSOR and frame feedback, before the generic arrow;
+    //a captured/explicit control or a newer modal root keeps its own cursor.
+    if (state.frontend_cursor && state.ui) {
+        const auto& cursor = *state.frontend_cursor;
+        const auto& runtime = state.ui->controls();
+        if (cursor.lifetime && !runtime.capture() && runtime.lifetime_serial(cursor.root) == cursor.lifetime && runtime.input_root() == cursor.root) {
+            state.cursor_assets->set(cursor.id);
+            return true;
+        }
+    }
     if (specific) {
         state.cursor_assets->set(UiCursorId::normal);
         return true;

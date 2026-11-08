@@ -85,6 +85,12 @@ struct LocalWindowPointer {
     std::uint64_t warp_count {};
 };
 
+struct WindowCursorOverride {
+    UiControl* root {};
+    std::uint64_t lifetime {};
+    UiCursorId id = UiCursorId::normal;
+};
+
 struct WindowState {
     SceneCamera camera;
     std::uint32_t width { 1100 }, height { 760 };
@@ -114,6 +120,7 @@ struct WindowState {
     const UiPreferences* preferences {};
     std::array<bool, 10> staff_camera_keys {}, previous_staff_camera_keys {};
     UiCursorWin32* cursor_assets {};
+    std::optional<WindowCursorOverride> frontend_cursor;
     std::function<bool(UINT, WPARAM, LPARAM)> application_input;
     std::function<bool(const WorldUiAction&)> application_action;
     std::function<bool(UINT, WPARAM, LPARAM)> application_world_input;
@@ -214,7 +221,6 @@ class ApplicationWindow {
     UiControl* canvas {};
     std::function<void(WorldRuntime&, const WorldEvent&)> previous_event;
     std::array<unsigned, 6> pauses {};
-    std::optional<UiCursorId> frontend_cursor;
     bool postcard_previous_presentation = true;
     bool map_active {}, loading {}, loading_presentation {}, loading_painted {}, close_after_loading {};
     bool active = true, booted {}, system_quit {};
