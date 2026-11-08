@@ -7,11 +7,13 @@
 
 namespace simcoaster {
 void* EventNodeResource::do_allocate(std::size_t bytes, std::size_t alignment) {
-    if (alignment > alignof(std::max_align_t))
+    if (alignment > alignof(std::max_align_t)) {
         throw std::bad_alloc();
+    }
     auto* result = services_.allocate(Allocation::event_tree_node, bytes);
-    if (!result)
+    if (!result) {
         throw std::bad_alloc();
+    }
     return result;
 }
 
@@ -32,21 +34,24 @@ void destroy_world_event_subscription_registry(WorldRuntime&, EventRegistry* reg
 }
 
 int clear_world_event_subscription_registry(WorldRuntime&, EventRegistry* registry) {
-    for (auto& slot : registry->slots)
+    for (auto& slot : registry->slots) {
         slot.subscribers.clear();
+    }
     return 0;
 }
 
 bool register_world_used_thing_for_event(WorldRuntime&, EventRegistry* registry, ThingHeader* record, int category) {
-    if (category < 0 || static_cast<std::size_t>(category) >= registry->slots.size())
+    if (category < 0 || static_cast<std::size_t>(category) >= registry->slots.size()) {
         throw std::out_of_range("world event category");
+    }
     return registry->slots[static_cast<std::size_t>(category)].subscribers.insert(record->id).second;
 }
 
 int remove_world_used_thing_from_all_events(WorldRuntime&, EventRegistry* registry, ThingHeader* record) {
     int removed = 0;
-    for (auto& slot : registry->slots)
+    for (auto& slot : registry->slots) {
         removed += static_cast<int>(slot.subscribers.erase(record->id));
+    }
     return removed;
 }
 
@@ -65,14 +70,11 @@ void dispatch_heap_payload_event(WorldRuntime& c, CompanyEmailMessage* payload) 
     destroy_heap_payload_event(c, &event.get<HeapPayloadEvent>());
 }
 
-int dispatch_world_event_to_subscribers(WorldRuntime& c,
-                                        EventRegistry* registry,
-                                        WorldEvent* event,
-                                        EventDelivery deliver,
-                                        void* state) {
+int dispatch_world_event_to_subscribers(WorldRuntime& c, EventRegistry* registry, WorldEvent* event, EventDelivery deliver, void* state) {
     const auto code = event->type();
-    if (code < 0 || static_cast<std::size_t>(code) >= registry->slots.size())
+    if (code < 0 || static_cast<std::size_t>(code) >= registry->slots.size()) {
         throw std::out_of_range("world event category");
+    }
     if (code == 33) {
         const auto id = event->get<RetirementEvent>().retired_id;
         remove_world_used_thing_from_all_events(c, registry, c.entities.at(id).payload);
@@ -91,26 +93,27 @@ int dispatch_world_event_to_subscribers(WorldRuntime& c,
 namespace {
 template <save::Scalar T>
 bool transfer(Stream& stream, T& value, bool writing) {
-    return save::transfer_value(value,
-                                writing ? save::Direction::write : save::Direction::read,
-                                [&](std::span<std::byte> bytes) {
-                                    return (writing ? stream.write(bytes) : stream.read(bytes))
-                                        == static_cast<std::int32_t>(bytes.size());
-                                });
+    return save::transfer_value(value, writing ? save::Direction::write : save::Direction::read, [&](std::span<std::byte> bytes) {
+        return (writing ? stream.write(bytes) : stream.read(bytes)) == static_cast<std::int32_t>(bytes.size());
+    });
 }
 } //namespace
 
 int save_world_event_subscriptions(WorldRuntime&, EventRegistry* registry, Stream& stream) {
     auto slots = static_cast<std::uint32_t>(registry->slots.size());
-    if (!transfer(stream, slots, true))
+    if (!transfer(stream, slots, true)) {
         return 1;
+    }
     for (const auto& slot : registry->slots) {
         auto count = static_cast<std::uint32_t>(slot.subscribers.size());
-        if (!transfer(stream, count, true))
+        if (!transfer(stream, count, true)) {
             return 1;
-        for (auto id : slot.subscribers)
-            if (!transfer(stream, id, true))
+        }
+        for (auto id : slot.subscribers) {
+            if (!transfer(stream, id, true)) {
                 return 1;
+            }
+        }
     }
     return 0;
 }
@@ -118,15 +121,18 @@ int save_world_event_subscriptions(WorldRuntime&, EventRegistry* registry, Strea
 int restore_world_event_subscriptions(WorldRuntime& c, EventRegistry* registry, Stream& stream) {
     clear_world_event_subscription_registry(c, registry);
     std::uint32_t count = 0;
-    if (!transfer(stream, count, false) || count != registry->slots.size())
+    if (!transfer(stream, count, false) || count != registry->slots.size()) {
         return 1;
+    }
     for (auto& slot : registry->slots) {
-        if (!transfer(stream, count, false) || count > thing_slot_count)
+        if (!transfer(stream, count, false) || count > thing_slot_count) {
             return 1;
+        }
         for (std::uint32_t i = 0; i < count; ++i) {
             ThingId id = 0;
-            if (!transfer(stream, id, false) || id >= thing_slot_count || !slot.subscribers.insert(id).second)
+            if (!transfer(stream, id, false) || id >= thing_slot_count || !slot.subscribers.insert(id).second) {
                 return 1;
+            }
         }
     }
     return 0;

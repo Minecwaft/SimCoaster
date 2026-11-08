@@ -22,14 +22,16 @@ inline World& world(ConstructionWorld& c) {
 }
 
 inline MapCell& map(ConstructionWorld& c, CellId id) {
-    if (!id || id > map_cell_count)
+    if (!id || id > map_cell_count) {
         throw std::out_of_range("construction cell ID");
+    }
     return world(c).map_cells.at(static_cast<std::size_t>(id) - 1);
 }
 
 inline TrackCell& track(ConstructionWorld& c, CellId id) {
-    if (!id || id > map_cell_count)
+    if (!id || id > map_cell_count) {
         throw std::out_of_range("construction track ID");
+    }
     return world(c).track_cells.at(static_cast<std::size_t>(id) - 1);
 }
 
@@ -38,8 +40,9 @@ inline CellId cell_id(WorldCellCoordinates p) {
 }
 
 inline WorldCellCoordinates coordinate(CellId id) {
-    if (!id || id > map_cell_count)
+    if (!id || id > map_cell_count) {
         throw std::out_of_range("construction coordinate ID");
+    }
     const auto n = static_cast<std::uint32_t>(id) - 1;
     return { static_cast<int>(n & 127u), static_cast<int>(n >> 7) };
 }
@@ -51,12 +54,12 @@ inline bool bounds(WorldCellCoordinates p) {
 inline WorldCellCoordinates snap_land_boundary_corner(const ConstructionQuery& c, WorldCellCoordinates p) {
     const auto snap = [](int value, int origin) {
         auto delta = value - origin;
-        if (delta < 0 && delta % 2)
+        if (delta < 0 && delta % 2) {
             --delta;
+        }
         return origin + 2 * (delta / 2);
     };
-    return { snap(std::clamp(p.x, 1, 126), c.construction.hoarding_chain_start_x),
-             snap(std::clamp(p.y, 1, 125), c.construction.hoarding_chain_start_y) };
+    return { snap(std::clamp(p.x, 1, 126), c.construction.hoarding_chain_start_x), snap(std::clamp(p.y, 1, 125), c.construction.hoarding_chain_start_y) };
 }
 
 inline bool footprint(int type) {
@@ -65,47 +68,47 @@ inline bool footprint(int type) {
 
 inline BankRecord& bank(VisitorWorld& c) {
     auto* p = c.entities.at(world(c).saved.bank_account).payload;
-    if (!p || p->kind != ThingKind::bank_account)
+    if (!p || p->kind != ThingKind::bank_account) {
         throw std::logic_error("construction bank is missing");
+    }
     return *reinterpret_cast<BankRecord*>(p);
 }
 
 inline ResearchCatalogDefinition& definition(ConstructionWorld& c, std::uint16_t id) {
     auto* d = find_object_definition_by_id(&c.resources.object_catalog, id);
-    if (!d || !d->balance)
+    if (!d || !d->balance) {
         throw std::out_of_range("construction definition is missing");
+    }
     return *d;
 }
 
 inline ParkObjectRuntimeView* object(ConstructionWorld& c, ThingId id) {
-    if (!id)
+    if (!id) {
         return nullptr;
+    }
     auto* p = c.entities.at(id).payload;
     return p && p->kind == ThingKind::park_object ? reinterpret_cast<ParkObjectRuntimeView*>(p) : nullptr;
 }
 
 inline ParkObjectRuntimeView* object_in(ConstructionWorld& c, const CellBase& cell) {
-    const auto owner =
-        footprint(cell.common.type) || map(c, cell.index).is_obstacle ? cell.common.parent_id : cell.index;
+    const auto owner = footprint(cell.common.type) || map(c, cell.index).is_obstacle ? cell.common.parent_id : cell.index;
     return owner ? object(c, find_first_park_object_id_in_map_cell(c, &map(c, owner))) : nullptr;
 }
 
 inline ParkObjectRuntimeView* gate_or_object_in(ConstructionWorld& c, const CellBase& cell) {
     const auto p = coordinate(cell.index);
     const auto& f = c.visitors.environment.FixedItemInfo;
-    if (f.EntranceAPosY
-        && f.EntranceAPosX
-        && p.x >= f.EntranceAPosX - 1
-        && p.x <= f.EntranceBPosX + 1
-        && p.y == f.EntranceAPosY)
+    if (f.EntranceAPosY && f.EntranceAPosX && p.x >= f.EntranceAPosX - 1 && p.x <= f.EntranceBPosX + 1 && p.y == f.EntranceAPosY) {
         return object(c, world(c).saved.park_gates);
+    }
     return object_in(c, cell);
 }
 
 inline TrackCell& root_track(ConstructionWorld& c, const CellBase& cell) {
     auto* row = resolve_track_cell_for_grid_entry(c, &cell);
-    if (world_cell_is_track_child(&row->base) && row->base.common.parent_id)
+    if (world_cell_is_track_child(&row->base) && row->base.common.parent_id) {
         row = &track(c, row->base.common.parent_id);
+    }
     return *row;
 }
 
@@ -119,26 +122,25 @@ inline std::int32_t multiply_integer(std::int32_t a, std::int32_t b) {
 
 inline bool track_variant(ConstructionWorld& c, const CellBase& row) {
     const auto* selected = &row;
-    if (world_cell_is_track_child(selected))
+    if (world_cell_is_track_child(selected)) {
         selected = &track(c, selected->common.parent_id).base;
+    }
     return selected->common.type == 13 || selected->common.type == 18;
 }
 
 inline bool map_corner(ConstructionWorld& c, const CellBase& cell) {
     const auto n = get_world_cell_neighbor_mask(c, &cell);
-    return count_world_cell_cardinal_neighbor_bits(c, &cell) == 2
-        && (((n & 1u) && (n & 4u)) || ((n & 1u) && (n & 64u)) || ((n & 16u) && (n & 4u)) || ((n & 16u) && (n & 64u)));
+    return count_world_cell_cardinal_neighbor_bits(c, &cell) == 2 && (((n & 1u) && (n & 4u)) || ((n & 1u) && (n & 64u)) || ((n & 16u) && (n & 4u)) || ((n & 16u) && (n & 64u)));
 }
 
 inline WorldCellCoordinates stepped(WorldCellCoordinates p, std::uint8_t direction, int scale = 1) {
     match (direction) {
-        case 1 => p.y = fixed::subtract(p.y, scale);
-        case 4 => p.x = fixed::add(p.x, scale);
+        case 1  => p.y = fixed::subtract(p.y, scale);
+        case 4  => p.x = fixed::add(p.x, scale);
         case 16 => p.y = fixed::add(p.y, scale);
         case 64 => p.x = fixed::subtract(p.x, scale);
-        case _ => throw std::invalid_argument("construction direction is not cardinal");
-    }
-    return p;
+        case _  => throw std::invalid_argument("construction direction is not cardinal");
+    } return p;
 }
 
 inline std::uint8_t object_anchor(WorldCellCoordinates& p, int rotation, bool opposite = false) {
@@ -165,8 +167,9 @@ inline std::uint8_t object_anchor(WorldCellCoordinates& p, int rotation, bool op
             direction = 16;
         }
         case _ => throw std::invalid_argument("construction object angle is not cardinal");
-    }
-    return opposite ? opposite_world_cell_direction(direction) : direction;
+    } return opposite
+        ? opposite_world_cell_direction(direction)
+        : direction;
 }
 
 template <class T>

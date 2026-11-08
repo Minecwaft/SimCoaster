@@ -39,24 +39,24 @@ enum class ParkLevelUpgradeAvailability {
 
 struct ParkLevelUpgrade {
     ParkLevelUpgradeAvailability availability = ParkLevelUpgradeAvailability::no_selection;
-    std::uint32_t level{};
-    std::int32_t cost{};
+    std::uint32_t level {};
+    std::int32_t cost {};
 };
 
 struct ParkAuthoringCatalogEntry {
-    std::uint16_t definition{};
-    ObjectUiCategory category{};
+    std::uint16_t definition {};
+    ObjectUiCategory category {};
     std::u16string name;
-    std::int32_t cost{};
-    ParkCatalogAvailability availability{};
-    bool attachment{};
+    std::int32_t cost {};
+    ParkCatalogAvailability availability {};
+    bool attachment {};
 };
 
 struct ParkAuthoringFeedback {
     std::u16string message, rejection;
     std::optional<WorldCellCoordinates> cursor;
-    std::int32_t cost{}, balance{}, rotation{};
-    bool accepted{}, insufficient_funds{};
+    std::int32_t cost {}, balance {}, rotation {};
+    bool accepted {}, insufficient_funds {};
 };
 
 //Frontend policy and gesture state. All persistent edits go through the
@@ -64,12 +64,12 @@ struct ParkAuthoringFeedback {
 class ParkAuthoringController {
     ParkRuntime& park_;
     ParkAuthoringTool tool_ = ParkAuthoringTool::inspect;
-    ThingId selected_{};
-    std::uint16_t selected_definition_{}, placement_definition_{};
-    std::uint64_t selected_creation_time_{};
-    bool mouse_down_{};
-    bool track_changed_{}, reopen_after_cancel_{};
-    std::uint64_t interaction_revision_{};
+    ThingId selected_ {};
+    std::uint16_t selected_definition_ {}, placement_definition_ {};
+    std::uint64_t selected_creation_time_ {};
+    bool mouse_down_ {};
+    bool track_changed_ {}, reopen_after_cancel_ {};
+    std::uint64_t interaction_revision_ {};
     ParkAuthoringFeedback feedback_;
     ParkObjectRuntimeView* selected_object();
     void remember_selection(ParkObjectRuntimeView&);

@@ -9,15 +9,11 @@ struct UiRect;
 class PostcardImageComposer {
     std::array<TextureImage, 6> art_;
     TextureImage scene_, composite_;
-    bool hires_{}, american_{};
+    bool hires_ {}, american_ {};
     UiFontLibrary& fonts_;
 
 public:
-    PostcardImageComposer(const std::filesystem::path&,
-                          std::string_view language,
-                          UiFontLibrary&,
-                          const TextureImage& capture,
-                          bool hires);
+    PostcardImageComposer(const std::filesystem::path&, std::string_view language, UiFontLibrary&, const TextureImage& capture, bool hires);
     void compose(std::u16string_view message, bool draw_text = true);
 
     const TextureImage& image() const {

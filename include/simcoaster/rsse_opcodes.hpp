@@ -15,7 +15,7 @@ struct RsseOpcodeDescriptor {
 
 //Recovered directly from Game.exe's106 original mnemonic/count descriptors.
 //The same ordered metadata defines the wire enum and diagnostic names.
-inline constexpr std::array<RsseOpcodeDescriptor, 106> rsse_opcode_descriptors{ {
+inline constexpr std::array<RsseOpcodeDescriptor, 106> rsse_opcode_descriptors { {
     { "NOP", 0 },
     { "CRIT_LOCK", 0 },
     { "CRIT_UNLOCK", 0 },
@@ -127,8 +127,9 @@ enum class RsseOpcode : std::uint32_t;
 inline constexpr std::uint32_t rsse_opcode_checksum = [] consteval {
     std::uint32_t value = 0;
     for (const auto& descriptor : rsse_opcode_descriptors) {
-        for (unsigned char c : descriptor.mnemonic)
+        for (unsigned char c : descriptor.mnemonic) {
             value += c;
+        }
         value += static_cast<std::uint32_t>('0') + descriptor.operand_count;
     }
     return value;
@@ -136,10 +137,9 @@ inline constexpr std::uint32_t rsse_opcode_checksum = [] consteval {
 static_assert(rsse_opcode_checksum == 69457);
 consteval {
     std::vector<std::meta::info> specifications;
-    for (std::size_t i = 0; i < rsse_opcode_descriptors.size(); ++i)
-        specifications.push_back(
-            std::meta::enumerator_spec({ .name = std::string{ rsse_opcode_descriptors[i].mnemonic },
-                                         .value = std::meta::reflect_constant(static_cast<std::uint32_t>(i)) }));
+    for (std::size_t i = 0; i < rsse_opcode_descriptors.size(); ++i) {
+        specifications.push_back(std::meta::enumerator_spec({ .name = std::string { rsse_opcode_descriptors[i].mnemonic }, .value = std::meta::reflect_constant(static_cast<std::uint32_t>(i)) }));
+    }
     std::meta::define_enum(^^RsseOpcode, specifications);
 }
 enum class RsseWordTag : std::uint32_t {

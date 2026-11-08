@@ -16,23 +16,23 @@ enum class SoundTargetKind : std::uint32_t {
 };
 
 struct SoundSavedPayload {
-    [[=save::Field{ "keys", 0 }]] std::array<std::uint8_t, 4> keys{};
-    [[=save::Field{ "values", 1 }]] std::array<std::uint8_t, 4> values{};
+    [[=save::Field { "keys", 0 }]] std::array<std::uint8_t, 4> keys {};
+    [[=save::Field { "values", 1 }]] std::array<std::uint8_t, 4> values {};
     //Native order is max_z,min_x,max_x,min_z, not memory member order.
-    [[=save::Field{ "max_z", 2 }]] std::int32_t max_z{};
-    [[=save::Field{ "min_x", 3 }]] std::int32_t min_x{};
-    [[=save::Field{ "max_x", 4 }]] std::int32_t max_x{};
-    [[=save::Field{ "min_z", 5 }]] std::int32_t min_z{};
+    [[=save::Field { "max_z", 2 }]] std::int32_t max_z {};
+    [[=save::Field { "min_x", 3 }]] std::int32_t min_x {};
+    [[=save::Field { "max_x", 4 }]] std::int32_t max_x {};
+    [[=save::Field { "min_z", 5 }]] std::int32_t min_z {};
 };
 
 struct SoundSavedTargetFields {
-    [[=save::Field{ "position", 0 }]] std::array<float, 3> position{};
-    [[=save::Field{ "saved_zero", 1 }]] std::uint32_t saved_zero{};
-    [[=save::Field{ "parameter", 2 }]] float parameter{};
-    [[=save::Field{ "catalog_slot", 3 }]] std::uint32_t catalog{};
-    [[=save::Field{ "descriptor_index", 4 }]] std::uint32_t descriptor{};
-    [[=save::Field{ "selection_index", 5 }]] std::uint32_t selection{};
-    [[=save::Field{ "sample_index", 6 }]] std::uint32_t sample{};
+    [[=save::Field { "position", 0 }]] std::array<float, 3> position {};
+    [[=save::Field { "saved_zero", 1 }]] std::uint32_t saved_zero {};
+    [[=save::Field { "parameter", 2 }]] float parameter {};
+    [[=save::Field { "catalog_slot", 3 }]] std::uint32_t catalog {};
+    [[=save::Field { "descriptor_index", 4 }]] std::uint32_t descriptor {};
+    [[=save::Field { "selection_index", 5 }]] std::uint32_t selection {};
+    [[=save::Field { "sample_index", 6 }]] std::uint32_t sample {};
 };
 
 static_assert(save::value_width<SoundSavedTargetFields> == 36);
@@ -42,27 +42,27 @@ struct SoundSavedTarget {
     SoundTargetKind kind = SoundTargetKind::single;
     SoundSavedTargetFields fields;
     std::optional<SoundSavedPayload> payload;
-    std::uint8_t has_xz_bounds{};
-    std::uint32_t target_id{};
+    std::uint8_t has_xz_bounds {};
+    std::uint32_t target_id {};
 };
 
 struct SoundSavedTargetChain {
-    std::uint32_t id{};
+    std::uint32_t id {};
     //The original recursively serializes child_link. Flatten this owned chain
     //to keep input depth from consuming the C++ stack. Child kinds are7 or9.
     std::vector<SoundSavedTarget> nodes;
 };
 
 struct SoundBackendSnapshot {
-    std::array<float, 3> listener{};
+    std::array<float, 3> listener {};
     SoundCatalogReferences catalogs;
-    std::uint32_t pool_blocks{};
+    std::uint32_t pool_blocks {};
     std::vector<SoundSavedTargetChain> targets;
 };
 
 struct SoundBackendSnapshotPrefix {
     SoundBackendSnapshot snapshot;
-    std::size_t bytes_consumed{};
+    std::size_t bytes_consumed {};
 };
 
 //Native89D9D0 leaves extent zero when its active list is empty, despite

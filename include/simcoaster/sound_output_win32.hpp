@@ -7,13 +7,13 @@
 
 namespace simcoaster {
 struct SoundOutputStatus {
-    bool available{};
-    std::int32_t hresult{};
-    std::size_t queued_frames{};
-    std::uint64_t submitted_frames{}, device_frames{}, underrun_frames{}, rejected_frames{};
+    bool available {};
+    std::int32_t hresult {};
+    std::size_t queued_frames {};
+    std::uint64_t submitted_frames {}, device_frames {}, underrun_frames {}, rejected_frames {};
     //IAudioClock position, converted to this stream's sample rate. Includes
     //silence, remains monotonic across clear(), and resets only on reopen().
-    std::uint64_t played_frames{};
+    std::uint64_t played_frames {};
     //Actual endpoint timeline of the first admitted PCM in the current flush
     //epoch. Subtract this from played_frames for a content-relative clock;
     //submitted/device frame counters describe admission, never playback.

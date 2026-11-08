@@ -34,15 +34,17 @@ std::uint8_t get_park_object_activation_flag(const ParkObjectRuntimeView* object
 std::uint8_t truncate_park_object_condition(float value) {
     const auto truncated = std::trunc(static_cast<double>(value));
     const auto limit = std::ldexp(1.0, 63);
-    if (!std::isfinite(truncated) || truncated < -limit || truncated >= limit)
+    if (!std::isfinite(truncated) || truncated < -limit || truncated >= limit) {
         return 0;
+    }
     return static_cast<std::uint8_t>(static_cast<std::int64_t>(truncated));
 }
 
 bool park_object_requires_staff_service(AttractionWorld& c, const ParkObjectRuntimeView& object) {
     const auto flags = static_cast<std::uint16_t>(object.capabilities); //Priority uses the entry mask.
-    if (flags & std::to_underlying(ParkObjectCapabilities::provides_relief))
+    if (flags & std::to_underlying(ParkObjectCapabilities::provides_relief)) {
         return truncate_park_object_condition(object.repair_state) < 25;
+    }
     const auto slot = [&](int index) {
         auto* script = world_operations::find_script(c, object.script_id);
         return world_operations::script_slot(c, script, index);
@@ -64,17 +66,20 @@ ThingId find_first_park_object_record_id_by_definition_id(AttractionWorld& c, st
     ThingId id = c.entities.active_head ? static_cast<ThingId>(c.entities.active_head->id_storage) : 0;
     std::size_t traversed = 0;
     while (id) {
-        if (traversed++ >= c.entities.size())
+        if (traversed++ >= c.entities.size()) {
             throw std::length_error("cyclic active thing list");
+        }
         auto* payload = c.entities.at(id).payload;
-        if (!payload)
+        if (!payload) {
             throw std::invalid_argument("null active thing payload");
+        }
         if (payload->kind == ThingKind::park_object) {
             auto* object = reinterpret_cast<const ParkObjectRuntimeView*>(payload);
             //Compare the resolved definition's ID. Even an existing cache entry
             //inconsistent with the object's lookup key is observed by the original.
-            if (require_definition(c, object).id == definition_id)
+            if (require_definition(c, object).id == definition_id) {
                 return id;
+            }
         }
         //The link belongs to metadata indexed by the payload's own header ID,
         //not necessarily the cursor ID used to fetch that payload.

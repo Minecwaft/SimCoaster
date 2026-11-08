@@ -21,7 +21,7 @@ struct PositionedStream : Stream {
 class MemoryByteStream final : public PositionedStream {
 public:
     std::vector<std::byte> bytes;
-    std::size_t cursor{};
+    std::size_t cursor {};
     std::int64_t position() const override;
     std::int32_t read(std::span<std::byte>) override;
     std::int32_t write(std::span<const std::byte>) override;

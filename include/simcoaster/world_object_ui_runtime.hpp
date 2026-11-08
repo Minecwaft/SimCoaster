@@ -25,8 +25,8 @@ enum class ParkObjectUiPanel {
 };
 
 struct ParkObjectUiRoute {
-    ParkObjectUiPanel panel{};
-    ThingId target{};
+    ParkObjectUiPanel panel {};
+    ThingId target {};
 };
 enum class ParkObjectDurationUnit : std::int32_t {
     none,
@@ -37,69 +37,66 @@ enum class ParkObjectDurationUnit : std::int32_t {
 };
 
 struct ParkObjectUiSettingRange {
-    std::int32_t minimum{}, maximum{}, step = 1;
+    std::int32_t minimum {}, maximum {}, step = 1;
     bool visible = true, enabled = true;
 };
 
 struct ParkObjectUiStagedSettings {
-    std::int32_t speed{}, capacity{}, duration{}, price{}, quality{}, ingredient{}, portion{}, chance{}, goods_cost{};
-    ThingId promoted_attraction{};
+    std::int32_t speed {}, capacity {}, duration {}, price {}, quality {}, ingredient {}, portion {}, chance {}, goods_cost {};
+    ThingId promoted_attraction {};
 };
 
 struct ParkObjectUiMetrics {
-    std::int32_t users{}, walkaways{}, winners{}, monthly_running_cost{}, excitement_meter{}, condition_meter{},
-        repair_meter{}, life_meter{}, satisfaction_meter{}, value_meter{}, goods_cost{}, contents_meter{}, capacity{},
-        gender{};
-    std::uint32_t scrap_value{}, owned_count{};
+    std::int32_t users {}, walkaways {}, winners {}, monthly_running_cost {}, excitement_meter {}, condition_meter {}, repair_meter {}, life_meter {}, satisfaction_meter {}, value_meter {}, goods_cost {}, contents_meter {}, capacity {}, gender {};
+    std::uint32_t scrap_value {}, owned_count {};
 };
 
 struct ParkObjectSettingsUiState {
-    bool open{}, apply_to_matching{}, can_navigate{}, closed{}, can_toggle_open{};
-    ParkObjectUiPanel panel{};
-    ThingId object{};
-    std::uint16_t definition{};
+    bool open {}, apply_to_matching {}, can_navigate {}, closed {}, can_toggle_open {};
+    ParkObjectUiPanel panel {};
+    ThingId object {};
+    std::uint16_t definition {};
     std::u16string name, promoted_attraction_name, ingredient_caption, related_ride_name;
-    std::array<std::int32_t, 4> definition_modifiers{};
-    std::int32_t build_cost{};
-    bool build_cost_valid{};
-    ParkObjectUiStatus status{};
-    ParkObjectDurationUnit duration_unit{};
+    std::array<std::int32_t, 4> definition_modifiers {};
+    std::int32_t build_cost {};
+    bool build_cost_valid {};
+    ParkObjectUiStatus status {};
+    ParkObjectDurationUnit duration_unit {};
     std::uint32_t capacity_caption_row = 936;
     ParkObjectUiStagedSettings staged;
     ParkObjectUiSettingRange speed, capacity, duration, price, quality, ingredient, portion, chance, goods_cost;
-    std::int32_t speed_redline_meter{}, capacity_redline_meter{};
-    std::uint32_t upgrade_level{};
+    std::int32_t speed_redline_meter {}, capacity_redline_meter {};
+    std::uint32_t upgrade_level {};
     ParkObjectUiMetrics metrics;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
     //Reload provenance, separate from metric refresh: native widgets own
     //in-flight edit values until initial load/navigation/status reload.
-    std::uint64_t input_revision{};
+    std::uint64_t input_revision {};
 };
 
 struct ParkObjectListUiRow {
-    ThingId object{};
+    ThingId object {};
     std::optional<ThingId> parent_object;
-    std::uint16_t definition{};
+    std::uint16_t definition {};
     std::u16string name;
-    ParkObjectUiStatus status{};
-    std::array<std::uint8_t, 4> color{};
-    std::int32_t users{}, winners{}, excitement_meter{}, satisfaction_meter{}, repair_meter{}, profit{}, goods_cost{},
-        value_meter{}, owned_count{}, gender{};
-    bool has_usage{}, has_finances{}, has_satisfaction{}, has_cleanliness{}, has_value{};
+    ParkObjectUiStatus status {};
+    std::array<std::uint8_t, 4> color {};
+    std::int32_t users {}, winners {}, excitement_meter {}, satisfaction_meter {}, repair_meter {}, profit {}, goods_cost {}, value_meter {}, owned_count {}, gender {};
+    bool has_usage {}, has_finances {}, has_satisfaction {}, has_cleanliness {}, has_value {};
 };
 
 struct ParkObjectListUiState {
-    bool open{};
+    bool open {};
     ObjectUiCategory category = ObjectUiCategory::rides;
-    ThingId selected{};
-    std::array<bool, 6> available{};
-    std::array<std::int32_t, 6> sort_keys{ 1, 1, 1, 1, 1, 1 };
+    ThingId selected {};
+    std::array<bool, 6> available {};
+    std::array<std::int32_t, 6> sort_keys { 1, 1, 1, 1, 1, 1 };
     std::vector<ParkObjectListUiRow> rows;
-    bool details_visible{};
-    std::int32_t monthly_running_cost{}, profit_to_date{};
-    std::array<std::int32_t, 4> definition_modifiers{};
-    std::uint32_t upgrade_level{};
-    std::uint64_t revision{};
+    bool details_visible {};
+    std::int32_t monthly_running_cost {}, profit_to_date {};
+    std::array<std::int32_t, 4> definition_modifiers {};
+    std::uint32_t upgrade_level {};
+    std::uint64_t revision {};
 };
 enum class ParkObjectFinanceMode : std::int32_t {
     amount,
@@ -116,46 +113,46 @@ enum class ParkObjectFinanceCategory : std::size_t {
 };
 
 struct ParkObjectFinanceUiState {
-    bool open{};
-    ParkObjectFinanceMode mode{};
-    std::array<std::int32_t, 6> values{};
-    std::array<bool, 6> enabled{};
+    bool open {};
+    ParkObjectFinanceMode mode {};
+    std::array<std::int32_t, 6> values {};
+    std::array<bool, 6> enabled {};
 };
 
 struct ParkObjectStatisticsUiState {
-    bool open{};
-    ThingId object{};
+    bool open {};
+    ThingId object {};
     std::u16string name;
     StatisticsGraphUiState graph;
-    std::int32_t takings{}, running_cost{}, goods_cost{}, profit{}, total_profit{};
-    bool show_goods_cost{}, show_prizes_cost{};
-    std::uint64_t revision{};
+    std::int32_t takings {}, running_cost {}, goods_cost {}, profit {}, total_profit {};
+    bool show_goods_cost {}, show_prizes_cost {};
+    std::uint64_t revision {};
 };
 
 struct ParkObjectOpinionsUiState {
-    bool open{};
-    ThingId object{};
+    bool open {};
+    ThingId object {};
     std::u16string name;
-    std::int32_t days{}, users{}, walkaways{};
+    std::int32_t days {}, users {}, walkaways {};
     std::uint32_t days_caption_row = 432;
-    std::array<std::uint32_t, 2> queue_caption_rows{};
-    bool show_second_queue{};
-    std::array<std::int32_t, 5> satisfaction{};
-    std::array<std::int32_t, 3> price{};
-    std::array<std::int32_t, 2> queue{};
-    std::uint64_t revision{};
+    std::array<std::uint32_t, 2> queue_caption_rows {};
+    bool show_second_queue {};
+    std::array<std::int32_t, 5> satisfaction {};
+    std::array<std::int32_t, 3> price {};
+    std::array<std::int32_t, 2> queue {};
+    std::uint64_t revision {};
 };
 
 struct ParkObjectPromotionUiRow {
-    ThingId object{};
+    ThingId object {};
     std::u16string name;
-    ParkObjectUiStatus status{};
-    std::array<std::uint8_t, 4> color{};
+    ParkObjectUiStatus status {};
+    std::array<std::uint8_t, 4> color {};
 };
 
 struct ParkObjectPromotionUiState {
-    bool open{}, return_to_settings{};
-    ThingId info_desk{}, selected{};
+    bool open {}, return_to_settings {};
+    ThingId info_desk {}, selected {};
     ObjectUiCategory category = ObjectUiCategory::rides;
     std::int32_t sort_key = 1;
     std::vector<ParkObjectPromotionUiRow> rows;
@@ -168,46 +165,44 @@ enum class ParkObjectUpgradeKind {
 };
 
 struct ParkObjectUpgradeUiRow {
-    std::int32_t key{};
-    ParkObjectUpgradeKind kind{};
+    std::int32_t key {};
+    ParkObjectUpgradeKind kind {};
     std::u16string name;
-    std::int32_t cost{};
-    bool affordable{};
+    std::int32_t cost {};
+    bool affordable {};
 };
 
 struct ParkObjectUpgradeUiState {
-    bool open{}, trained_mechanic{};
+    bool open {}, trained_mechanic {};
     std::optional<std::uint32_t> message_row;
-    ThingId object{};
-    std::int32_t selected{}, sort_key = 1;
+    ThingId object {};
+    std::int32_t selected {}, sort_key = 1;
     std::vector<ParkObjectUpgradeUiRow> rows;
 };
 
 struct ParkObjectSpecialRequirementUiRow {
-    std::size_t slot{};
+    std::size_t slot {};
     SpecialRideRequirementType type = SpecialRideRequirementType::end;
-    ThemeAbility ability{};
-    ThingId staff{};
+    ThemeAbility ability {};
+    ThingId staff {};
     std::u16string name, role, ability_name;
-    bool fulfilled{}, ability_activated{};
+    bool fulfilled {}, ability_activated {};
 };
 
 struct ParkObjectSpecialUiState {
-    bool open{}, ready{}, can_activate{}, abilities_activated{};
-    ThingId object{};
+    bool open {}, ready {}, can_activate {}, abilities_activated {};
+    ThingId object {};
     std::u16string name;
-    std::int32_t ticket_cost{}, ticket_balance{};
+    std::int32_t ticket_cost {}, ticket_balance {};
     std::vector<ParkObjectSpecialRequirementUiRow> requirements;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct ParkObjectContextUiState {
     ParkObjectUiRoute route;
-    std::int32_t menu_family{};
+    std::int32_t menu_family {};
     std::u16string name;
-    bool closed{}, can_open{}, can_close{}, can_request_service{}, can_cancel_service{}, can_request_gardener{},
-        can_request_janitor{}, unregistered_special{}, can_upgrade{}, can_ride{}, can_edit_track{}, can_delete{},
-        can_copy{};
+    bool closed {}, can_open {}, can_close {}, can_request_service {}, can_cancel_service {}, can_request_gardener {}, can_request_janitor {}, unregistered_special {}, can_upgrade {}, can_ride {}, can_edit_track {}, can_delete {}, can_copy {};
 };
 
 struct ParkObjectUiState {

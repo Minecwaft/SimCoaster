@@ -29,49 +29,49 @@ using SpriteQuadVertices = std::array<SpriteVertex, 4>;
 using SpriteTransform = std::array<float, 16>;
 
 struct SpriteTerrainSampling {
-    const TerrainGridView* grid{};
-    std::int32_t sample_width{}, sample_height{};
-    float inverse_scale_x{}, inverse_scale_y{};
+    const TerrainGridView* grid {};
+    std::int32_t sample_width {}, sample_height {};
+    float inverse_scale_x {}, inverse_scale_y {};
     //The owned heightfield's pitch differs from its inclusive sample limit.
     //Zero retains an explicitly supplied native raw-context width as pitch.
-    std::size_t sample_stride{};
+    std::size_t sample_stride {};
 };
 
 struct SpriteGeometrySettings {
-    SpriteTransform transform{ 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
-    float coordinate_scale = 1, height_bias{}, orientation_turns{};
-    std::uint32_t runtime_flags{};
-    bool direct3d_state{};
-    const SpriteTerrainSampling* terrain{};
+    SpriteTransform transform { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
+    float coordinate_scale = 1, height_bias {}, orientation_turns {};
+    std::uint32_t runtime_flags {};
+    bool direct3d_state {};
+    const SpriteTerrainSampling* terrain {};
     //Adapt only the camera-facing base quad. World projection consumers keep
     //command.scale unchanged and do not inherit the camera focal length.
     float billboard_scale = 1;
 };
 
 struct SpritePickState {
-    float x{}, y{};
+    float x {}, y {};
     std::optional<std::uint32_t> handle;
-    float homogeneous_w{};
+    float homogeneous_w {};
 };
 
 struct SpriteTextureState {
-    std::uint32_t source_flags{};
-    std::uint64_t storage{};
-    float u_origin{}, v_origin{}, u_extent{}, v_extent{};
+    std::uint32_t source_flags {};
+    std::uint64_t storage {};
+    float u_origin {}, v_origin {}, u_extent {}, v_extent {};
 };
 
 struct SpriteQuad {
     SpriteFrameReference frame;
-    std::uint32_t handle{}, packet_flags{}, color{}, render_state{};
-    std::uint64_t texture_storage{};
-    std::array<float, 4> uv{}; //uMin,vMin,uMax,vMax
-    SpriteDepthMode depth_mode{};
-    SpriteQuadVertices vertices{};
+    std::uint32_t handle {}, packet_flags {}, color {}, render_state {};
+    std::uint64_t texture_storage {};
+    std::array<float, 4> uv {}; //uMin,vMin,uMax,vMax
+    SpriteDepthMode depth_mode {};
+    SpriteQuadVertices vertices {};
 };
 
 struct SpriteCacheRequest {
     SpriteFrameReference frame;
-    float sampling_bias{};
+    float sampling_bias {};
 };
 
 struct SpriteGeometryPass {
@@ -89,25 +89,11 @@ std::uint32_t sprite_texture_render_state(std::uint32_t source_flags, bool direc
 //Returns queue eligibility, whereas the original routine always returned 1.
 bool prepare_sprite_geometry(ResourceSpriteCommand&, const SpriteGeometrySettings&);
 //Return value is winding parity, not success. Offsets use frame reference dimensions.
-bool expand_sprite_quad(const ResourceSpriteCommand&,
-                        const EncodedSpriteFrame&,
-                        SpriteQuadVertices&,
-                        const SpriteGeometrySettings&,
-                        float width_override = 0,
-                        float height_override = 0,
-                        SpritePickState* pick = nullptr);
-std::optional<SpriteQuad> build_sprite_quad(ResourceSpriteCommand&,
-                                            const EncodedSpriteFrame&,
-                                            const SpriteTextureState*,
-                                            const SpriteGeometrySettings&,
-                                            SpritePickState* pick = nullptr);
+bool expand_sprite_quad(const ResourceSpriteCommand&, const EncodedSpriteFrame&, SpriteQuadVertices&, const SpriteGeometrySettings&, float width_override = 0, float height_override = 0, SpritePickState* pick = nullptr);
+std::optional<SpriteQuad> build_sprite_quad(ResourceSpriteCommand&, const EncodedSpriteFrame&, const SpriteTextureState*, const SpriteGeometrySettings&, SpritePickState* pick = nullptr);
 using SpriteTextureLookup = std::function<std::optional<SpriteTextureState>(SpriteFrameReference)>;
 //Visits region queues in their stored order followed by the explicit-coordinate queue.
-SpriteGeometryPass build_resource_sprite_geometry(ResourceSpritePass&,
-                                                  SpritePixelCatalog&,
-                                                  const SpriteGeometrySettings&,
-                                                  const SpriteTextureLookup&,
-                                                  SpritePickState* pick = nullptr);
+SpriteGeometryPass build_resource_sprite_geometry(ResourceSpritePass&, SpritePixelCatalog&, const SpriteGeometrySettings&, const SpriteTextureLookup&, SpritePickState* pick = nullptr);
 
 //Backend owns actual GPU submission and clipping; a failed submission stops this pass.
 struct SpriteQuadSink {

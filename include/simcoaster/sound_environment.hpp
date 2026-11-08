@@ -5,32 +5,32 @@ namespace simcoaster {
 //52-byte game record, reordered by8AC920 when sending EAX2 listener data.
 //These are actual SndReverb.map parameters, not EAX built-in preset IDs.
 struct SoundReverbParameters {
-    [[=save::Field{ "dwEnvironment", 0 }]] std::uint32_t environment{};
-    [[=save::Field{ "flEnvironmentSize", 1 }]] float size{};
-    [[=save::Field{ "flEnvironmentDiffusion", 2 }]] float diffusion{};
-    [[=save::Field{ "lRoom", 3 }]] std::int32_t room_millibels{};
-    [[=save::Field{ "lRoomHF", 4 }]] std::int32_t room_hf_millibels{};
-    [[=save::Field{ "flDecayTime", 5 }]] float decay_seconds{};
-    [[=save::Field{ "flDecayHFRatio", 6 }]] float decay_hf_ratio{};
-    [[=save::Field{ "lReflections", 7 }]] std::int32_t reflections_millibels{};
-    [[=save::Field{ "flReflectionsDelay", 8 }]] float reflections_delay_seconds{};
-    [[=save::Field{ "lReverb", 9 }]] std::int32_t reverb_millibels{};
-    [[=save::Field{ "flReverbDelay", 10 }]] float reverb_delay_seconds{};
-    [[=save::Field{ "flRoomRolloffFactor", 11 }]] float room_rolloff{};
-    [[=save::Field{ "flAirAbsorptionHF", 12 }]] float air_absorption_hf{};
+    [[=save::Field { "dwEnvironment", 0 }]] std::uint32_t environment {};
+    [[=save::Field { "flEnvironmentSize", 1 }]] float size {};
+    [[=save::Field { "flEnvironmentDiffusion", 2 }]] float diffusion {};
+    [[=save::Field { "lRoom", 3 }]] std::int32_t room_millibels {};
+    [[=save::Field { "lRoomHF", 4 }]] std::int32_t room_hf_millibels {};
+    [[=save::Field { "flDecayTime", 5 }]] float decay_seconds {};
+    [[=save::Field { "flDecayHFRatio", 6 }]] float decay_hf_ratio {};
+    [[=save::Field { "lReflections", 7 }]] std::int32_t reflections_millibels {};
+    [[=save::Field { "flReflectionsDelay", 8 }]] float reflections_delay_seconds {};
+    [[=save::Field { "lReverb", 9 }]] std::int32_t reverb_millibels {};
+    [[=save::Field { "flReverbDelay", 10 }]] float reverb_delay_seconds {};
+    [[=save::Field { "flRoomRolloffFactor", 11 }]] float room_rolloff {};
+    [[=save::Field { "flAirAbsorptionHF", 12 }]] float air_absorption_hf {};
 };
 
 static_assert(save::value_width<SoundReverbParameters> == 52);
 
 struct SoundEnvironmentRegion {
-    float x{}, z{};
-    std::uint32_t opaque_value{}; //RSSE passes raw height bits; query ignores it.
-    float radius{};
+    float x {}, z {};
+    std::uint32_t opaque_value {}; //RSSE passes raw height bits; query ignores it.
+    float radius {};
 };
 
 struct SoundOcclusionParameters {
-    float scalar{}, eq = 1.f;
-    std::int32_t obstruction_millibels{}, occlusion_millibels{};
+    float scalar {}, eq = 1.f;
+    std::int32_t obstruction_millibels {}, occlusion_millibels {};
     float occlusion_lf_ratio = .25f, occlusion_room_ratio = .5f;
     float air_absorption_factor = 1.f;
 };

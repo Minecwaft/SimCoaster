@@ -18,8 +18,7 @@ bool has_spare_park_object_queue_capacity(AttractionWorld&, ParkObjectRuntimeVie
 std::int32_t get_park_object_queue_position_limit(AttractionWorld&, const ParkObjectRuntimeView&);
 bool park_object_queue_exceeds_position_limit(AttractionWorld&, ParkObjectRuntimeView&);
 void append_person_to_park_object_queue(AttractionWorld&, ParkObjectRuntimeView&, ThingId);
-ParkObjectQueueTarget
-find_park_object_queue_destination(AttractionWorld&, ParkObjectRuntimeView&, std::uint32_t position);
+ParkObjectQueueTarget find_park_object_queue_destination(AttractionWorld&, ParkObjectRuntimeView&, std::uint32_t position);
 bool is_person_being_loaded_by_park_object(const ParkObjectRuntimeView&, ThingId);
 bool is_admission_slot_mismatched_with_queue_head(AttractionWorld&, const ParkObjectRuntimeView&);
 void clear_park_object_person_admission_state(AttractionWorld&, ParkObjectRuntimeView&, ThingId);

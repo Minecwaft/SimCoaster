@@ -23,13 +23,13 @@ enum class TextureSourceMode : std::uint32_t {
 };
 
 struct TextureImage {
-    std::uint32_t width{}, height{};
+    std::uint32_t width {}, height {};
     //Explicit RGBA rows; row zero is sampled at V=0 by the producer's UVs.
     //Mesh assets use native bottom-origin rows. Ordinary image decoding, glyph
     //atlases and framebuffer captures use top-origin rows with their own UVs.
     std::vector<RgbaPixel> pixels;
-    TextureAlpha alpha{};
-    std::optional<TextureSourceMode> source_mode{}; //Native palette/header policy can differ from visible
+    TextureAlpha alpha {};
+    std::optional<TextureSourceMode> source_mode {}; //Native palette/header policy can differ from visible
     //pixels.
 };
 enum class TextureFailure {
@@ -44,15 +44,13 @@ enum class TextureFailure {
 
 struct TextureError {
     TextureFailure reason;
-    std::size_t offset{};
+    std::size_t offset {};
     std::string resource;
 };
 
 std::string describe_texture_error(const TextureError&);
-std::expected<TextureImage, TextureError> decode_tga_image(std::span<const std::byte>,
-                                                           TextureRowOrigin = TextureRowOrigin::top);
-std::expected<TextureImage, TextureError> decode_fsh_image(std::span<const std::byte>,
-                                                           TextureRowOrigin = TextureRowOrigin::top);
+std::expected<TextureImage, TextureError> decode_tga_image(std::span<const std::byte>, TextureRowOrigin = TextureRowOrigin::top);
+std::expected<TextureImage, TextureError> decode_fsh_image(std::span<const std::byte>, TextureRowOrigin = TextureRowOrigin::top);
 using TextureImagePtr = std::shared_ptr<const TextureImage>;
 //6A13B0/4CBEC0 select original image namespaces, not a synthetic mip bias.
 enum class MeshTextureSet {
@@ -68,7 +66,7 @@ constexpr MeshTextureSet mesh_texture_set_for_quality(std::int32_t quality) {
 //provider. The namespace is exact: callers select textures/stexture, and
 //native fixed directories such as MiscMesh/textures stay fixed.
 struct MeshTextureSource {
-    const MeshModelLibrary* library{};
+    const MeshModelLibrary* library {};
     std::filesystem::path root;
     std::string relative_namespace;
 };
@@ -85,10 +83,10 @@ struct MeshTextureSources {
 
 class MeshTextureLibrary {
     struct Source {
-        const MeshModelLibrary* library{};
+        const MeshModelLibrary* library {};
         std::shared_ptr<MeshModelLibrary> owner;
         std::vector<std::shared_ptr<MeshModelLibrary>> alternatives;
-        std::size_t active_provider{};
+        std::size_t active_provider {};
         std::filesystem::path root;
         std::string relative_namespace;
         std::optional<TextureError> error;
@@ -99,7 +97,7 @@ class MeshTextureLibrary {
     bool animated_textures_;
     std::vector<Source> sources_;
     std::optional<std::size_t> secondary_, root_fallback_;
-    bool quickload_ready_{};
+    bool quickload_ready_ {};
     std::vector<std::string> quickload_names_;
     std::optional<TextureError> quickload_error_;
     std::unordered_map<std::string, std::size_t> slot_sources_;
@@ -120,16 +118,8 @@ public:
     //Compatibility constructor: ordinary model root + selected texture folder,
     //then either the explicit secondary texture folder or theme SharedTex.
     //An empty theme/secondary retains the model-root fallback used by UI models.
-    MeshTextureLibrary(const MeshModelLibrary&,
-                       const std::filesystem::path& game_root,
-                       std::string_view theme,
-                       std::filesystem::path additional_library_root = {},
-                       MeshTextureSet texture_set = MeshTextureSet::full,
-                       bool animated_textures = true);
-    MeshTextureLibrary(MeshTextureSources,
-                       const std::filesystem::path& game_root,
-                       MeshTextureSet texture_set = MeshTextureSet::full,
-                       bool animated_textures = true);
+    MeshTextureLibrary(const MeshModelLibrary&, const std::filesystem::path& game_root, std::string_view theme, std::filesystem::path additional_library_root = {}, MeshTextureSet texture_set = MeshTextureSet::full, bool animated_textures = true);
+    MeshTextureLibrary(MeshTextureSources, const std::filesystem::path& game_root, MeshTextureSet texture_set = MeshTextureSet::full, bool animated_textures = true);
 
     MeshTextureSet texture_set() const {
         return texture_set_;

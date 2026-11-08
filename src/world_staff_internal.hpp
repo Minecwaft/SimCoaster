@@ -27,8 +27,9 @@ inline World& primary(StaffWorld& c) {
 template <class T>
 T& record(StaffWorld& c, ThingId id) {
     auto* value = c.entities.at(id).payload;
-    if (!value)
+    if (!value) {
         throw std::logic_error("staff record is missing");
+    }
     return *reinterpret_cast<T*>(value);
 }
 
@@ -67,8 +68,7 @@ inline NavigationResult navigate(StaffWorld& c, StaffRuntimeRecord& s) {
 }
 
 inline std::uint32_t distance(const MapObjectBase& a, const MapObjectBase& b) {
-    const auto dx = static_cast<int>(a.x >> 8) - static_cast<int>(b.x >> 8),
-               dy = static_cast<int>(a.y >> 8) - static_cast<int>(b.y >> 8);
+    const auto dx = static_cast<int>(a.x >> 8) - static_cast<int>(b.x >> 8), dy = static_cast<int>(a.y >> 8) - static_cast<int>(b.y >> 8);
     return static_cast<std::uint32_t>(dx * dx + dy * dy);
 }
 
@@ -78,8 +78,9 @@ inline float percentage(double value) {
 
 inline std::int64_t integer(double value) {
     const auto v = std::trunc(value);
-    if (!std::isfinite(v) || v < -std::ldexp(1.0, 63) || v >= std::ldexp(1.0, 63))
+    if (!std::isfinite(v) || v < -std::ldexp(1.0, 63) || v >= std::ldexp(1.0, 63)) {
         throw std::domain_error("nonrepresentable staff integer");
+    }
     return static_cast<std::int64_t>(v);
 }
 
@@ -92,8 +93,9 @@ inline std::uint32_t random(StaffWorld& c) {
 }
 
 inline std::uint32_t bounded_random(StaffWorld& c, std::uint32_t size) {
-    if (!size)
+    if (!size) {
         throw std::domain_error("zero staff random range");
+    }
     return random(c) % size;
 }
 
@@ -112,22 +114,15 @@ inline void idle_animation(StaffRuntimeRecord& s) {
 
 inline void animation(ScriptWorld& c, StaffRuntimeRecord& s, std::uint32_t id) {
     auto& a = s.mobile.animation;
-    if (a.sprite_script)
+    if (a.sprite_script) {
         set_sprite_animation_next(a, id);
-    else
-        set_world_sprite_animation_resource(c,
-                                            a,
-                                            id,
-                                            static_cast<std::int32_t>(s.mobile.sprite_category),
-                                            static_cast<std::int32_t>(s.mobile.sprite_id));
+    } else {
+        set_world_sprite_animation_resource(c, a, id, static_cast<std::int32_t>(s.mobile.sprite_category), static_cast<std::int32_t>(s.mobile.sprite_id));
+    }
 }
 
 inline void notify(StaffWorld& c, WorldEvent event) {
-    dispatch_world_event_to_subscribers(c,
-                                        get_world_event_subscription_registry(c),
-                                        &event,
-                                        deliver_world_record_event,
-                                        nullptr);
+    dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &event, deliver_world_record_event, nullptr);
 }
 
 inline auto* script(AdvisorWorld& c, ParkObjectRuntimeView& o) {
@@ -135,11 +130,13 @@ inline auto* script(AdvisorWorld& c, ParkObjectRuntimeView& o) {
 }
 
 inline ParkObjectRuntimeView* live_room(StaffWorld& c, ThingId id, ParkObjectCapabilities capability) {
-    if (!id || id >= c.entities.size())
+    if (!id || id >= c.entities.size()) {
         return nullptr;
+    }
     auto* value = c.entities[id].payload;
-    if (!value || value->kind != ThingKind::park_object || value->retirement_pending)
+    if (!value || value->kind != ThingKind::park_object || value->retirement_pending) {
         return nullptr;
+    }
     auto& room = *reinterpret_cast<ParkObjectRuntimeView*>(value);
     return has(room, capability) ? &room : nullptr;
 }
@@ -152,8 +149,9 @@ void restore_cancelled_training_availability(StaffWorld&, StaffRuntimeRecord&);
 inline ThingId first_training_room(StaffWorld& c) {
     for (auto id = primary(c).saved.first_park_object; id;) {
         auto& o = object(c, id);
-        if (has(o, ParkObjectCapabilities::training_room))
+        if (has(o, ParkObjectCapabilities::training_room)) {
             return id;
+        }
         id = o.next_park_object;
     }
     return 0;
@@ -164,8 +162,7 @@ inline StaffHqRecord& hq(StaffWorld& c) {
 }
 
 inline bool striking(StaffWorld& c, const StaffRuntimeRecord& s) {
-    return hq(c).strikes.at(static_cast<std::size_t>(world_staff_type_for_used_thing(s.base.header))).strike_active
-        != 0;
+    return hq(c).strikes.at(static_cast<std::size_t>(world_staff_type_for_used_thing(s.base.header))).strike_active != 0;
 }
 
 void post_training_mail(StaffWorld&, StaffRuntimeRecord&, bool completed, ThemeAbility);
@@ -179,18 +176,19 @@ ThingId claim_owner(StaffWorld&, ParkObjectRuntimeView&);
 ThingId select_staff_service_target(StaffWorld&, StaffRuntimeRecord&, ParkObjectCapabilities);
 void reset_position(StaffWorld&, MapObjectBase&, MobileEntityState&, std::uint16_t, std::uint16_t);
 
-inline std::int32_t
-interpolate(const StaffQuery& c, const StaffRuntimeRecord& s, std::int32_t minimum, std::int32_t maximum) {
+inline std::int32_t interpolate(const StaffQuery& c, const StaffRuntimeRecord& s, std::int32_t minimum, std::int32_t maximum) {
     const auto limit = balance(c).MaxExperience, value = fixed::word(s.experience);
-    if (value > limit)
+    if (value > limit) {
         return maximum;
-    if (value < 0)
+    }
+    if (value < 0) {
         return minimum;
-    if (!limit)
+    }
+    if (!limit) {
         throw std::domain_error("zero maximum staff experience");
+    }
     const auto fraction = fixed::word(s.experience << 14) / limit;
-    const auto sum = static_cast<std::uint32_t>(maximum) * static_cast<std::uint32_t>(fraction)
-                   + static_cast<std::uint32_t>(minimum) * (16384u - static_cast<std::uint32_t>(fraction));
+    const auto sum = static_cast<std::uint32_t>(maximum) * static_cast<std::uint32_t>(fraction) + static_cast<std::uint32_t>(minimum) * (16384u - static_cast<std::uint32_t>(fraction));
     return fixed::word(sum) / 16384;
 }
 
@@ -219,8 +217,9 @@ inline void claim(StaffWorld& c, ParkObjectRuntimeView& o, const StaffRuntimeRec
 }
 
 inline void release_claim(StaffWorld& c, ParkObjectRuntimeView& o) {
-    if (o.assigned_staff_member)
+    if (o.assigned_staff_member) {
         enter_world_staff_state(c, record<StaffRuntimeRecord>(c, o.assigned_staff_member), StaffState::idle);
+    }
     o.assigned_staff_member = 0;
     o.time_marked_for_maintenance = 0;
 }

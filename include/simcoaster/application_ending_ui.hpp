@@ -32,12 +32,7 @@ class ApplicationEndingUiController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationEndingUiController(WorldRuntime&,
-                                  UiRuntime&,
-                                  UiControl* primary,
-                                  const std::filesystem::path& game_root,
-                                  ApplicationEndingUiHost,
-                                  std::string language = "American");
+    ApplicationEndingUiController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, ApplicationEndingUiHost, std::string language = "American");
     ~ApplicationEndingUiController();
     ApplicationEndingUiController(const ApplicationEndingUiController&) = delete;
     ApplicationEndingUiController& operator=(const ApplicationEndingUiController&) = delete;

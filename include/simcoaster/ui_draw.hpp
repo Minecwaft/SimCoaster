@@ -13,10 +13,10 @@ inline float ui_attachment_depth(std::int32_t selector) {
 //UI drawing uses the original 2048 by1536 logical canvas; its Win32/D3D
 //consumer maps that canvas to the current client area. No packed x86 ABI.
 struct UiDrawVertex {
-    std::array<float, 3> position{};
-    std::array<float, 2> uv{};
-    RgbaPixel color{ 255, 255, 255, 255 };
-    std::array<float, 2> reflection_uv{ .5f, .5f };
+    std::array<float, 3> position {};
+    std::array<float, 2> uv {};
+    RgbaPixel color { 255, 255, 255, 255 };
+    std::array<float, 2> reflection_uv { .5f, .5f };
 };
 //The Advisor retains model depth within its layer; interactive controls
 //composite above it using their own depth. They cannot slice its geometry.
@@ -27,13 +27,13 @@ enum class UiDrawLayer {
 
 struct UiDrawCommand {
     TextureImagePtr texture;
-    std::uint32_t first_index{}, index_count{};
+    std::uint32_t first_index {}, index_count {};
     //Logical left,top,right,bottom clip edges (right/bottom exclusive).
-    std::array<float, 4> clip{ 0, 0, 2048, 1536 };
+    std::array<float, 4> clip { 0, 0, 2048, 1536 };
     MeshMaterial material;
-    bool native_model_filter{};
-    bool depth_buffered{};
-    TextureImagePtr secondary_texture{};
+    bool native_model_filter {};
+    bool depth_buffered {};
+    TextureImagePtr secondary_texture {};
     UiDrawLayer layer = UiDrawLayer::controls;
 };
 
@@ -64,11 +64,7 @@ class UiNativeDepthScope {
     float depth_;
 
 public:
-    UiNativeDepthScope(UiDrawList& draw, float depth)
-        : draw_(draw),
-          first_command_(draw.commands.size()),
-          previous_depth_(draw.native_depth),
-          depth_(depth) {
+    UiNativeDepthScope(UiDrawList& draw, float depth) : draw_(draw), first_command_(draw.commands.size()), previous_depth_(draw.native_depth), depth_(depth) {
         draw_.native_depth = depth;
     }
 
@@ -78,12 +74,12 @@ public:
     ~UiNativeDepthScope() {
         for (auto i = first_command_; i < draw_.commands.size(); ++i) {
             auto& command = draw_.commands[i];
-            if (command.depth_buffered)
+            if (command.depth_buffered) {
                 continue;
-            for (std::size_t n = command.first_index;
-                 n < static_cast<std::size_t>(command.first_index) + command.index_count;
-                 ++n)
+            }
+            for (std::size_t n = command.first_index; n < static_cast<std::size_t>(command.first_index) + command.index_count; ++n) {
                 draw_.vertices[draw_.indices[n]].position[2] = depth_ * .1f;
+            }
             //These legacy flat commands used the modern depthless compositor.
             //Native attachment ownership supplies shared depth testing/writing;
             //genuine per-material overrides are already marked depth_buffered.

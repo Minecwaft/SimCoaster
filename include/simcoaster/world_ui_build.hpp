@@ -14,11 +14,7 @@ class WorldBuildUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldBuildUiController(WorldRuntime&,
-                           UiRuntime&,
-                           UiControl* primary_root,
-                           const std::filesystem::path&,
-                           WorldUiPanelHost);
+    WorldBuildUiController(WorldRuntime&, UiRuntime&, UiControl* primary_root, const std::filesystem::path&, WorldUiPanelHost);
     ~WorldBuildUiController();
     WorldBuildUiController(const WorldBuildUiController&) = delete;
     WorldBuildUiController& operator=(const WorldBuildUiController&) = delete;

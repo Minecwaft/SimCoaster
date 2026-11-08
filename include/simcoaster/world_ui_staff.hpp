@@ -18,11 +18,7 @@ class WorldStaffUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldStaffUiController(WorldRuntime&,
-                           UiRuntime&,
-                           UiControl* primary_root,
-                           const std::filesystem::path&,
-                           StaffUiPanelHost);
+    WorldStaffUiController(WorldRuntime&, UiRuntime&, UiControl* primary_root, const std::filesystem::path&, StaffUiPanelHost);
     ~WorldStaffUiController();
     WorldStaffUiController(const WorldStaffUiController&) = delete;
     WorldStaffUiController& operator=(const WorldStaffUiController&) = delete;

@@ -3,22 +3,25 @@
 
 namespace simcoaster {
 bool reset_shares_finance_contexts(SharesFinanceState* state) {
-    if (!state)
+    if (!state) {
         throw std::invalid_argument("null shares contexts");
+    }
     //Comparison values live inside their rebuilt report owner. Native freed
     //only the outer allocation here, leaking its separately allocated delta.
     state->ownership_context.reset();
     state->ownership_context = std::make_unique<SharesOwnershipContext>();
     state->share_price_context.reset();
     state->share_price_context = std::make_unique<SharePriceContext>();
-    for (auto& record : state->record_slots)
+    for (auto& record : state->record_slots) {
         record.reset();
+    }
     return true;
 }
 
 int reset_mission_state_and_scan_cdk_files(MissionWorld& c, ThemeGlobalInfoManager* manager) {
-    if (!manager)
+    if (!manager) {
         throw std::invalid_argument("null theme manager");
+    }
     rebuild_theme_cdk_registrations(c, manager);
     manager->mission_number = 0;
     manager->current_promotion_index = 1;
@@ -26,8 +29,9 @@ int reset_mission_state_and_scan_cdk_files(MissionWorld& c, ThemeGlobalInfoManag
     manager->obstacle_removed_message_received = 0;
     manager->mission_obstacle_research_complete = 0;
     manager->golden_ticket_balance = 0;
-    for (std::size_t i = 0; i < manager->theme_ability_activation_flags.size(); ++i)
+    for (std::size_t i = 0; i < manager->theme_ability_activation_flags.size(); ++i) {
         manager->theme_ability_activation_flags[i] = i == 1 || i == 7 || i == 9;
+    }
     manager->mission_obstacle_research_complete = 0;
     manager->obstacle_removed_message_received = 0;
     for (auto& row : manager->objective_entries) {
@@ -59,13 +63,15 @@ int reset_mission_state_and_scan_cdk_files(MissionWorld& c, ThemeGlobalInfoManag
 }
 
 ThemeGlobalInfoManager* construct_theme_global_info_manager(MissionWorld& c, ThemeGlobalInfoManager* manager) {
-    if (!manager)
+    if (!manager) {
         throw std::invalid_argument("null theme manager");
+    }
     manager->swear_word_list.clear();
     manager->allowed_word_list.clear();
     manager->theme_info_records.clear();
-    for (auto& record : manager->cdk_registrations)
-        record = CdkRegistrationRecord{};
+    for (auto& record : manager->cdk_registrations) {
+        record = CdkRegistrationRecord {};
+    }
     //The native receiver binding-map constructor resets all fields before CDK
     //file discovery. Natural typed storage replaces that pointer map.
     sam::reset_integer_record(manager->mission_research);
@@ -87,8 +93,9 @@ ThemeGlobalInfoManager* construct_theme_global_info_manager(MissionWorld& c, The
 }
 
 ThemeGlobalInfoManager& get_or_create_theme_global_info_manager(MissionWorld& c) {
-    if (c.missions.theme_global_info_manager)
+    if (c.missions.theme_global_info_manager) {
         return *c.missions.theme_global_info_manager;
+    }
     auto created = std::make_unique<ThemeGlobalInfoManager>();
     construct_theme_global_info_manager(c, created.get());
     c.missions.owned_theme_manager = std::move(created);

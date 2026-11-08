@@ -18,11 +18,7 @@ void initialize_common_email(CompanyEmailMessage* email, CompanyEmailMessageKind
 }
 } //namespace
 
-CompanyEmailMessage* construct_tag_system_company_email(MissionWorld& c,
-                                                        CompanyEmailMessage* email,
-                                                        std::int32_t tag_id,
-                                                        std::int32_t message_kind,
-                                                        std::int32_t context_mode) {
+CompanyEmailMessage* construct_tag_system_company_email(MissionWorld& c, CompanyEmailMessage* email, std::int32_t tag_id, std::int32_t message_kind, std::int32_t context_mode) {
     initialize_common_email(email, static_cast<CompanyEmailMessageKind>(message_kind), context_mode);
     //The native search selects ID0. It never reserves or modifies that row.
     email->selected_variant = find_tag_system_message_variant_by_id(c, 0);
@@ -32,8 +28,7 @@ CompanyEmailMessage* construct_tag_system_company_email(MissionWorld& c,
     return email;
 }
 
-GameOverCompanyEmail*
-construct_game_over_company_email(MissionWorld& c, GameOverCompanyEmail* email, GameOverEmailReason reason) {
+GameOverCompanyEmail* construct_game_over_company_email(MissionWorld& c, GameOverCompanyEmail* email, GameOverEmailReason reason) {
     initialize_common_email(email, reason, 1);
     email->selected_variant = find_tag_system_message_variant_by_id(c, 1);
     email->concrete_class = CompanyEmailClass::game_over;
@@ -45,10 +40,10 @@ construct_game_over_company_email(MissionWorld& c, GameOverCompanyEmail* email, 
 bool dispatch_initial_mission_event_once(MissionWorld& c) {
     auto& manager = get_or_create_theme_global_info_manager(c);
     //Native CMP/JZ tests exactly1, rather than treating the byte as bool.
-    if (manager.mission_world_event_latch == 1 || manager.mission_number != 0)
+    if (manager.mission_world_event_latch == 1 || manager.mission_number != 0) {
         return false;
-    auto* raw = static_cast<CompanyEmailMessage*>(
-        c.ports.memory.allocate(Allocation::event_payload, sizeof(CompanyEmailMessage)));
+    }
+    auto* raw = static_cast<CompanyEmailMessage*>(c.ports.memory.allocate(Allocation::event_payload, sizeof(CompanyEmailMessage)));
     CompanyEmailMessage* email = nullptr;
     if (raw) {
         try {

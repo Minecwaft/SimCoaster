@@ -14,8 +14,9 @@ World& base_world(VisitorWorld& c) {
 template <class T>
 T& record(VisitorWorld& c, ThingId id) {
     auto* payload = c.entities.at(id).payload;
-    if (!payload)
+    if (!payload) {
         throw std::logic_error("arrival manager record is missing");
+    }
     return *reinterpret_cast<T*>(payload);
 }
 
@@ -28,8 +29,7 @@ ParkAnalyserState& analyser(VisitorWorld& c, World& world) {
 }
 } //namespace
 
-std::uint32_t
-get_cached_eligible_person_record_count(VisitorWorld& c, ParkAnalyserState& analyser, std::uint32_t refresh_quarters) {
+std::uint32_t get_cached_eligible_person_record_count(VisitorWorld& c, ParkAnalyserState& analyser, std::uint32_t refresh_quarters) {
     auto& metric = analyser.metrics[0];
     const auto& world = base_world(c);
     if (!metric.cache_valid || elapsed_quarters(world, metric.last_calculation_tick) > refresh_quarters) {
@@ -42,8 +42,9 @@ get_cached_eligible_person_record_count(VisitorWorld& c, ParkAnalyserState& anal
 
 std::uint32_t calculate_world_arrival_passenger_count(VisitorWorld& c) {
     auto& world = base_world(c);
-    if (world.saved.state == WorldState::transition || c.ports.assets.selected_resource_source(c) == 3)
+    if (world.saved.state == WorldState::transition || c.ports.assets.selected_resource_source(c) == 3) {
         return 0;
+    }
     const auto population = get_cached_eligible_person_record_count(c, analyser(c, world), 20);
     const auto& arrival = c.visitors.arrivals;
     const auto divisor = std::max(arrival.PointsPerVisitor, 1);
@@ -56,38 +57,38 @@ std::uint32_t calculate_world_arrival_passenger_count(VisitorWorld& c) {
         case WeatherCategory::snow     => arrival.SnowPercentageModifier;
         case _                         => 100;
     };
-    const auto proposed = fixed::truncate_integer(
-        static_cast<double>(value) * (static_cast<double>(percent) * static_cast<double>(.01f)) / divisor);
+    const auto proposed = fixed::truncate_integer(static_cast<double>(value) * (static_cast<double>(percent) * static_cast<double>(.01f)) / divisor);
     auto result = std::max(arrival.MinPeople, proposed);
     if (!(c.visitors.arrival_mode_initialized & 1)) {
         c.visitors.arrival_mode_initialized |= 1;
         initialize_game_mode_selector(c);
     }
     const auto cap = c.mode.game == GameMode::online ? 500u : 1500u;
-    if (static_cast<std::uint32_t>(result) + population > cap)
+    if (static_cast<std::uint32_t>(result) + population > cap) {
         result = std::bit_cast<std::int32_t>(cap - population);
+    }
     return std::bit_cast<std::uint32_t>(result);
 }
 
 bool is_person_departure_routing_at_bus_stop_a(VisitorWorld& c, const World& world) {
     const auto id = get_bus_stop_cell(c.visitors.environment, BusStopSelector::a);
-    if (!id || id > world.map_cells.size())
+    if (!id || id > world.map_cells.size()) {
         throw std::out_of_range("bus stop cell");
+    }
     const auto occupant = world.map_cells[id - 1].who;
-    if (!occupant)
+    if (!occupant) {
         return false;
+    }
     const auto* payload = c.entities.at(occupant).payload;
-    if (!payload)
+    if (!payload) {
         throw std::logic_error("bus stop occupant is missing");
-    return payload->kind == ThingKind::person
-        && reinterpret_cast<const PersonRuntimeView*>(payload)->state == PersonState::departure_routing;
+    }
+    return payload->kind == ThingKind::person && reinterpret_cast<const PersonRuntimeView*>(payload)->state == PersonState::departure_routing;
 }
 
 void update_bus_arrival_state(VisitorWorld& c, ArrivalState& arrival) {
     auto& world = base_world(c);
-    if (!arrival.offloading
-        && elapsed_quarters(world, arrival.time_signature)
-               > static_cast<std::uint32_t>(c.visitors.arrivals.TimeBetweenArrivals)) {
+    if (!arrival.offloading && elapsed_quarters(world, arrival.time_signature) > static_cast<std::uint32_t>(c.visitors.arrivals.TimeBetweenArrivals)) {
         arrival.people_on_bus = calculate_world_arrival_passenger_count(c);
         arrival.offloading = 1;
         auto& history = analyser(c, world).tiny_history;
@@ -96,8 +97,9 @@ void update_bus_arrival_state(VisitorWorld& c, ArrivalState& arrival) {
             history.current_entry = 0;
             history.wrapped = 1;
         }
-        if (history.current_entry < 0)
+        if (history.current_entry < 0) {
             throw std::out_of_range("arrival history index");
+        }
         history.data.at(static_cast<std::size_t>(history.current_entry)) = arrival.people_on_bus;
     }
     if (arrival.offloading) {
@@ -119,15 +121,18 @@ void update_bus_arrival_state(VisitorWorld& c, ArrivalState& arrival) {
     }
     if (is_person_departure_routing_at_bus_stop_a(c, world)) {
         const auto status = get_current_arrival_vehicle_status(c, world);
-        if (status == -1 || status == 0 || (status == 2 && !arrival.people_on_bus))
+        if (status == -1 || status == 0 || (status == 2 && !arrival.people_on_bus)) {
             world_operations::update_arrival_vehicle(c, world, 0);
-    } else if (get_current_arrival_vehicle_status(c, world) == 4)
+        }
+    } else if (get_current_arrival_vehicle_status(c, world) == 4) {
         world_operations::update_arrival_vehicle(c, world, 0);
+    }
 }
 
 void world_operations::builtin::arrivals(WorldRuntime& c, ArrivalState* arrival) {
-    if (!arrival)
+    if (!arrival) {
         throw std::invalid_argument("null World arrival state");
+    }
     update_bus_arrival_state(c, *arrival);
 }
 } //namespace simcoaster

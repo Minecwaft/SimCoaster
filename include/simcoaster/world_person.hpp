@@ -23,8 +23,7 @@ void handle_person_park_object_event(VisitorWorld&, PersonRuntimeView&, const Wo
 void record_person_park_object_visit(VisitorWorld&, PersonRuntimeView&, ParkObjectRuntimeView&);
 void apply_park_object_use_effects(VisitorWorld&, PersonRuntimeView&, ParkObjectRuntimeView&);
 std::int32_t apply_person_ride_excitement_effects(VisitorWorld&, PersonRuntimeView&, ParkObjectRuntimeView&);
-std::int32_t
-compute_person_ride_excitement_difference(AttractionWorld&, const PersonRuntimeView&, ParkObjectRuntimeView&);
+std::int32_t compute_person_ride_excitement_difference(AttractionWorld&, const PersonRuntimeView&, ParkObjectRuntimeView&);
 bool is_object_price_too_high_for_person(VisitorWorld&, PersonRuntimeView&, ParkObjectRuntimeView&);
 bool route_person_to_current_queue_position(VisitorWorld&, PersonRuntimeView&);
 void update_person_en_route_to_park_object_queue(VisitorWorld&, PersonRuntimeView&);
@@ -40,35 +39,27 @@ ThingId find_nearby_unstarted_fireworks(VisitorWorld&, const PersonRuntimeView&)
 ThingId find_nearest_entertainer_to_entity(VisitorWorld&, const MapObjectBase&);
 ThingId find_nearest_active_person_record(VisitorWorld&, const MapObjectBase&);
 ThingId select_best_available_info_desk_for_person(VisitorWorld&, const PersonRuntimeView&);
-inline constexpr std::array<std::uint16_t, 3> mobile_purpose_speed_values{ 0, 25, 50 };
-inline constexpr std::array<std::uint16_t, 5> mobile_base_speed_variants{ 60, 80, 100, 120, 140 };
+inline constexpr std::array<std::uint16_t, 3> mobile_purpose_speed_values { 0, 25, 50 };
+inline constexpr std::array<std::uint16_t, 5> mobile_base_speed_variants { 60, 80, 100, 120, 140 };
 std::int32_t get_resource_category_variant_count(const VisitorQuery&, std::uint32_t category);
 //Future appearance selection is quality-limited independently of the full
 //resource range retained for existing people, save restoration and rendering.
 std::int32_t get_resource_category_appearance_variant_count(const VisitorQuery&, std::uint32_t category);
 void initialize_mobile_sprite_animation(MobileSpriteAnimationState&);
 void set_sprite_animation_next(MobileSpriteAnimationState&, std::uint32_t animation_id);
-bool
-sprite_animation_matches_resource_or_next_anim(VisitorWorld&, MobileSpriteAnimationState&, std::uint32_t animation_id);
-void set_world_sprite_animation_resource(VisitorWorld&,
-                                         MobileSpriteAnimationState&,
-                                         std::uint32_t animation_id,
-                                         std::int32_t parameter_a,
-                                         std::int32_t parameter_b);
+bool sprite_animation_matches_resource_or_next_anim(VisitorWorld&, MobileSpriteAnimationState&, std::uint32_t animation_id);
+void set_world_sprite_animation_resource(VisitorWorld&, MobileSpriteAnimationState&, std::uint32_t animation_id, std::int32_t parameter_a, std::int32_t parameter_b);
 void release_world_sprite_animation_resource_handle(VisitorWorld&, MobileSpriteAnimationState&);
 void synchronize_world_sprite_animation_resource_state(VisitorWorld&, MobileSpriteAnimationState&);
 std::uint32_t set_sprite_animation_service_interval_from_motion_speed(MobileSpriteAnimationState&, float speed);
 void set_navigation_force_and_speed_limits(MobileNavigationState&, float requested_speed);
 void update_mobile_entity_speed_and_cached_position(VisitorWorld&, MobileEntityState&);
 //Only Person callers supply umbrella state; staff have no enclosing Person.
-std::uint16_t set_mobile_entity_purpose_speed(MobileEntityState&,
-                                              PurposeSpeedMode,
-                                              std::optional<PersonUmbrellaState> person_umbrella = std::nullopt);
+std::uint16_t set_mobile_entity_purpose_speed(MobileEntityState&, PurposeSpeedMode, std::optional<PersonUmbrellaState> person_umbrella = std::nullopt);
 void insert_person_previous_ride_history_entry(PersonRuntimeView&, ThingId);
 void insert_person_temporary_ride_history_entry(PersonRuntimeView&, ThingId);
 void age_person_temporary_ride_history(VisitorWorld&, PersonRuntimeView&);
-void
-set_mobile_entity_thought_bubble(VisitorWorld&, MobileEntityThoughtHistory&, MobileThoughtCode, bool force_display);
+void set_mobile_entity_thought_bubble(VisitorWorld&, MobileEntityThoughtHistory&, MobileThoughtCode, bool force_display);
 void release_expired_mobile_entity_thought_script(VisitorWorld&, MobileEntityThoughtHistory&);
 void update_person_need_and_mood_thought_bubble(VisitorWorld&, PersonRuntimeView&);
 void discard_person_balloon(VisitorWorld&, PersonRuntimeView&, bool create_litter);
@@ -92,8 +83,7 @@ enum class BusStopSelector : std::int32_t {
 CellId get_bus_stop_cell(const PersonEnvironmentBalance&, BusStopSelector);
 CellId select_world_map_cell_id_from_pair(const PersonEnvironmentBalance&, bool second);
 std::int32_t get_current_arrival_vehicle_status(VisitorWorld&, World&);
-std::uint32_t
-get_cached_eligible_person_record_count(VisitorWorld&, ParkAnalyserState&, std::uint32_t refresh_quarters);
+std::uint32_t get_cached_eligible_person_record_count(VisitorWorld&, ParkAnalyserState&, std::uint32_t refresh_quarters);
 std::uint32_t calculate_world_arrival_passenger_count(VisitorWorld&);
 bool is_person_departure_routing_at_bus_stop_a(VisitorWorld&, const World&);
 void update_bus_arrival_state(VisitorWorld&, ArrivalState&);
@@ -122,19 +112,11 @@ MobileRenderPose interpolate_mobile_entity_render_position(const MobileEntitySta
 void update_mobile_entity_render_pose(VisitorWorld&, MapObjectBase&, MobileEntityState&, float interpolation);
 void update_person_balloon_render_pose(VisitorWorld&, PersonRuntimeView&, const WorldVector3&, std::uint32_t angle);
 void update_person_umbrella_render_pose(VisitorWorld&, PersonRuntimeView&, const WorldVector3&, std::uint32_t angle);
-std::uint32_t create_runtime_template_at_mobile_entity_resource_position(VisitorWorld&,
-                                                                         const MobileEntityState&,
-                                                                         std::uint32_t particle,
-                                                                         std::int32_t vertical_offset,
-                                                                         std::int32_t parameter);
+std::uint32_t create_runtime_template_at_mobile_entity_resource_position(VisitorWorld&, const MobileEntityState&, std::uint32_t particle, std::int32_t vertical_offset, std::int32_t parameter);
 CellId get_ticket_booth_cell(const PersonEnvironmentBalance&, std::size_t index);
 bool roll_type3_object_chance(VisitorWorld&, ParkObjectRuntimeView&);
 void record_person_departure_visit_duration(VisitorWorld&, ParkAnalyserState&, std::uint32_t elapsed_world_ticks);
-void add_progress_to_matching_world_challenges(ChallengeManagerRecord&,
-                                               ChallengeType,
-                                               std::int32_t delta,
-                                               ThingId target,
-                                               bool secondary);
+void add_progress_to_matching_world_challenges(ChallengeManagerRecord&, ChallengeType, std::int32_t delta, ThingId target, bool secondary);
 void initialize_mobile_navigation_state(MobileNavigationState&);
 void initialize_world_mobile_entity_base(VisitorWorld&, MapObjectBase&, MobileEntityState&, CellId, ThingKind);
 void initialize_world_person_record(VisitorWorld&, PersonRuntimeView&, CellId);

@@ -23,20 +23,13 @@ namespace {
 template <class T, bool Integer = false>
 void append(std::vector<NamedSamContract>& out, const char* schema) {
     static constexpr auto fields = std::define_static_array(compiled_sam_contracts<T, Integer>());
-    for (const auto& field : fields)
+    for (const auto& field : fields) {
         out.push_back({ schema, field });
+    }
 }
 
 bool same(const SamFieldContract& a, const SamFieldContract& b) {
-    return a.kind == b.kind
-        && a.minimum == b.minimum
-        && a.maximum == b.maximum
-        && a.lower == b.lower
-        && a.upper == b.upper
-        && a.capacity == b.capacity
-        && a.indexed == b.indexed
-        && a.subtype == b.subtype
-        && a.unsigned_storage == b.unsigned_storage;
+    return a.kind == b.kind && a.minimum == b.minimum && a.maximum == b.maximum && a.lower == b.lower && a.upper == b.upper && a.capacity == b.capacity && a.indexed == b.indexed && a.subtype == b.subtype && a.unsigned_storage == b.unsigned_storage;
 }
 } //namespace
 
@@ -80,14 +73,14 @@ std::span<const NamedSamContract> sam_schema_catalog() {
         append<RideDescriptionBalance>(fields, "ride_description_balance_descriptors");
         constexpr auto dynamic = "generic_dynamic_texture_descriptors";
         append<DynamicTextureMeshBalance>(fields, dynamic);
-        for (const auto& field : coaster_mesh_sam_contracts())
+        for (const auto& field : coaster_mesh_sam_contracts()) {
             fields.push_back({ dynamic, field });
-        for (const auto& field : coaster_collision_sam_contracts())
+        }
+        for (const auto& field : coaster_collision_sam_contracts()) {
             fields.push_back({ dynamic, field });
+        }
         const auto key = [](const auto& f) {
-            return std::tuple{ std::string_view{ f.schema },
-                               std::string_view{ f.field.group },
-                               std::string_view{ f.field.name } };
+            return std::tuple { std::string_view { f.schema }, std::string_view { f.field.group }, std::string_view { f.field.name } };
         };
         std::ranges::sort(fields, [&](const auto& a, const auto& b) {
             return key(a) < key(b);
@@ -95,15 +88,12 @@ std::span<const NamedSamContract> sam_schema_catalog() {
         auto output = fields.begin();
         for (auto it = fields.begin(); it != fields.end(); ++it) {
             if (output != fields.begin() && key(*(output - 1)) == key(*it)) {
-                if (!same((output - 1)->field, it->field))
-                    throw std::logic_error("Conflicting compiled SAM projections: "
-                                           + std::string{ it->schema }
-                                           + " "
-                                           + it->field.group
-                                           + "."
-                                           + it->field.name);
-            } else
+                if (!same((output - 1)->field, it->field)) {
+                    throw std::logic_error("Conflicting compiled SAM projections: " + std::string { it->schema } + " " + it->field.group + "." + it->field.name);
+                }
+            } else {
                 *output++ = *it;
+            }
         }
         fields.erase(output, fields.end());
         return fields;

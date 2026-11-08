@@ -33,7 +33,7 @@ struct ObjectCatalogError {
 std::string describe_catalog_error(const ObjectCatalogError&);
 
 struct ConfiguredObjectText {
-    std::array<std::u16string, 3> fields{ u"MISSING STRING", u"MISSING STRING", u"MISSING STRING" };
+    std::array<std::u16string, 3> fields { u"MISSING STRING", u"MISSING STRING", u"MISSING STRING" };
 };
 
 //Native configured-language NAME/SIGNA/SIGNB key/value stream, UTF-16LE.
@@ -47,14 +47,13 @@ struct ObjectDefinitionAsset {
     std::filesystem::path game_root;
     ObjectDefinitionBalance balance;
     std::optional<ConfiguredObjectText> configured_text;
-    ResearchCatalogDefinition runtime{};
+    ResearchCatalogDefinition runtime {};
 };
 
 //Reads pylon/car configuration and the track cross-section/material schema
 //from an installed Coaster.sam.
 //A missing file is distinct from a malformed archive or balance field.
-std::expected<std::optional<DynamicTextureMeshBalance>, ObjectCatalogError>
-load_dynamic_texture_mesh_balance(const ObjectDefinitionAsset&);
+std::expected<std::optional<DynamicTextureMeshBalance>, ObjectCatalogError> load_dynamic_texture_mesh_balance(const ObjectDefinitionAsset&);
 //The executable scans columns first and only searches for an exit after it
 //finds an entrance. The catalog owns the shape used to populate this cache.
 void finalize_object_definition_markers(ResearchCatalogDefinition&, const DefinitionGrid&);
@@ -83,14 +82,11 @@ struct LoadedObjectScript {
 
 //RequiresWatering selects the shared vegetation script; otherwise use the
 //object source. Missing scripts fall back to Data/TestScript/test.rse.
-std::expected<LoadedObjectScript, ObjectScriptError> load_installed_object_script(const ObjectDefinitionAsset&,
-                                                                                  bool requires_watering);
-std::expected<RsseProgram, ObjectScriptError> load_relative_rsse_script(const RsseScriptSource&,
-                                                                        std::string_view relative_path);
+std::expected<LoadedObjectScript, ObjectScriptError> load_installed_object_script(const ObjectDefinitionAsset&, bool requires_watering);
+std::expected<RsseProgram, ObjectScriptError> load_relative_rsse_script(const RsseScriptSource&, std::string_view relative_path);
 //Creates the RSSE state and records its ID. Mesh binding and optional initial
 //effects remain backend operations performed by the park-object constructor.
-std::expected<RsseScriptState*, ObjectScriptError> create_installed_park_object_rsse_state(WorldRuntime&,
-                                                                                           ParkObjectRuntimeView&);
+std::expected<RsseScriptState*, ObjectScriptError> create_installed_park_object_rsse_state(WorldRuntime&, ParkObjectRuntimeView&);
 
 struct LoadedObjectCatalog {
     std::unique_ptr<RideDescriptionBalance> shared_ride_description;
@@ -104,16 +100,8 @@ struct LoadedObjectCatalog {
 //Installed per-theme category directories, with loose object directories and
 //WAD object bundles. Resource mesh/audio loading remains a separate
 //dependency.
-std::expected<LoadedObjectCatalog, ObjectCatalogError>
-load_installed_object_catalog(const std::filesystem::path& game_root,
-                              std::string_view source,
-                              CatalogMode = CatalogMode::standard);
+std::expected<LoadedObjectCatalog, ObjectCatalogError> load_installed_object_catalog(const std::filesystem::path& game_root, std::string_view source, CatalogMode = CatalogMode::standard);
 //Carry the process-wide Bumper.sam receiver across catalog reloads. The
 //previous value is copied before any new object overlays are parsed.
-std::expected<LoadedObjectCatalog, ObjectCatalogError>
-load_installed_object_catalog(const std::filesystem::path& game_root,
-                              std::string_view source,
-                              CatalogMode,
-                              const RideDescriptionBalance* previous_description,
-                              std::string_view configured_language = "American");
+std::expected<LoadedObjectCatalog, ObjectCatalogError> load_installed_object_catalog(const std::filesystem::path& game_root, std::string_view source, CatalogMode, const RideDescriptionBalance* previous_description, std::string_view configured_language = "American");
 } //namespace simcoaster

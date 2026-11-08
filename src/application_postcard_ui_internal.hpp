@@ -9,25 +9,21 @@
 
 namespace simcoaster {
 struct ApplicationPostcardUiController::State : UiPanelPresentation {
-    static constexpr UiPanelPresentationPolicy panel_presentation{ .missing_control =
-                                                                       "Original postcard template missing control ",
-                                                                   .text_error = "Postcard localized text: ",
-                                                                   .text_error_row = false,
-                                                                   .white_caption = true };
+    static constexpr UiPanelPresentationPolicy panel_presentation { .missing_control = "Original postcard template missing control ", .text_error = "Postcard localized text: ", .text_error_row = false, .white_caption = true };
     enum class Page {
         none,
         composer,
         outbox
     };
     WorldRuntime& c;
-    UiModalScope message_scope{ c };
+    UiModalScope message_scope { c };
     UiFocusBookmark modal_focus;
     UiMessageControls message_controls;
     UiRuntime& ui;
-    mutable UiPanelBindings bindings{ ui };
-    UiControl *parent{}, *root{}, *wrapper{}, *book{}, *entry{};
-    UiControl *message_wrapper{}, *message_root{};
-    std::uint64_t profile_revision{}, next_send = 1, send_serial{}, send_profile_revision{};
+    mutable UiPanelBindings bindings { ui };
+    UiControl *parent {}, *root {}, *wrapper {}, *book {}, *entry {};
+    UiControl *message_wrapper {}, *message_root {};
+    std::uint64_t profile_revision {}, next_send = 1, send_serial {}, send_profile_revision {};
     std::filesystem::path game_root;
     ApplicationPostcards& store;
     ApplicationPostcardUiHost host;
@@ -37,27 +33,22 @@ struct ApplicationPostcardUiController::State : UiPanelPresentation {
     std::optional<PostcardRecord> pending_postcard;
     std::filesystem::path temporary_directory;
     std::vector<std::filesystem::path> temporary_images;
-    bool sending_from_outbox{};
+    bool sending_from_outbox {};
     //Present through capture/restoration/UI construction, including ready0.
     std::optional<std::int32_t> composition_polls;
-    bool composition_hidden{};
-    Page page{};
-    bool closing{}, paused{}, commands_disabled{};
-    bool book_shifted{}, subject_edited{}, body_edited{}, recipients_edited{}, dragging{};
-    UiPoint drag_previous{}, drag_offset{};
-    std::int32_t preview_deadline{}, entry_index = -1;
+    bool composition_hidden {};
+    Page page {};
+    bool closing {}, paused {}, commands_disabled {};
+    bool book_shifted {}, subject_edited {}, body_edited {}, recipients_edited {}, dragging {};
+    UiPoint drag_previous {}, drag_offset {};
+    std::int32_t preview_deadline {}, entry_index = -1;
     std::vector<PostcardRecord> outbox_records, pending_send;
     std::map<std::uint32_t, PostcardRowAction> actions;
     std::function<void()> message_cancel, message_accept;
     std::uint32_t pixel_width = 1100, pixel_height = 760;
-    bool outbox_scroll_dirty{};
+    bool outbox_scroll_dirty {};
     std::optional<std::array<std::uint32_t, 2>> outbox_resolution;
-    State(WorldRuntime&,
-          UiRuntime&,
-          UiControl*,
-          const std::filesystem::path&,
-          ApplicationPostcards&,
-          ApplicationPostcardUiHost);
+    State(WorldRuntime&, UiRuntime&, UiControl*, const std::filesystem::path&, ApplicationPostcards&, ApplicationPostcardUiHost);
     ~State();
     UiControl& control(std::uint32_t) const;
 
@@ -65,6 +56,7 @@ struct ApplicationPostcardUiController::State : UiPanelPresentation {
     UiControl& parse(UiControl* owner, std::span<const unsigned char> bytes, std::uint32_t id, Callback callback) {
         return parse_control(owner, bytes, id, std::move(callback), "Cannot parse original postcard template");
     }
+
     void title(UiControl&, std::uint32_t, std::uint32_t);
     void edit(UiControl&, std::size_t, std::uint32_t, std::int32_t = 0);
     void list(UiControl&, std::span<const std::uint32_t>);
@@ -74,8 +66,7 @@ struct ApplicationPostcardUiController::State : UiPanelPresentation {
     void close();
     void close_panel();
     void close_message();
-    void
-    message(std::u16string, std::u16string, std::function<void()> cancel = {}, std::function<void()> accepted = {});
+    void message(std::u16string, std::u16string, std::function<void()> cancel = {}, std::function<void()> accepted = {});
     void resource_message(std::uint32_t, std::function<void()> accepted = {}, std::function<void()> cancel = {});
     void error(const PostcardError&);
     void open_composer();

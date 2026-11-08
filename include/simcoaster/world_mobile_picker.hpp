@@ -7,11 +7,11 @@ namespace simcoaster {
 struct ThingHeader;
 
 struct WorldMobilePick {
-    std::uint16_t thing{};
-    const ThingHeader* identity{};
-    std::uint32_t resource{};
+    std::uint16_t thing {};
+    const ThingHeader* identity {};
+    std::uint32_t resource {};
     SpriteFrameReference frame;
-    float homogeneous_w{};
+    float homogeneous_w {};
 };
 
 //User-approved repair of original6FB8C0/67A040: pick the displayed sprite
@@ -24,11 +24,6 @@ class WorldMobilePicker {
     std::vector<const ThingHeader*> body_owners_;
 
 public:
-    std::optional<WorldMobilePick> pick(VisitorWorld&,
-                                        const SceneCamera&,
-                                        const TerrainGridView&,
-                                        std::array<std::int32_t, 2> pixel,
-                                        std::uint32_t width,
-                                        std::uint32_t height);
+    std::optional<WorldMobilePick> pick(VisitorWorld&, const SceneCamera&, const TerrainGridView&, std::array<std::int32_t, 2> pixel, std::uint32_t width, std::uint32_t height);
 };
 } //namespace simcoaster

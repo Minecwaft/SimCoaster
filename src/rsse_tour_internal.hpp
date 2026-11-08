@@ -31,7 +31,7 @@ inline const RsseTourRecord* find(const ScriptQuery& c, std::uint32_t id) {
 }
 
 inline std::int32_t mul(std::int32_t a, std::int32_t b) {
-    return fixed::narrow(std::int64_t{ a } * b);
+    return fixed::narrow(std::int64_t { a } * b);
 }
 
 inline std::int32_t divide(std::int32_t a, std::int32_t b) {
@@ -43,8 +43,9 @@ inline std::int32_t scale(std::int32_t a, std::int32_t b, int denominator = 1024
 }
 
 inline std::int32_t random(ScriptWorld& c) {
-    if (!c.simulation.current)
+    if (!c.simulation.current) {
         throw std::logic_error("TOUR World is not bound");
+    }
     return fixed::absolute(next_world_prng_value(*c.simulation.current));
 }
 

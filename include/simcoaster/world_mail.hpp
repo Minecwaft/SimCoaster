@@ -58,10 +58,7 @@ bool handle_world_tag_system_event(MissionWorld&, TagSystemRecord&, const WorldE
 int mark_tag_messages_by_primary_key_for_deletion(WorldRuntime&, TagSystemRecord*, std::int32_t primary_key);
 int mark_matching_mail_for_deletion(WorldRuntime&, TagSystemRecord*, std::int32_t tag_id, std::int32_t format_dword);
 int mark_tag_messages_by_format_word_for_deletion(WorldRuntime&, TagSystemRecord*, std::uint16_t format_word);
-int mark_tag_messages_by_key_set_and_format_word_for_deletion(WorldRuntime&,
-                                                              TagSystemRecord*,
-                                                              std::span<const std::int32_t> keys,
-                                                              std::uint16_t format_word);
+int mark_tag_messages_by_key_set_and_format_word_for_deletion(WorldRuntime&, TagSystemRecord*, std::span<const std::int32_t> keys, std::uint16_t format_word);
 void update_tag_system_lifecycle(WorldRuntime&, TagSystemRecord*);
 //Release owned mail/counter storage without map/event unlink or UI callbacks.
 //Suitable for an unpublished, partially restored, value-initialized payload.

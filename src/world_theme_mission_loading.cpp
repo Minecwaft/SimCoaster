@@ -7,20 +7,24 @@ std::string mission_balance_asset_path(const MissionQuery& c, std::int32_t missi
     //Native Miss%02d has a minimum width, including the sign, rather than a
     //mission-number range restriction: -1,00,09,100 are all valid spellings.
     auto number = std::to_string(mission);
-    if (number.size() < 2)
+    if (number.size() < 2) {
         number.insert(number.begin(), '0');
+    }
     return c.missions.missions_directory + "/Miss" + number + ".sam";
 }
 
 bool load_mission_balance_data(MissionWorld& c, ThemeGlobalInfoManager* manager) {
-    if (!manager)
+    if (!manager) {
         throw std::invalid_argument("null theme manager");
+    }
     const auto path = mission_balance_asset_path(c, manager->mission_number);
     const auto text = c.ports.assets.read_balance_asset(c, path);
-    if (!text)
+    if (!text) {
         return false; //Missing files leave existing configuration intact.
-    if (!text->empty() && !sam::parse_integer_record(manager->mission_research, *text))
+    }
+    if (!text->empty() && !sam::parse_integer_record(manager->mission_research, *text)) {
         return false;
+    }
 
     //Native0x74C0CA copies all five slots, independently of parsed extent.
     //Failed parsing retains its partial configuration writes and never enters

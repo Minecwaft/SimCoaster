@@ -19,8 +19,9 @@ inline CellId cell_id(const MapObjectBase& base) {
 
 inline MapObjectBase& map_object(VisitorWorld& c, ThingId id) {
     auto* record = c.entities.at(id).payload;
-    if (!record)
+    if (!record) {
         throw std::logic_error("missing map object");
+    }
     return *reinterpret_cast<MapObjectBase*>(record);
 }
 
@@ -31,11 +32,13 @@ inline ParkObjectRuntimeView& park_object(VisitorWorld& c, ThingId id) {
 //Optional remembered destinations may outlive their object. Keep this
 //separate from the strict lookup used while an object owns the Person.
 inline ParkObjectRuntimeView* find_live_park_object(VisitorWorld& c, ThingId id) {
-    if (!id || id >= c.entities.size())
+    if (!id || id >= c.entities.size()) {
         return nullptr;
+    }
     auto* record = c.entities[id].payload;
-    if (!record || record->retirement_pending || record->kind != ThingKind::park_object)
+    if (!record || record->retirement_pending || record->kind != ThingKind::park_object) {
         return nullptr;
+    }
     return reinterpret_cast<ParkObjectRuntimeView*>(record);
 }
 
@@ -43,8 +46,7 @@ inline std::uint32_t squared_cell_distance(CellId a, CellId b) {
     const auto x = static_cast<std::uint32_t>(a) - 1u, y = static_cast<std::uint32_t>(b) - 1u;
     const auto dx = static_cast<std::int32_t>(x & 127u) - static_cast<std::int32_t>(y & 127u);
     const auto dy = std::bit_cast<std::int32_t>((x >> 7) - (y >> 7));
-    return static_cast<std::uint32_t>(dx) * static_cast<std::uint32_t>(dx)
-         + static_cast<std::uint32_t>(dy) * static_cast<std::uint32_t>(dy);
+    return static_cast<std::uint32_t>(dx) * static_cast<std::uint32_t>(dx) + static_cast<std::uint32_t>(dy) * static_cast<std::uint32_t>(dy);
 }
 
 inline float meter(double value) {

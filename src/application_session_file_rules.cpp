@@ -3,7 +3,7 @@
 
 namespace simcoaster::application_session_detail {
 [[noreturn]] void fail(ApplicationSessionFailure failure, const std::filesystem::path& path, std::string detail) {
-    throw ApplicationSessionError{ failure, path, std::move(detail) };
+    throw ApplicationSessionError { failure, path, std::move(detail) };
 }
 
 ApplicationSessionError profile_error(const CampaignProfileError& error) {
@@ -11,13 +11,7 @@ ApplicationSessionError profile_error(const CampaignProfileError& error) {
 }
 
 bool valid_basename(std::u16string_view name) {
-    return !name.empty()
-        && name.size() <= 32
-        && name != u"."
-        && name != u".."
-        && name.find_first_of(u"\\/*?:|<>\"\0", 0, 10) == name.npos
-        && name.back() != u'.'
-        && name.back() != u' ';
+    return !name.empty() && name.size() <= 32 && name != u"." && name != u".." && name.find_first_of(u"\\/*?:|<>\"\0", 0, 10) == name.npos && name.back() != u'.' && name.back() != u' ';
 }
 
 bool extension_is(const std::filesystem::path& path, std::u16string_view suffix) {

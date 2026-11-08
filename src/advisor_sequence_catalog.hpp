@@ -4,7 +4,7 @@
 
 namespace simcoaster::advisor_catalog {
 //Native static sequence rows; words include animation flags and UI-event operands.
-inline constexpr std::array<std::array<std::uint32_t, 20>, 20> sequences{ {
+inline constexpr std::array<std::array<std::uint32_t, 20>, 20> sequences { {
     { { 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { { 196626, 589843, 1114132, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },
     { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } },

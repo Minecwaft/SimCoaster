@@ -10,71 +10,39 @@ namespace world_dependency_detail {
 consteval std::vector<std::meta::info> fields(WorldDomain domain) {
     match (domain) {
         case WorldDomain::visitors => {
-            return { ^^WorldStateOwners::ports,      ^^WorldStateOwners::resources, ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation, ^^WorldStateOwners::view,      ^^WorldStateOwners::visitors,
-                     ^^WorldStateOwners::advisor,    ^^WorldStateOwners::mode,      ^^WorldStateOwners::construction,
-                     ^^WorldStateOwners::timing };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::view, ^^WorldStateOwners::visitors, ^^WorldStateOwners::advisor, ^^WorldStateOwners::mode, ^^WorldStateOwners::construction, ^^WorldStateOwners::timing };
         }
         case WorldDomain::staff => {
-            return { ^^WorldStateOwners::ports,        ^^WorldStateOwners::resources, ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation,   ^^WorldStateOwners::messages,  ^^WorldStateOwners::view,
-                     ^^WorldStateOwners::attractions,  ^^WorldStateOwners::visitors,  ^^WorldStateOwners::mode,
-                     ^^WorldStateOwners::construction, ^^WorldStateOwners::ui,        ^^WorldStateOwners::staff,
-                     ^^WorldStateOwners::source };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::messages, ^^WorldStateOwners::view, ^^WorldStateOwners::attractions, ^^WorldStateOwners::visitors, ^^WorldStateOwners::mode, ^^WorldStateOwners::construction, ^^WorldStateOwners::ui, ^^WorldStateOwners::staff, ^^WorldStateOwners::source };
         }
         case WorldDomain::attractions => {
-            return { ^^WorldStateOwners::ports,        ^^WorldStateOwners::resources,  ^^WorldStateOwners::weather,
-                     ^^WorldStateOwners::entities,     ^^WorldStateOwners::simulation, ^^WorldStateOwners::view,
-                     ^^WorldStateOwners::attractions,  ^^WorldStateOwners::visitors,   ^^WorldStateOwners::mode,
-                     ^^WorldStateOwners::construction, ^^WorldStateOwners::staff,      ^^WorldStateOwners::random };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::weather, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::view, ^^WorldStateOwners::attractions, ^^WorldStateOwners::visitors, ^^WorldStateOwners::mode, ^^WorldStateOwners::construction, ^^WorldStateOwners::staff, ^^WorldStateOwners::random };
         }
         case WorldDomain::economy => {
-            return { ^^WorldStateOwners::ports,    ^^WorldStateOwners::resources,  ^^WorldStateOwners::balance,
-                     ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::finance,
-                     ^^WorldStateOwners::messages, ^^WorldStateOwners::advisor,    ^^WorldStateOwners::mode,
-                     ^^WorldStateOwners::ui };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::balance, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::finance, ^^WorldStateOwners::messages, ^^WorldStateOwners::advisor, ^^WorldStateOwners::mode, ^^WorldStateOwners::ui };
         }
         case WorldDomain::research => {
-            return { ^^WorldStateOwners::ports,      ^^WorldStateOwners::resources, ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation, ^^WorldStateOwners::staff,     ^^WorldStateOwners::research,
-                     ^^WorldStateOwners::random };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::staff, ^^WorldStateOwners::research, ^^WorldStateOwners::random };
         }
         case WorldDomain::missions => {
-            return { ^^WorldStateOwners::ports,      ^^WorldStateOwners::resources,    ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation, ^^WorldStateOwners::missions,     ^^WorldStateOwners::finance,
-                     ^^WorldStateOwners::messages,   ^^WorldStateOwners::view,         ^^WorldStateOwners::advisor,
-                     ^^WorldStateOwners::mode,       ^^WorldStateOwners::construction, ^^WorldStateOwners::timing,
-                     ^^WorldStateOwners::animation,  ^^WorldStateOwners::ui,           ^^WorldStateOwners::staff,
-                     ^^WorldStateOwners::source,     ^^WorldStateOwners::challenges };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources,    ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::missions, ^^WorldStateOwners::finance, ^^WorldStateOwners::messages, ^^WorldStateOwners::view,      ^^WorldStateOwners::advisor,
+                     ^^WorldStateOwners::mode,  ^^WorldStateOwners::construction, ^^WorldStateOwners::timing,   ^^WorldStateOwners::animation,  ^^WorldStateOwners::ui,       ^^WorldStateOwners::staff,   ^^WorldStateOwners::source,   ^^WorldStateOwners::challenges };
         }
         case WorldDomain::scripts => {
-            return { ^^WorldStateOwners::ports,      ^^WorldStateOwners::resources, ^^WorldStateOwners::scripts,
-                     ^^WorldStateOwners::weather,    ^^WorldStateOwners::balance,   ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation, ^^WorldStateOwners::visitors };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::scripts, ^^WorldStateOwners::weather, ^^WorldStateOwners::balance, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::visitors };
         }
         case WorldDomain::weather => {
-            return { ^^WorldStateOwners::ports,   ^^WorldStateOwners::resources, ^^WorldStateOwners::weather,
-                     ^^WorldStateOwners::balance, ^^WorldStateOwners::entities,  ^^WorldStateOwners::simulation,
-                     ^^WorldStateOwners::view,    ^^WorldStateOwners::source };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::weather, ^^WorldStateOwners::balance, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::view, ^^WorldStateOwners::source };
         }
         case WorldDomain::advisors => {
-            return { ^^WorldStateOwners::ports,      ^^WorldStateOwners::resources,    ^^WorldStateOwners::entities,
-                     ^^WorldStateOwners::simulation, ^^WorldStateOwners::visitors,     ^^WorldStateOwners::advisor,
-                     ^^WorldStateOwners::mode,       ^^WorldStateOwners::construction, ^^WorldStateOwners::timing,
-                     ^^WorldStateOwners::ui,         ^^WorldStateOwners::staff,        ^^WorldStateOwners::source };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::visitors, ^^WorldStateOwners::advisor, ^^WorldStateOwners::mode, ^^WorldStateOwners::construction, ^^WorldStateOwners::timing, ^^WorldStateOwners::ui, ^^WorldStateOwners::staff, ^^WorldStateOwners::source };
         }
         case WorldDomain::construction => {
-            return { ^^WorldStateOwners::ports,        ^^WorldStateOwners::resources,
-                     ^^WorldStateOwners::weather,      ^^WorldStateOwners::balance,
-                     ^^WorldStateOwners::entities,     ^^WorldStateOwners::simulation,
-                     ^^WorldStateOwners::view,         ^^WorldStateOwners::attractions,
-                     ^^WorldStateOwners::visitors,     ^^WorldStateOwners::mode,
-                     ^^WorldStateOwners::construction, ^^WorldStateOwners::staff,
-                     ^^WorldStateOwners::messages,     ^^WorldStateOwners::ui };
+            return { ^^WorldStateOwners::ports, ^^WorldStateOwners::resources, ^^WorldStateOwners::weather, ^^WorldStateOwners::balance, ^^WorldStateOwners::entities, ^^WorldStateOwners::simulation, ^^WorldStateOwners::view, ^^WorldStateOwners::attractions, ^^WorldStateOwners::visitors, ^^WorldStateOwners::mode, ^^WorldStateOwners::construction, ^^WorldStateOwners::staff, ^^WorldStateOwners::messages, ^^WorldStateOwners::ui };
         }
-        case _ => {}
-    }
-    throw "unknown world dependency domain";
+        case _ => {
+        }
+    } throw "unknown world dependency domain";
 }
 } //namespace world_dependency_detail
 
@@ -106,12 +74,14 @@ public:
         std::meta::token_sequence initializers = ^^{:owner_(owner)};
         std::vector<std::meta::info> visited;
         for (auto member : world_dependency_detail::fields(Domain)) {
-            if (std::ranges::find(visited, member) != visited.end())
+            if (std::ranges::find(visited, member) != visited.end()) {
                 throw "duplicate world dependency";
+            }
             visited.push_back(member);
             auto type = std::meta::type_of(member);
-            if (Readonly)
+            if (Readonly) {
                 type = std::meta::add_const(type);
+            }
             const auto reference = std::meta::add_lvalue_reference(type);
             const auto name = std::meta::id(std::meta::identifier_of(member));
             declarations += ^^{ ${reference} ${name}; };

@@ -11,26 +11,20 @@
 
 namespace simcoaster {
 namespace {
-constexpr unsigned char selector_template[]{
+constexpr unsigned char selector_template[] {
 #embed "ui_templates/application_debug_selector.bin"
 };
-constexpr unsigned char inspection_template[]{
+constexpr unsigned char inspection_template[] {
 #embed "ui_templates/application_debug_inspection.bin"
 };
-constexpr unsigned char buttons_template[]{
+constexpr unsigned char buttons_template[] {
 #embed "ui_templates/application_debug_buttons.bin"
 };
-static_assert(sizeof(selector_template) == 1450
-              && sizeof(inspection_template) == 432
-              && sizeof(buttons_template) == 3402);
-constexpr std::array<std::u16string_view, 12> page_names{ u"BULLFROG", u"NICK",  u"BEN",    u"JOHN",
-                                                          u"JANSUZ",   u"ED",    u"DAVE",   u"CHRIS",
-                                                          u"RICHARD",  u"LEIGH", u"WILL B", u"OLD PANEL" };
+static_assert(sizeof(selector_template) == 1450 && sizeof(inspection_template) == 432 && sizeof(buttons_template) == 3402);
+constexpr std::array<std::u16string_view, 12> page_names { u"BULLFROG", u"NICK", u"BEN", u"JOHN", u"JANSUZ", u"ED", u"DAVE", u"CHRIS", u"RICHARD", u"LEIGH", u"WILL B", u"OLD PANEL" };
 
 bool escape(const UiEvent& e) {
-    return e.type == 65547
-        && (e.id > 255 ? e.id >> 8 : e.id) == 27
-        && !(static_cast<std::uint32_t>(e.value) & 0xFF0000u);
+    return e.type == 65547 && (e.id > 255 ? e.id >> 8 : e.id) == 27 && !(static_cast<std::uint32_t>(e.value) & 0xFF0000u);
 }
 } //namespace
 
@@ -41,28 +35,19 @@ std::u16string_view application_debug_page_name(ApplicationDebugPage p) {
 struct ApplicationDebugSelectorController::State {
     WorldRuntime& c;
     UiRuntime& ui;
-    UiControl* primary{};
-    UiControl* selector{};
-    UiControl* inspection{};
-    UiControl* buttons{};
+    UiControl* primary {};
+    UiControl* selector {};
+    UiControl* inspection {};
+    UiControl* buttons {};
     ApplicationDebugSelectorHost host;
     std::optional<ApplicationDebugPage> page;
     std::optional<std::string> error;
-    bool closing{};
+    bool closing {};
 
-    State(WorldRuntime& context, UiRuntime& runtime, UiControl* p, ApplicationDebugSelectorHost h)
-        : c(context),
-          ui(runtime),
-          primary(p),
-          host(std::move(h)) {
-        if (!ui.owns(p)
-            || !host.panels.dismiss
-            || !host.panels.activate
-            || !host.panels.deactivate
-            || !host.persistent
-            || !host.execute
-            || !host.report_error)
+    State(WorldRuntime& context, UiRuntime& runtime, UiControl* p, ApplicationDebugSelectorHost h) : c(context), ui(runtime), primary(p), host(std::move(h)) {
+        if (!ui.owns(p) || !host.panels.dismiss || !host.panels.activate || !host.panels.deactivate || !host.persistent || !host.execute || !host.report_error) {
             throw std::invalid_argument("Developer tools require owned UI, process " "state and command routing");
+        }
         bind_application_debug_state(c, *host.persistent);
     }
 
@@ -71,30 +56,31 @@ struct ApplicationDebugSelectorController::State {
     }
 
     void focus() {
-        auto* root = ui.owns(selector)   ? selector
-                   : ui.owns(inspection) ? inspection
-                   : ui.owns(buttons)    ? buttons
-                                         : primary;
+        auto* root = ui.owns(selector) ? selector : ui.owns(inspection) ? inspection : ui.owns(buttons) ? buttons : primary;
         ui.set_input_root(root);
-        if (root != primary)
+        if (root != primary) {
             ui.set_focus(root);
-        else if (host.panels.synchronize_focus)
+        } else if (host.panels.synchronize_focus) {
             host.panels.synchronize_focus();
-        else
+        } else {
             ui.set_focus(primary);
+        }
     }
 
     void drop(UiControl*& owned) {
         auto* old = std::exchange(owned, nullptr);
-        if (ui.owns(old))
+        if (ui.owns(old)) {
             ui.destroy(old);
-        if (old)
+        }
+        if (old) {
             host.panels.deactivate(old);
+        }
     }
 
     void close() {
-        if (closing)
+        if (closing) {
             return;
+        }
         closing = true;
         drop(selector);
         drop(inspection);
@@ -117,18 +103,20 @@ struct ApplicationDebugSelectorController::State {
 
     UiControl& required(UiControl* root, std::uint32_t id) {
         auto* p = ui.find_recursive(root, id);
-        if (!p)
+        if (!p) {
             throw std::runtime_error("Developer control is absent: " + std::to_string(id));
+        }
         return *p;
     }
 
     UiControl* parse(std::span<const unsigned char> bytes, UiControl* parent = nullptr) {
         auto p = ui.parse_template(parent ? parent : primary, std::as_bytes(bytes));
-        if (!p)
-            throw std::runtime_error(
-                "Developer template word " + std::to_string(p.error().word) + ": " + p.error().reason);
-        if (!*p)
+        if (!p) {
+            throw std::runtime_error("Developer template word " + std::to_string(p.error().word) + ": " + p.error().reason);
+        }
+        if (!*p) {
             throw std::runtime_error("Developer template has no root");
+        }
         return *p;
     }
 
@@ -137,10 +125,12 @@ struct ApplicationDebugSelectorController::State {
             auto& label = required(selector, 100025u + static_cast<unsigned>(i));
             auto text = page ? debug_detail::pages[static_cast<std::size_t>(*page)][i].caption : page_names[i];
             if (page == ApplicationDebugPage::leigh) {
-                if (i == 8 && host.persistent->force_special)
+                if (i == 8 && host.persistent->force_special) {
                     text = u"Complete things for Special rides";
-                if (i == 9 && host.persistent->always_win)
+                }
+                if (i == 9 && host.persistent->always_win) {
                     text = u"Do Challenges normally";
+                }
             }
             label.secondary_asset_hash = 0;
             label.font = 6;
@@ -173,29 +163,30 @@ struct ApplicationDebugSelectorController::State {
             }
             const auto slot = debug_detail::pages[static_cast<std::size_t>(*page)][index];
             const auto page_name = application_debug_page_name(*page);
-            const auto action = "Developer "
-                              + std::string{ page_name.begin(), page_name.end() }
-                              + " command "
-                              + std::to_string(index + 1)
-                              + ": ";
-            if (slot.close == debug_detail::Close::before)
+            const auto action = "Developer " + std::string { page_name.begin(), page_name.end() } + " command " + std::to_string(index + 1) + ": ";
+            if (slot.close == debug_detail::Close::before) {
                 close_page();
+            }
             try {
-                auto result = std::expected<void, std::string>{};
-                if (slot.command == ApplicationDebugCommand::inspection)
+                auto result = std::expected<void, std::string> {};
+                if (slot.command == ApplicationDebugCommand::inspection) {
                     open_inspection();
-                else if (slot.command == ApplicationDebugCommand::button_window)
+                } else if (slot.command == ApplicationDebugCommand::button_window) {
                     open_buttons();
-                else if (slot.command != ApplicationDebugCommand::none)
+                } else if (slot.command != ApplicationDebugCommand::none) {
                     result = host.execute(slot.command);
-                if (!result)
+                }
+                if (!result) {
                     fail(action + result.error());
-                else
+                } else {
                     error.reset();
-                if (slot.close == debug_detail::Close::after)
+                }
+                if (slot.close == debug_detail::Close::after) {
                     close_page();
-                if (ui.owns(selector))
+                }
+                if (ui.owns(selector)) {
                     captions();
+                }
             } catch (const std::exception& ex) {
                 fail(action + ex.what());
             }
@@ -206,37 +197,39 @@ struct ApplicationDebugSelectorController::State {
 
     void bind_aux(UiControl& control, UiControl* root, bool inspection_kind) {
         const auto widget = control.primary_callback;
-        ui.set_primary_callback(
-            control,
-            [this, root, inspection_kind, widget](UiControl& sender, const UiEvent& e) -> std::intptr_t {
-                if (&sender == root && e.type == 20) {
-                    auto*& owned = inspection_kind ? inspection : buttons;
-                    if (owned == root) {
-                        owned = nullptr;
-                        host.panels.deactivate(root);
-                        focus();
-                    }
-                    return ui.secondary(sender, e);
-                }
-                if ((e.type == 256 && (e.id == 4294967294u || (!inspection_kind && e.id == 500001)))
-                    || (inspection_kind && (e.type == 5 || escape(e)))) {
-                    if (inspection_kind)
-                        drop(inspection);
-                    else
-                        drop(buttons);
+        ui.set_primary_callback(control, [this, root, inspection_kind, widget](UiControl& sender, const UiEvent& e) -> std::intptr_t {
+            if (&sender == root && e.type == 20) {
+                auto*& owned = inspection_kind ? inspection : buttons;
+                if (owned == root) {
+                    owned = nullptr;
+                    host.panels.deactivate(root);
                     focus();
-                    return inspection_kind && e.type == 5 ? 1 : 0;
                 }
-                if (inspection_kind && e.type == 1030)
-                    host.persistent->sort_key = static_cast<std::int32_t>(e.value);
-                if (inspection_kind && (e.type == 65546 || e.type == 65547) && host.key && host.key(e))
-                    return 1;
-                if (&sender == root || (e.type >= 256 && e.type <= 2055))
-                    return ui.secondary(sender, e);
-                return widget ? widget(sender, e) : ui.secondary(sender, e);
-            });
-        for (auto* child : control.children)
+                return ui.secondary(sender, e);
+            }
+            if ((e.type == 256 && (e.id == 4294967294u || (!inspection_kind && e.id == 500001))) || (inspection_kind && (e.type == 5 || escape(e)))) {
+                if (inspection_kind) {
+                    drop(inspection);
+                } else {
+                    drop(buttons);
+                }
+                focus();
+                return inspection_kind && e.type == 5 ? 1 : 0;
+            }
+            if (inspection_kind && e.type == 1030) {
+                host.persistent->sort_key = static_cast<std::int32_t>(e.value);
+            }
+            if (inspection_kind && (e.type == 65546 || e.type == 65547) && host.key && host.key(e)) {
+                return 1;
+            }
+            if (&sender == root || (e.type >= 256 && e.type <= 2055)) {
+                return ui.secondary(sender, e);
+            }
+            return widget ? widget(sender, e) : ui.secondary(sender, e);
+        });
+        for (auto* child : control.children) {
             bind_aux(*child, root, inspection_kind);
+        }
     }
 
     void open_buttons() {
@@ -256,8 +249,9 @@ struct ApplicationDebugSelectorController::State {
     }
 
     void open_inspection() {
-        if (ui.owns(inspection))
+        if (ui.owns(inspection)) {
             return;
+        }
         host.panels.dismiss();
         try {
             inspection = parse(inspection_template, host.inspection_parent);
@@ -266,8 +260,8 @@ struct ApplicationDebugSelectorController::State {
             list.row_height_font_padding = 6;
             list.list_highlight_asset_hash = ui_model_asset_hash("hilight");
             list.column_presentations.resize(5);
-            constexpr std::array names{ u"Name", u"Type", u"Xps", u"Ability", u"Progress" };
-            constexpr std::array helps{ 15u, 17u, 15u, 17u, 17u };
+            constexpr std::array names { u"Name", u"Type", u"Xps", u"Ability", u"Progress" };
+            constexpr std::array helps { 15u, 17u, 15u, 17u, 17u };
             for (unsigned i = 0; i < 5; ++i) {
                 auto& col = list.column_presentations[i];
                 col.font = 7;
@@ -282,37 +276,38 @@ struct ApplicationDebugSelectorController::State {
                 //refresh enabled text to opaque white. Disabled styling is retained.
                 heading.color = { 255, 255, 255, 255 };
                 heading.help_index = helps[i];
-                for (unsigned s = 0; s < 3; ++s)
+                for (unsigned s = 0; s < 3; ++s) {
                     heading.button_text_colors[s] = heading.color;
+                }
                 ui.set_text(heading, names[i]);
             }
             std::vector<UiListRow> rows;
             //Native enumeration is active-list order, staff mask1, TRAINING8 only.
             for (auto* link = c.entities.active_head; link; link = link->active_next) {
                 auto* payload = link->payload;
-                if (!payload || payload->retirement_pending || !is_staff_record_kind(payload->kind))
+                if (!payload || payload->retirement_pending || !is_staff_record_kind(payload->kind)) {
                     continue;
+                }
                 const auto& staff = *reinterpret_cast<const StaffRuntimeRecord*>(payload);
-                if (staff.state == StaffState::training)
+                if (staff.state == StaffState::training) {
                     rows.push_back({ staff.base.header.id, { u"SOMETHING", u"SOMETHING", 42, u"SOMETHING", 24 } });
+                }
             }
             if (!rows.empty()) {
-                const std::array argument{ BfstSignedIntegerArgument{ 6, 24 } };
-                auto percent = format_bfst_wide_string(c.messages.mail_language.ui_text,
-                                                       c.messages.mail_language.conversion,
-                                                       959,
-                                                       63,
-                                                       {},
-                                                       argument);
-                if (!percent)
+                const std::array argument { BfstSignedIntegerArgument { 6, 24 } };
+                auto percent = format_bfst_wide_string(c.messages.mail_language.ui_text, c.messages.mail_language.conversion, 959, 63, {}, argument);
+                if (!percent) {
                     throw std::runtime_error("Developer percentage: " + percent.error().reason);
-                for (auto& row : rows)
+                }
+                for (auto& row : rows) {
                     row.cells[4].display_text = *percent;
+                }
             }
             ui.set_list_rows(list, std::move(rows), false, false);
             ui.set_list_sort_key(list, host.persistent->sort_key, false);
-            if (!list.rows.empty())
+            if (!list.rows.empty()) {
                 ui.select_list_row(list, 0, false);
+            }
             auto& title = required(inspection, 623974933);
             title.font = 5;
             title.primary_shadow_text = true;
@@ -342,16 +337,19 @@ struct ApplicationDebugSelectorController::State {
     }
 
     bool open() {
-        if (!c.debug.cheat_commands.cheat_commands_enabled)
+        if (!c.debug.cheat_commands.cheat_commands_enabled) {
             return false;
-        if (ui.owns(selector))
+        }
+        if (ui.owns(selector)) {
             return true;
+        }
         close();
         host.panels.dismiss();
         try {
             selector = parse(selector_template);
-            if (selector->id != 100000)
+            if (selector->id != 100000) {
                 throw std::runtime_error("Developer selector root is absent");
+            }
             bind_ui_panel(ui, *selector, [this](auto& sender, const auto& value) {
                 return event(sender, value);
             });
@@ -361,18 +359,14 @@ struct ApplicationDebugSelectorController::State {
             focus();
         } catch (const std::exception& ex) {
             close();
-            fail(std::string{ "Opening developer selector: " } + ex.what());
+            fail(std::string { "Opening developer selector: " } + ex.what());
             return false;
         }
         return true;
     }
 };
 
-ApplicationDebugSelectorController::ApplicationDebugSelectorController(WorldRuntime& c,
-                                                                       UiRuntime& ui,
-                                                                       UiControl* p,
-                                                                       ApplicationDebugSelectorHost h)
-    : state_(std::make_unique<State>(c, ui, p, std::move(h))) {}
+ApplicationDebugSelectorController::ApplicationDebugSelectorController(WorldRuntime& c, UiRuntime& ui, UiControl* p, ApplicationDebugSelectorHost h) : state_(std::make_unique<State>(c, ui, p, std::move(h))) {}
 
 ApplicationDebugSelectorController::~ApplicationDebugSelectorController() = default;
 
@@ -389,9 +383,7 @@ bool ApplicationDebugSelectorController::is_open() const {
 }
 
 UiControl* ApplicationDebugSelectorController::root() const {
-    return state_->ui.owns(state_->selector)   ? state_->selector
-         : state_->ui.owns(state_->inspection) ? state_->inspection
-                                               : state_->buttons;
+    return state_->ui.owns(state_->selector) ? state_->selector : state_->ui.owns(state_->inspection) ? state_->inspection : state_->buttons;
 }
 
 const std::optional<std::string>& ApplicationDebugSelectorController::last_error() const {

@@ -13,29 +13,24 @@ enum class Close {
 struct Slot {
     std::u16string_view caption = u"Add button text here";
     C command = C::none;
-    Close close{};
+    Close close {};
     bool forward = true;
-    std::intptr_t result{};
+    std::intptr_t result {};
 };
 
 //Native initializers5323D0..5388C0 and callbacks532A40..538F30.
 //Caption identity is independent of the action: RICHARD and BEN demonstrate
 //why looking at text alone cannot supply this dispatch table.
 inline constexpr auto pages = [] {
-    std::array<std::array<Slot, 12>, 12> p{};
-    const auto set = [&](unsigned page,
-                         unsigned slot,
-                         std::u16string_view text,
-                         C command = C::none,
-                         Close close = Close::none,
-                         bool forward = false,
-                         std::intptr_t result = 0) {
+    std::array<std::array<Slot, 12>, 12> p {};
+    const auto set = [&](unsigned page, unsigned slot, std::u16string_view text, C command = C::none, Close close = Close::none, bool forward = false, std::intptr_t result = 0) {
         p[page][slot - 1] = { text, command, close, forward, result };
     };
     set(0, 1, u"Skip Mission", C::skip_mission, Close::after);
     set(0, 2, u"Get Promoted", C::promote, Close::after);
-    for (auto page : { 1u, 3u, 4u })
+    for (auto page : { 1u, 3u, 4u }) {
         set(page, 1, u"Add button text here");
+    }
     set(2, 1, u"Raise Light", C::raise_light, Close::none, true);
     set(2, 2, u"Lower Light", C::lower_light);
     set(2, 3, u"Park Award", C::award, Close::none, true);
@@ -47,8 +42,9 @@ inline constexpr auto pages = [] {
     set(5, 5, u"Reload Challenges for this theme", C::reload_challenges, Close::before);
     set(5, 6, u"Make new Research Panel", C::open_research, Close::before);
     set(5, 7, u"Reconstruct obstacle slot system", C::rebuild_staff_slots, Close::before);
-    for (unsigned i = 7; i < 12; ++i)
+    for (unsigned i = 7; i < 12; ++i) {
         p[5][i].caption = u"";
+    }
     set(6, 1, u"Spawn Message Room");
     set(6, 2, u"Spawn Research Assign", C::assign_research, Close::before);
     set(6, 3, u"Spawn of Satan", C::open_research, Close::before);

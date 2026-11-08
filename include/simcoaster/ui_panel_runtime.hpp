@@ -4,11 +4,12 @@
 
 namespace simcoaster {
 struct WorldRuntime;
+
 //A controller owns this cache; any tree mutation invalidates its projections.
 //Keys include the lookup root because original templates reuse child IDs.
 class UiPanelBindings {
     UiRuntime& ui_;
-    mutable std::uint64_t revision_{};
+    mutable std::uint64_t revision_ {};
     mutable std::map<std::pair<const UiControl*, std::uint32_t>, UiControl*> controls_;
 
 public:
@@ -23,10 +24,10 @@ struct UiRequiredControl {
 };
 
 struct UiMessageControls {
-    [[=UiRequiredControl{ 60004 }]] UiControl* title{};
-    [[=UiRequiredControl{ 60001 }]] UiControl* cancel{};
-    [[=UiRequiredControl{ 60002 }]] UiControl* okay{};
-    [[=UiRequiredControl{ 60003 }]] UiControl* close{};
+    [[=UiRequiredControl { 60004 }]] UiControl* title {};
+    [[=UiRequiredControl { 60001 }]] UiControl* cancel {};
+    [[=UiRequiredControl { 60002 }]] UiControl* okay {};
+    [[=UiRequiredControl { 60003 }]] UiControl* close {};
 };
 
 UiMessageControls bind_ui_message_controls(UiPanelBindings&, UiControl*, std::string_view missing);

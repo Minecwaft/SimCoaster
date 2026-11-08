@@ -23,18 +23,11 @@ struct SaveServices {
     virtual void field_header(std::uint32_t size, std::string_view label, bool writing) = 0;
     //The mobile codec requests a new path after successful read AND write, even
     //when schema>1 skips its own fields. The default runs the rebuilt router.
-    virtual bool
-    request_mobile_entity_path(WorldRuntime&, MapObjectBase&, MobileEntityState&, std::uint16_t x, std::uint16_t y);
+    virtual bool request_mobile_entity_path(WorldRuntime&, MapObjectBase&, MobileEntityState&, std::uint16_t x, std::uint16_t y);
     virtual void prepare_loaded_payload(WorldRuntime&, ThingHeader*, ThingKind);
     //The native dispatcher selects the codec before calling stream callbacks;
     //the payload's live kind can change independently during those callbacks.
-    virtual int transfer_payload(WorldRuntime&,
-                                 ThingKind selected_kind,
-                                 ThingHeader*,
-                                 Stream&,
-                                 bool writing,
-                                 std::uint32_t schema,
-                                 std::uint32_t world_version);
+    virtual int transfer_payload(WorldRuntime&, ThingKind selected_kind, ThingHeader*, Stream&, bool writing, std::uint32_t schema, std::uint32_t world_version);
 };
 
 //One transfer owns its stream/header boundary and immutable codec policy.
@@ -92,8 +85,7 @@ int transfer_world_cell_base_fields(CellBase*, SaveArchive archive);
 int transfer_world_map_cell_record(MapCell*, SaveArchive archive);
 int transfer_world_track_cell_record(TrackCell*, SaveArchive archive);
 
-int
-transfer_world_map_cells(WorldRuntime&, World&, PositionedStream&, SaveServices&, bool writing, std::uint32_t schema);
+int transfer_world_map_cells(WorldRuntime&, World&, PositionedStream&, SaveServices&, bool writing, std::uint32_t schema);
 
 int transfer_world_population_state(World&, SaveArchive archive);
 

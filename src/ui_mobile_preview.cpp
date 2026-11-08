@@ -19,7 +19,7 @@ namespace {
 //Native UIHireStaffPanel uses off_9B11F0, inside the existing immutable
 //resource program image beginning at 9AFB08. Its own script sets flags51000,
 //frame-entry1, direction5 and cycles frame offsets0..7, yielding each frame.
-constexpr ResourceScriptEntry hire_program{ false, (10162672u - 10156808u) / 4u };
+constexpr ResourceScriptEntry hire_program { false, (10162672u - 10156808u) / 4u };
 
 std::uint32_t staff_category(StaffType role) {
     return match (role) -> std::uint32_t {
@@ -44,15 +44,13 @@ class PreviewLease {
     std::size_t index_;
 
 public:
-    PreviewLease(WorldRuntime& c, std::unique_ptr<ResourceVariant>& owner, std::string_view family)
-        : c_(c),
-          owner_(owner),
-          saved_active_(c.resources.variants.active),
-          index_(c.resources.variants.slots.size()) {
-        if (!owner || !c.resources.variants.initialized)
+    PreviewLease(WorldRuntime& c, std::unique_ptr<ResourceVariant>& owner, std::string_view family) : c_(c), owner_(owner), saved_active_(c.resources.variants.active), index_(c.resources.variants.slots.size()) {
+        if (!owner || !c.resources.variants.initialized) {
             throw std::logic_error(std::string(family) + " preview resource lease is unavailable");
-        if (index_ >= static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max()))
+        }
+        if (index_ >= static_cast<std::size_t>(std::numeric_limits<std::int32_t>::max())) {
             throw std::length_error(std::string(family) + " preview resource handle capacity");
+        }
         c.resources.variants.slots.push_back(std::move(owner));
         c.resources.variants.slots[index_]->handle = handle();
     }
@@ -60,10 +58,12 @@ public:
     ~PreviewLease() {
         auto& runtime = c_.resources.variants;
         owner_ = std::move(runtime.slots[index_]);
-        if (owner_)
+        if (owner_) {
             owner_->handle = 0;
-        if (runtime.slots.size() == index_ + 1)
+        }
+        if (runtime.slots.size() == index_ + 1) {
             runtime.slots.pop_back();
+        }
         runtime.active = saved_active_;
     }
 
@@ -109,10 +109,10 @@ struct SpritePreviewPlacement {
 struct SpritePreviewState {
     WorldRuntime& c;
     const std::thread::id thread = std::this_thread::get_id();
-    const World* world{};
-    const LoadedSpriteCatalog* catalog{};
+    const World* world {};
+    const LoadedSpriteCatalog* catalog {};
     std::unique_ptr<ResourceVariant> preview, fallback;
-    std::uint32_t category{}, variant{};
+    std::uint32_t category {}, variant {};
     SpritePixelCatalog pixels;
     ResourceSpritePass pass;
     std::map<std::pair<std::size_t, std::size_t>, TextureImagePtr> textures;
@@ -122,15 +122,12 @@ struct SpritePreviewState {
     const float adjustment;
     const bool initial_fallback;
 
-    SpritePreviewState(WorldRuntime& context, std::string_view name, float scale, bool initial)
-        : c(context),
-          family(name),
-          adjustment(scale),
-          initial_fallback(initial) {}
+    SpritePreviewState(WorldRuntime& context, std::string_view name, float scale, bool initial) : c(context), family(name), adjustment(scale), initial_fallback(initial) {}
 
     void require_thread() const {
-        if (thread != std::this_thread::get_id())
+        if (thread != std::this_thread::get_id()) {
             throw std::logic_error(std::string(family) + " previews require their owning UI thread");
+        }
     }
 
     void clear() {
@@ -139,15 +136,13 @@ struct SpritePreviewState {
         fallback.reset();
         pass.commands.clear();
         pass.special.clear();
-        for (auto& region : pass.regions)
+        for (auto& region : pass.regions) {
             region.clear();
+        }
     }
 
     bool ready() {
-        if (!c.resources.variants.initialized
-            || !c.resources.variants.catalog
-            || !world
-            || world != c.referenced_world()) {
+        if (!c.resources.variants.initialized || !c.resources.variants.catalog || !world || world != c.referenced_world()) {
             return false;
         }
         if (catalog != c.resources.variants.catalog) {
@@ -161,40 +156,37 @@ struct SpritePreviewState {
     }
 
     void validate_variant() {
-        if (category >= catalog->variants.size()
-            || catalog->variants[category].loaded_resource_count < 0
-            || variant >= static_cast<std::uint32_t>(catalog->variants[category].loaded_resource_count))
+        if (category >= catalog->variants.size() || catalog->variants[category].loaded_resource_count < 0 || variant >= static_cast<std::uint32_t>(catalog->variants[category].loaded_resource_count)) {
             throw std::runtime_error(std::string(family) + " preview selects an absent sprite variant");
+        }
     }
 
     std::unique_ptr<ResourceVariant> take_resource(std::uint32_t handle) {
         auto* resource = find_resource_variant(c, handle);
-        if (!resource)
+        if (!resource) {
             throw std::runtime_error("Unable to create original " + std::string(family) + " preview resource");
+        }
         auto owned = std::move(c.resources.variants.slots[handle]);
-        if (c.resources.variants.active == resource)
+        if (c.resources.variants.active == resource) {
             c.resources.variants.active = nullptr;
+        }
         owned->handle = 0;
         return owned;
     }
 
     std::uint32_t narrow_index(std::size_t index) {
-        if (index > std::numeric_limits<std::uint32_t>::max())
+        if (index > std::numeric_limits<std::uint32_t>::max()) {
             throw std::length_error(std::string(family) + " preview draw index capacity");
+        }
         return static_cast<std::uint32_t>(index);
     }
 
     void synchronize_pixels() {
         const auto& values = preview->values;
-        const auto& asset = catalog->resources.at(
-            static_cast<std::size_t>(catalog->variants.at(values[10].bits).first_loaded_resource_index)
-            + values[11].bits
-            + static_cast<std::uint32_t>(values[12].integer() / 16));
+        const auto& asset = catalog->resources.at(static_cast<std::size_t>(catalog->variants.at(values[10].bits).first_loaded_resource_index) + values[11].bits + static_cast<std::uint32_t>(values[12].integer() / 16));
         //Native F/T reload preserves the catalog address, but replaces the
         //backing buffers borrowed by decoded frame metadata.
-        if (pixel_path != asset.pixel_path
-            || pixel_payload.data() != asset.pixel_payload.data()
-            || pixel_payload.size() != asset.pixel_payload.size()) {
+        if (pixel_path != asset.pixel_path || pixel_payload.data() != asset.pixel_payload.data() || pixel_payload.size() != asset.pixel_payload.size()) {
             pixels.bind(*catalog);
             textures.clear();
             pixel_path = asset.pixel_path;
@@ -203,9 +195,10 @@ struct SpritePreviewState {
     }
 
     void advance(std::unique_ptr<ResourceVariant>& owned, std::uint32_t now, bool initialize = false) {
-        if (!owned || owned->state == ResourceRunState::completed || (!initialize && !due(now, owned->deadline)))
+        if (!owned || owned->state == ResourceRunState::completed || (!initialize && !due(now, owned->deadline))) {
             return;
-        PreviewLease lease{ c, owned, family };
+        }
+        PreviewLease lease { c, owned, family };
         //Metadata/program operations use the runtime's current snapshot. Restore
         //it rather than letting a UI update change the World scheduler's clock.
         const auto snapshot = c.resources.variants.time_snapshot;
@@ -222,7 +215,7 @@ struct SpritePreviewState {
     }
 
     void copy_from(std::uint32_t handle) {
-        PreviewLease lease{ c, preview, family };
+        PreviewLease lease { c, preview, family };
         copy_resource_variant_state(c, lease.handle(), handle);
     }
 
@@ -232,47 +225,47 @@ struct SpritePreviewState {
         advance(preview, now);
         const auto handle = mobile.animation.sprite_script;
         const auto* live = find_resource_variant(c, handle);
-        if (live && (live->values[10].bits != category || live->values[11].bits != variant))
+        if (live && (live->values[10].bits != category || live->values[11].bits != variant)) {
             live = nullptr;
+        }
         if (live) {
             fallback.reset();
-            if (!preview)
+            if (!preview) {
                 preview = take_resource(clone_resource_variant_for_preview(c, handle, 0, 0, 0, adjustment));
-            else
+            } else {
                 copy_from(handle);
+            }
         } else {
             //Visitors retain 502B60's initial empty-source behavior. The approved
             //staff repair primes a new owned category3 fallback, even while paused.
-            if (!preview && !initial_fallback)
+            if (!preview && !initial_fallback) {
                 return false;
-            const bool create_fallback =
-                !fallback || fallback->values[10].bits != category || fallback->values[11].bits != variant;
-            if (create_fallback)
-                fallback = take_resource(
-                    allocate_resource_variant(c,
-                                              resource_program_entry({ ResourceProgramFamily::sprite_animation, 3 }),
-                                              { category, variant, 0, 0, 0, 0 }));
+            }
+            const bool create_fallback = !fallback || fallback->values[10].bits != category || fallback->values[11].bits != variant;
+            if (create_fallback) {
+                fallback = take_resource(allocate_resource_variant(c, resource_program_entry({ ResourceProgramFamily::sprite_animation, 3 }), { category, variant, 0, 0, 0, 0 }));
+            }
             advance(fallback, now, !preview && create_fallback);
-            PreviewLease lease{ c, fallback, family };
-            if (!preview)
+            PreviewLease lease { c, fallback, family };
+            if (!preview) {
                 preview = take_resource(clone_resource_variant_for_preview(c, lease.handle(), 0, 0, 0, adjustment));
-            else
+            } else {
                 copy_from(lease.handle());
+            }
         }
         //690400 renders a copied visible frame even after the clone reached END.
         return preview && preview->render_enabled;
     }
 
     TextureImagePtr texture(SpriteFrameReference frame) {
-        const auto key = std::pair{ frame.resource, frame.frame };
-        if (const auto found = textures.find(key); found != textures.end())
+        const auto key = std::pair { frame.resource, frame.frame };
+        if (const auto found = textures.find(key); found != textures.end()) {
             return found->second;
+        }
         const auto image = decode_sprite_image(pixels.payload(frame.resource), frame.frame);
-        if (!image)
-            throw std::runtime_error("Original "
-                                     + std::string(family)
-                                     + " sprite decode failed at byte "
-                                     + std::to_string(image.error().offset));
+        if (!image) {
+            throw std::runtime_error("Original " + std::string(family) + " sprite decode failed at byte " + std::to_string(image.error().offset));
+        }
         auto output = std::make_shared<TextureImage>();
         output->width = image->width;
         output->height = image->height;
@@ -285,9 +278,7 @@ struct SpritePreviewState {
             output->pixels.push_back(rgba);
         }
         output->alpha = partial ? TextureAlpha::translucent : cutout ? TextureAlpha::cutout : TextureAlpha::opaque;
-        output->source_mode = partial ? TextureSourceMode::alpha_low
-                            : cutout  ? TextureSourceMode::alpha_high
-                                      : TextureSourceMode::opaque;
+        output->source_mode = partial ? TextureSourceMode::alpha_low : cutout ? TextureSourceMode::alpha_high : TextureSourceMode::opaque;
         return textures.emplace(key, std::move(output)).first->second;
     }
 
@@ -300,8 +291,9 @@ struct SpritePreviewState {
                                         return std::isfinite(value);
                                     })
             || placement.bounds[2] < placement.bounds[0]
-            || placement.bounds[3] < placement.bounds[1])
+            || placement.bounds[3] < placement.bounds[1]) {
             throw std::invalid_argument("Invalid " + std::string(family) + " UI preview placement");
+        }
         auto clip = placement.clip;
         clip[0] = std::max({ clip[0], static_cast<float>(placement.bounds[0]), 0.f });
         clip[1] = std::max({ clip[1], static_cast<float>(placement.bounds[1]), 0.f });
@@ -310,25 +302,23 @@ struct SpritePreviewState {
         return clip;
     }
 
-    bool draw(UiDrawList& output,
-              const SpritePreviewPlacement& placement,
-              const std::array<float, 4>& clip,
-              bool candidate) {
+    bool draw(UiDrawList& output, const SpritePreviewPlacement& placement, const std::array<float, 4>& clip, bool candidate) {
         synchronize_pixels();
 
         //502B60 and hire-candidate preview use the original 2048x1536 canvas.
         const auto& b = placement.bounds;
         const auto center = (static_cast<std::int64_t>(b[2]) - b[0]) / 2 + b[0];
         auto baseline = static_cast<std::int64_t>(b[3]) - (static_cast<std::int64_t>(b[3]) - b[1]) / 4;
-        if (!candidate)
+        if (!candidate) {
             baseline += static_cast<std::int64_t>(placement.adjustment * -.25f);
+        }
         preview->values[1].floating(static_cast<float>(center - 1016) * .0009765625f);
         preview->values[2].floating(static_cast<float>(768 - baseline) * .0013020834f);
         preview->values[3].floating(1.f - static_cast<float>(placement.depth) / 40.f);
         preview->values[8].floating(placement.adjustment);
 
         {
-            PreviewLease lease{ c, preview, family };
+            PreviewLease lease { c, preview, family };
             //queue_resource_sprite's ordinary height sampler is a World-space
             //adapter. UI explicit coordinates already carry their own normalized Y.
             //This high-only bypass bit is removed by the queue's24-bit flag mask;
@@ -336,7 +326,7 @@ struct SpritePreviewState {
             auto* resource = find_resource_variant(c, lease.handle());
             const auto flags = resource->values[16].bits;
             resource->values[16].bits |= 0x1000000u;
-            const ResourceSpritePassSettings settings{ 0, 0, 32, 32 };
+            const ResourceSpritePassSettings settings { 0, 0, 32, 32 };
             begin_resource_sprite_pass(c, pass, settings);
             bool queued;
             try {
@@ -346,42 +336,38 @@ struct SpritePreviewState {
                 throw;
             }
             resource->values[16].bits = flags;
-            if (!queued)
+            if (!queued) {
                 return false;
+            }
         }
         SpriteGeometrySettings geometry_settings;
         //Preserve square sprite reference dimensions on the fixed4:3 UI canvas.
         geometry_settings.coordinate_scale = 1536.f / 2048.f;
         geometry_settings.direct3d_state = true;
-        const auto geometry = build_resource_sprite_geometry(
-            pass,
-            pixels,
-            geometry_settings,
-            [&](SpriteFrameReference frame) -> std::optional<SpriteTextureState> {
-                const auto image = texture(frame);
-                return SpriteTextureState{ static_cast<std::uint32_t>(*image->source_mode), 0, 0, 0, 1, 1 };
-            });
-        if (geometry.quads.empty())
+        const auto geometry = build_resource_sprite_geometry(pass, pixels, geometry_settings, [&](SpriteFrameReference frame) -> std::optional<SpriteTextureState> {
+            const auto image = texture(frame);
+            return SpriteTextureState { static_cast<std::uint32_t>(*image->source_mode), 0, 0, 0, 1, 1 };
+        });
+        if (geometry.quads.empty()) {
             return false;
+        }
         (void)narrow_index(output.vertices.size() + geometry.quads.size() * 4);
         (void)narrow_index(output.indices.size() + geometry.quads.size() * 6);
         for (const auto& quad : geometry.quads) {
             const auto base = narrow_index(output.vertices.size());
             const auto color = mesh_argb_color(quad.color);
-            const std::array<std::array<float, 2>, 4> uv{ { { quad.uv[0], quad.uv[1] },
-                                                            { quad.uv[2], quad.uv[1] },
-                                                            { quad.uv[2], quad.uv[3] },
-                                                            { quad.uv[0], quad.uv[3] } } };
+            const std::array<std::array<float, 2>, 4> uv { { { quad.uv[0], quad.uv[1] }, { quad.uv[2], quad.uv[1] }, { quad.uv[2], quad.uv[3] }, { quad.uv[0], quad.uv[3] } } };
             for (std::size_t i = 0; i < quad.vertices.size(); ++i) {
                 const auto& v = quad.vertices[i];
                 //The shared502B60 preview path supplies selector depth before the
                 //explicit-sprite-.00125 bias. Mode2 projection6E16C0 finally scales
                 //the complete source Z by0.1, matching ordinary UI attachments.
-                const std::array<float, 3> position{ (v[0] + 1.f) * 1024.f, (v[1] + 1.f) * 768.f, v[2] * .1f };
+                const std::array<float, 3> position { (v[0] + 1.f) * 1024.f, (v[1] + 1.f) * 768.f, v[2] * .1f };
                 if (!std::ranges::all_of(position, [](float value) {
                         return std::isfinite(value);
-                    }))
+                    })) {
                     throw std::runtime_error("Nonfinite original " + std::string(family) + " preview geometry");
+                }
                 output.vertices.push_back({ position, uv[i], color });
             }
             UiDrawCommand draw;
@@ -393,12 +379,15 @@ struct SpritePreviewState {
             draw.depth_buffered = true;
             //Sprites decode directly to top-left images. Unlike imported MD2 model
             //UVs, their frame UVs already match the UI compositor row origin.
-            if (quad.packet_flags & 2u)
-                for (const auto i : { 0u, 2u, 1u, 0u, 3u, 2u })
+            if (quad.packet_flags & 2u) {
+                for (const auto i : { 0u, 2u, 1u, 0u, 3u, 2u }) {
                     output.indices.push_back(base + i);
-            else
-                for (const auto i : { 0u, 1u, 2u, 0u, 2u, 3u })
+                }
+            } else {
+                for (const auto i : { 0u, 1u, 2u, 0u, 2u, 3u }) {
                     output.indices.push_back(base + i);
+                }
+            }
             output.commands.push_back(std::move(draw));
         }
         return true;
@@ -407,13 +396,11 @@ struct SpritePreviewState {
     template <class Self, class Placement>
     bool append(this Self& self, UiDrawList& output, const Placement& source_placement) {
         self.require_thread();
-        const SpritePreviewPlacement placement{ source_placement.bounds,
-                                                source_placement.clip,
-                                                source_placement.depth,
-                                                source_placement.adjustment };
+        const SpritePreviewPlacement placement { source_placement.bounds, source_placement.clip, source_placement.depth, source_placement.adjustment };
         const auto clip = self.clipped(output, placement);
-        if (!self.refresh() || clip[0] >= clip[2] || clip[1] >= clip[3])
+        if (!self.refresh() || clip[0] >= clip[2] || clip[1] >= clip[3]) {
             return false;
+        }
         return self.draw(output, placement, clip, self.candidate_selected());
     }
 };
@@ -425,7 +412,7 @@ struct UiStaffPreview::State : SpritePreviewState {
     explicit State(WorldRuntime& context) : SpritePreviewState(context, "Staff", 8.f, true) {}
 
     void clear() {
-        source = std::monostate{};
+        source = std::monostate {};
         SpritePreviewState::clear();
     }
 
@@ -439,19 +426,15 @@ struct UiStaffPreview::State : SpritePreviewState {
 
     const StaffCandidate* candidate(std::size_t slot) const {
         const auto* owner = c.referenced_world();
-        if (!owner || slot >= owner->staff_candidates.size())
+        if (!owner || slot >= owner->staff_candidates.size()) {
             return nullptr;
+        }
         const auto& value = owner->staff_candidates[slot];
         return value.valid && !value.on_pointer ? &value : nullptr;
     }
 
     bool same_candidate(const StaffCandidate& a, const StaffCandidate& b) const {
-        return a.creation_tick == b.creation_tick
-            && a.type == b.type
-            && a.resource_variant == b.resource_variant
-            && a.name_index == b.name_index
-            && a.agency_index == b.agency_index
-            && a.timeout == b.timeout;
+        return a.creation_tick == b.creation_tick && a.type == b.type && a.resource_variant == b.resource_variant && a.name_index == b.name_index && a.agency_index == b.agency_index && a.timeout == b.timeout;
     }
 
     bool reconcile() {
@@ -483,11 +466,13 @@ struct UiStaffPreview::State : SpritePreviewState {
     }
 
     bool refresh() {
-        if (!reconcile())
+        if (!reconcile()) {
             return false;
+        }
         const auto now = c.ports.clock.get_simulation_clock_time_ms(c);
-        if (!candidate_selected())
+        if (!candidate_selected()) {
             return refresh_live(staff(std::get<StaffBinding>(source).id)->mobile, now);
+        }
         if (!preview) {
             preview = take_resource(allocate_resource_variant(c, hire_program, { category, variant, 1, 0, 0, 0 }));
             preview->values[8].floating(8.f);
@@ -516,8 +501,9 @@ struct UiPersonPreview::State : SpritePreviewState {
             clear();
             return false;
         }
-        if (!source)
+        if (!source) {
             return false;
+        }
         const auto* current = EntityIdentity { source->id, source->identity, source->arrival_date }.get<PersonRuntimeView, true>(c.entities);
         if (!current || current->arrival_index != source->arrival_index) {
             clear();
@@ -530,8 +516,9 @@ struct UiPersonPreview::State : SpritePreviewState {
     }
 
     bool refresh() {
-        if (!reconcile())
+        if (!reconcile()) {
             return false;
+        }
         const auto now = c.ports.clock.get_simulation_clock_time_ms(c);
         return refresh_live(find_ui_visitor(c, source->id)->mobile, now);
     }
@@ -549,13 +536,14 @@ bool UiStaffPreview::bind_candidate(std::size_t slot) {
         s.clear();
         return false;
     }
-    if (s.world == s.c.referenced_world())
-        if (const auto* bound = std::get_if<CandidateBinding>(&s.source);
-            bound && bound->slot == slot && s.same_candidate(bound->identity, *candidate))
+    if (s.world == s.c.referenced_world()) {
+        if (const auto* bound = std::get_if<CandidateBinding>(&s.source); bound && bound->slot == slot && s.same_candidate(bound->identity, *candidate)) {
             return true;
+        }
+    }
     s.clear();
     s.world = s.c.referenced_world();
-    s.source = CandidateBinding{ slot, *candidate };
+    s.source = CandidateBinding { slot, *candidate };
     return true;
 }
 
@@ -567,15 +555,14 @@ bool UiStaffPreview::bind_staff(ThingId id) {
         s.clear();
         return false;
     }
-    if (s.world == s.c.referenced_world())
-        if (const auto* bound = std::get_if<StaffBinding>(&s.source); bound
-                                                                      && bound->id == id
-                                                                      && bound->identity == &staff->base.header
-                                                                      && bound->time_hired == staff->time_hired)
+    if (s.world == s.c.referenced_world()) {
+        if (const auto* bound = std::get_if<StaffBinding>(&s.source); bound && bound->id == id && bound->identity == &staff->base.header && bound->time_hired == staff->time_hired) {
             return true;
+        }
+    }
     s.clear();
     s.world = s.c.referenced_world();
-    s.source = StaffBinding{ id, &staff->base.header, staff->time_hired };
+    s.source = StaffBinding { id, &staff->base.header, staff->time_hired };
     return true;
 }
 
@@ -586,8 +573,9 @@ void UiStaffPreview::clear() {
 
 void UiStaffPreview::retire(ThingId id) {
     state_->require_thread();
-    if (const auto* bound = std::get_if<StaffBinding>(&state_->source); bound && bound->id == id)
+    if (const auto* bound = std::get_if<StaffBinding>(&state_->source); bound && bound->id == id) {
         state_->clear();
+    }
 }
 
 bool UiStaffPreview::bound() const {
@@ -616,16 +604,12 @@ bool UiPersonPreview::bind_person(ThingId id) {
         s.clear();
         return false;
     }
-    if (s.world == s.c.referenced_world()
-        && s.source
-        && s.source->id == id
-        && s.source->identity == &person->base.header
-        && s.source->arrival_date == person->arrival_date
-        && s.source->arrival_index == person->arrival_index)
+    if (s.world == s.c.referenced_world() && s.source && s.source->id == id && s.source->identity == &person->base.header && s.source->arrival_date == person->arrival_date && s.source->arrival_index == person->arrival_index) {
         return true;
+    }
     s.clear();
     s.world = s.c.referenced_world();
-    s.source = PersonBinding{ id, &person->base.header, person->arrival_date, person->arrival_index };
+    s.source = PersonBinding { id, &person->base.header, person->arrival_date, person->arrival_index };
     return true;
 }
 
@@ -636,8 +620,9 @@ void UiPersonPreview::clear() {
 
 void UiPersonPreview::retire(ThingId id) {
     state_->require_thread();
-    if (state_->source && state_->source->id == id)
+    if (state_->source && state_->source->id == id) {
         state_->clear();
+    }
 }
 
 bool UiPersonPreview::bound() const {

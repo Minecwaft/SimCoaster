@@ -11,8 +11,9 @@ ThingStore::~ThingStore() {
 
 void* ThingStore::allocate_payload(AllocationPort& services, std::size_t size) {
     auto* pointer = services.allocate(Allocation::payload, size);
-    if (!pointer || ownership_ == EntityOwnership::allocator)
+    if (!pointer || ownership_ == EntityOwnership::allocator) {
         return pointer;
+    }
     try {
         owned_.emplace(pointer, &services);
     } catch (...) {
@@ -28,8 +29,9 @@ void ThingStore::release_payload(AllocationPort& services, void* pointer) {
         owned_.erase(found);
         owner->release(Allocation::payload, pointer);
     } else {
-        if (pointer && ownership_ == EntityOwnership::store)
+        if (pointer && ownership_ == EntityOwnership::store) {
             throw std::logic_error("Mismatched native runtime allocation lifetime");
+        }
         services.release(Allocation::payload, pointer);
     }
 }

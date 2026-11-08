@@ -6,13 +6,16 @@ namespace simcoaster {
 namespace {
 bool station_track(const World& w, const TrackCell& cell) {
     const auto type = cell.base.common.type;
-    if (type == 13 || type == 18)
+    if (type == 13 || type == 18) {
         return true;
-    if (!world_cell_is_track_child(&cell.base))
+    }
+    if (!world_cell_is_track_child(&cell.base)) {
         return false;
+    }
     const auto parent = cell.base.common.parent_id;
-    if (!parent || parent > map_cell_count)
+    if (!parent || parent > map_cell_count) {
         return false;
+    }
     const auto parent_type = w.track_cells[parent - 1].base.common.type;
     return parent_type == 13 || parent_type == 18;
 }
@@ -42,53 +45,52 @@ void endpoint(ScriptWorld& c, ParkObjectRuntimeView& object, bool valid, bool ot
             y += other ? -2 : 4;
             direction = 16;
         }
-        case _ => {}
-    }
-    if (other)
+        case _ => {
+        }
+    } if (other) {
         direction = opposite_world_cell_direction(direction);
+    }
     auto remaining = direction;
     for (std::size_t visited = 0; visited < map_cell_count; ++visited) {
         const auto id = static_cast<CellId>(static_cast<std::uint32_t>(x) + static_cast<std::uint32_t>(y) * 128u + 1u);
-        if (!id || id > map_cell_count)
+        if (!id || id > map_cell_count) {
             throw std::out_of_range("track ride endpoint cell");
+        }
         auto& cell = w.track_cells[id - 1];
         bool connected = true;
         if (world_cell_is_track_root(&cell.base)) {
             if (get_world_cell_corner_neighbor_mask(c, &cell.base)) {
                 auto back = opposite_world_cell_direction(direction);
-                if (!(get_world_cell_neighbor_mask(c, &cell.base) & back))
+                if (!(get_world_cell_neighbor_mask(c, &cell.base) & back)) {
                     back = remaining;
+                }
                 remaining = static_cast<std::uint8_t>(back ^ get_world_cell_neighbor_mask(c, &cell.base));
                 direction = remaining;
             }
-            if (cell.base.common.mesh_instance)
-                (void)world_operations::request_mesh_animation_control_transition(
-                    c,
-                    cell.base.common.mesh_instance,
-                    static_cast<MeshAnimationRequest>(valid ? 5 : 12),
-                    0,
-                    static_cast<MeshAnimationTransitionFlags>(7),
-                    1.f,
-                    0);
-        } else
+            if (cell.base.common.mesh_instance) {
+                (void)world_operations::request_mesh_animation_control_transition(c, cell.base.common.mesh_instance, static_cast<MeshAnimationRequest>(valid ? 5 : 12), 0, static_cast<MeshAnimationTransitionFlags>(7), 1.f, 0);
+            }
+        } else {
             remaining = direction = 0;
-        if (!get_world_cell_corner_neighbor_mask(c, &cell.base)
-            && !(get_world_cell_neighbor_mask(c, &cell.base) & remaining))
+        }
+        if (!get_world_cell_corner_neighbor_mask(c, &cell.base) && !(get_world_cell_neighbor_mask(c, &cell.base) & remaining)) {
             connected = false;
-        if (auto* next = resolve_track_cell_in_direction(c, &cell.base, direction, 2))
-            if (station_track(w, *next)
-                && next->base.common.parent_id == cell.base.common.parent_id
-                && (get_world_cell_neighbor_mask(c, &next->base) & opposite_world_cell_direction(direction)))
+        }
+        if (auto* next = resolve_track_cell_in_direction(c, &cell.base, direction, 2)) {
+            if (station_track(w, *next) && next->base.common.parent_id == cell.base.common.parent_id && (get_world_cell_neighbor_mask(c, &next->base) & opposite_world_cell_direction(direction))) {
                 connected = false;
+            }
+        }
         match (direction) {
-            case 1 => y -= 2;
-            case 4 => x += 2;
+            case 1  => y -= 2;
+            case 4  => x += 2;
             case 16 => y += 2;
             case 64 => x -= 2;
-            case _ => {}
-        }
-        if (!connected)
+            case _  => {
+            }
+        } if (!connected) {
             return;
+        }
     }
     throw std::logic_error("cyclic track ride endpoint traversal");
 }
@@ -96,8 +98,9 @@ void endpoint(ScriptWorld& c, ParkObjectRuntimeView& object, bool valid, bool ot
 
 void step_rsse_bump_instruction(ScriptWorld& c, RsseScriptState& script) {
     auto* header = c.entities.at(script.owner_used_thing_id).payload;
-    if (!header || header->kind != ThingKind::park_object)
+    if (!header || header->kind != ThingKind::park_object) {
         throw std::invalid_argument("RSSE BUMP owner is not a park object");
+    }
     auto& object = *reinterpret_cast<ParkObjectRuntimeView*>(header);
     const auto handle = object.track_ride_handle;
     const auto read = [&] {
@@ -111,8 +114,9 @@ void step_rsse_bump_instruction(ScriptWorld& c, RsseScriptState& script) {
     };
     const auto output = [&](std::uint32_t destination, std::int32_t value) {
         script.current_value = value;
-        if (tagged(destination))
+        if (tagged(destination)) {
             script.value_slots.at(destination ^ std::to_underlying(RsseWordTag::value_slot)) = value;
+        }
     };
     // clang-format off
   match(static_cast<RsseBumpCommand>(read())) {

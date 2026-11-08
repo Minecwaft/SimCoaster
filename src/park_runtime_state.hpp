@@ -67,7 +67,7 @@
 namespace simcoaster {
 namespace park_detail {
 struct SoundSnapshot {
-    std::uint32_t backend_present{}, feature_flags{};
+    std::uint32_t backend_present {}, feature_flags {};
     std::vector<std::byte> global_state, backend_state;
 };
 
@@ -88,23 +88,22 @@ struct RuntimeRendering {
     WorldParticleScene particle_scene;
     WorldMobilePicker mobile_picker;
     TerrainGridView terrain;
-    ActiveTerrainModelDataView active{ &terrain };
+    ActiveTerrainModelDataView active { &terrain };
     MeshLighting lighting;
     WorldAtmosphereColors atmosphere_colors;
-    SpriteShadowQuality sprite_shadow_quality{ SpriteShadowQuality::off };
+    SpriteShadowQuality sprite_shadow_quality { SpriteShadowQuality::off };
 };
 
 struct RuntimeTools {
     ParkConstructionRuntime construction;
-    NativeCoasterEditor coaster_editor{ construction };
-    CoasterCatalogRuntime coaster_catalog{ construction };
-    LayoutWorldBackend layout_backend{ construction, &coaster_editor };
+    NativeCoasterEditor coaster_editor { construction };
+    CoasterCatalogRuntime coaster_catalog { construction };
+    LayoutWorldBackend layout_backend { construction, &coaster_editor };
     LayoutReplayRuntime layout_replay;
 };
 
 struct RuntimeSimulation {
-    explicit RuntimeSimulation(ParkRuntimeBindings& bindings)
-        : world(std::make_unique<WorldRuntime>(bindings, EntityOwnership::store)) {}
+    explicit RuntimeSimulation(ParkRuntimeBindings& bindings) : world(std::make_unique<WorldRuntime>(bindings, EntityOwnership::store)) {}
 
     std::unique_ptr<WorldRuntime> world;
     std::unique_ptr<ParticleRuntime> particles = std::make_unique<ParticleRuntime>();
@@ -131,13 +130,13 @@ struct RuntimePresentation {
 struct RuntimeFrame {
     ParkRuntimeStatistics statistics;
     FrameScheduler scheduler;
-    bool mobile_poses_ready{};
-    bool application_ui_paused{};
-    bool frame_external_paused{};
+    bool mobile_poses_ready {};
+    bool application_ui_paused {};
+    bool frame_external_paused {};
     std::optional<float> native_camera_zoom;
-    float preview_phase{}, preview_camera_heading{};
-    std::array<float, 2> preview_reference{};
-    std::uint32_t preview_blink_counter{};
+    float preview_phase {}, preview_camera_heading {};
+    std::array<float, 2> preview_reference {};
+    std::uint32_t preview_blink_counter {};
     std::vector<StaffInteractionOverlay> runtime_overlays;
 };
 
@@ -161,11 +160,7 @@ struct ParkRuntime::State {
     park_detail::RuntimeConfiguration configuration;
     SceneCamera render_camera();
     void publish_render_camera(bool paused);
-    State(const std::filesystem::path& root,
-          const std::string& theme,
-          bool coaster_designer,
-          std::function<void()> pump,
-          std::optional<ApplicationHardwareProfile> requested_profile);
+    State(const std::filesystem::path& root, const std::string& theme, bool coaster_designer, std::function<void()> pump, std::optional<ApplicationHardwareProfile> requested_profile);
     void apply_hardware_profile(const ApplicationHardwareProfile& profile);
     ~State();
     void initialize_assets(const std::filesystem::path& root, const std::string& theme);

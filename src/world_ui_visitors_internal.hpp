@@ -10,12 +10,7 @@
 
 namespace simcoaster {
 struct WorldVisitorsUiController::State : UiPanelPresentation {
-    static constexpr UiPanelPresentationPolicy panel_presentation{ .missing_control =
-                                                                       "Original Visitors template missing control ",
-                                                                   .text_error = "Visitors UI text: ",
-                                                                   .text_error_row = false,
-                                                                   .caption_font = 6,
-                                                                   .caption_horizontal = 0 };
+    static constexpr UiPanelPresentationPolicy panel_presentation { .missing_control = "Original Visitors template missing control ", .text_error = "Visitors UI text: ", .text_error_row = false, .caption_font = 6, .caption_horizontal = 0 };
     enum class Page {
         none,
         statistics,
@@ -25,25 +20,25 @@ struct WorldVisitorsUiController::State : UiPanelPresentation {
     };
     WorldRuntime& c;
     UiRuntime& ui;
-    mutable UiPanelBindings bindings{ ui };
-    UiControl *primary{}, *root{}, *context{};
+    mutable UiPanelBindings bindings { ui };
+    UiControl *primary {}, *root {}, *context {};
     std::filesystem::path game_root;
     WorldUiPanelHost host;
-    Page page{};
-    ThingId target{}, retiring{}, context_person{};
-    const ThingHeader *target_identity{}, *context_identity{};
-    std::uint32_t target_arrival{}, context_arrival{};
-    std::int32_t advisor = -1, list_sort = 1, list_selected = -1, locator_filter{};
+    Page page {};
+    ThingId target {}, retiring {}, context_person {};
+    const ThingHeader *target_identity {}, *context_identity {};
+    std::uint32_t target_arrival {}, context_arrival {};
+    std::int32_t advisor = -1, list_sort = 1, list_selected = -1, locator_filter {};
     VisitorPopulation population = VisitorPopulation::all;
     std::map<ThingId, const ThingHeader*> list_identities;
     std::unique_ptr<UiPersonPreview> preview;
     std::unique_ptr<UiFontLibrary> local_fonts;
-    bool closing{}, refreshing{}, animate_menus = true;
-    UiControl* context_previous{};
-    std::uint64_t context_previous_serial{};
-    bool context_previous_enabled{};
+    bool closing {}, refreshing {}, animate_menus = true;
+    UiControl* context_previous {};
+    std::uint64_t context_previous_serial {};
+    bool context_previous_enabled {};
     UiContextMenu context_menu;
-    std::chrono::milliseconds next_refresh{};
+    std::chrono::milliseconds next_refresh {};
     UiHelpQuery help_query;
     std::u16string help_buffer;
     std::uint32_t pixel_width = 1100, pixel_height = 760;
@@ -54,6 +49,7 @@ struct WorldVisitorsUiController::State : UiPanelPresentation {
     UiControl& parse(std::span<const unsigned char> bytes, std::uint32_t id, Callback callback) {
         return parse_control(primary, bytes, id, std::move(callback), "Unable to construct original Visitors template");
     }
+
     std::u16string thought(std::uint32_t) const;
     void label(std::uint32_t, std::uint32_t, std::uint32_t font = 6, std::int32_t horizontal = 0);
     void scalar(std::uint32_t, std::int32_t);

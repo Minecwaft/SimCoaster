@@ -33,10 +33,7 @@ template <class T>
 bool entity_supports(ThingKind kind) {
     const auto* descriptor = record_descriptor(kind);
     using Payload = std::remove_cv_t<T>;
-    return descriptor
-        && (std::same_as<Payload, MapObjectBase>
-            || (std::same_as<Payload, StaffRuntimeRecord> && descriptor->staff_projection)
-            || *descriptor->payload_type == typeid(Payload));
+    return descriptor && (std::same_as<Payload, MapObjectBase> || (std::same_as<Payload, StaffRuntimeRecord> && descriptor->staff_projection) || *descriptor->payload_type == typeid(Payload));
 }
 
 template <class T, class Header>

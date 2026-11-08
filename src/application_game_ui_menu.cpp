@@ -7,35 +7,34 @@
 
 namespace simcoaster {
 void ApplicationGameUiController::State::open_menu(bool retain) {
-    if (page == Page::menu && root)
+    if (page == Page::menu && root) {
         return;
+    }
     begin(Page::menu, !retain);
     const auto status = host.status();
     const bool designer = c.mode.game == GameMode::code_3;
     host.prepare_menu(designer);
     const bool transition_world = c.simulation.current && c.simulation.current->saved.state == WorldState::transition;
     std::vector<std::pair<std::uint32_t, std::uint32_t>> items;
-    if (designer)
-        items = { { 29, 51 },  { status.online_session_active ? 31u : 32u, status.online_session_active ? 767u : 766u },
-                  { 33, 770 }, { 28, 771 },
-                  { 34, 53 },  { 35, 772 } };
-    else if (transition_world)
+    if (designer) {
+        items = { { 29, 51 }, { status.online_session_active ? 31u : 32u, status.online_session_active ? 767u : 766u }, { 33, 770 }, { 28, 771 }, { 34, 53 }, { 35, 772 } };
+    } else if (transition_world) {
         items = { { 24, 768 }, { 23, 771 }, { 26, 774 }, { 27, 772 } };
-    else {
-        items = { { 1, 768 },
-                  { 2, 769 },
-                  { 6, 774 },
-                  { status.online_session_active ? 7u : 8u, status.online_session_active ? 767u : 766u } };
-        if (!status.online_services_active)
+    } else {
+        items = { { 1, 768 }, { 2, 769 }, { 6, 774 }, { status.online_session_active ? 7u : 8u, status.online_session_active ? 767u : 766u } };
+        if (!status.online_services_active) {
             items.emplace_back(5, 770);
+        }
         items.insert(items.end(), { { 10, 50 }, { 0, 771 }, { 9, 772 } });
     }
     const auto viewport = host.viewport();
-    if (!viewport[0] || !viewport[1])
+    if (!viewport[0] || !viewport[1]) {
         throw std::logic_error("Command menu viewport is empty");
+    }
     auto font = font_library().slot(0, viewport[0]);
-    if (!font)
+    if (!font) {
         throw std::runtime_error(font.error().reason);
+    }
     const auto count = static_cast<std::int32_t>(items.size());
     const auto line = 1536 * static_cast<std::int32_t>((*font)->line_advance) / static_cast<std::int32_t>(viewport[1]);
     const auto total = count * line + (count - 1) * (7680 / static_cast<std::int32_t>(viewport[1]));
@@ -58,29 +57,24 @@ void ApplicationGameUiController::State::open_menu(bool retain) {
         UiTextStyle style;
         style.wrap = false;
         const auto measured = font_library().measure(**font, label, { 0, 0, 2048, 1536 }, style);
-        if (!measured)
+        if (!measured) {
             throw std::runtime_error(measured.error().reason);
-        const auto width = static_cast<std::int32_t>(
-            (measured->bounds[2] - measured->bounds[0] + 1.f) * 2048.f / static_cast<float>(viewport[0]));
-        const auto height = static_cast<std::int32_t>(
-            (measured->bounds[3] - measured->bounds[1] + 5.f) * 1536.f / static_cast<float>(viewport[1]));
-        auto& item = ui.create(root,
-                               UiControlKind::window,
-                               1,
-                               id,
-                               { 2047 / 2 - width / 2, y, 2047 / 2 - width / 2 + width, y + height });
+        }
+        const auto width = static_cast<std::int32_t>((measured->bounds[2] - measured->bounds[0] + 1.f) * 2048.f / static_cast<float>(viewport[0]));
+        const auto height = static_cast<std::int32_t>((measured->bounds[3] - measured->bounds[1] + 5.f) * 1536.f / static_cast<float>(viewport[1]));
+        auto& item = ui.create(root, UiControlKind::window, 1, id, { 2047 / 2 - width / 2, y, 2047 / 2 - width / 2 + width, y + height });
         caption(item, label, 0, 1, 1);
         item.secondary_shadow_text = true;
-        item.color = designer ? RgbaPixel{ 0, 0, 0, 255 } : RgbaPixel{ 128, 128, 128, 255 };
+        item.color = designer ? RgbaPixel { 0, 0, 0, 255 } : RgbaPixel { 128, 128, 128, 255 };
         hover.emplace(&item, 0);
         ui.set_primary_callback(item, [this](UiControl& sender, const UiEvent& e) -> std::intptr_t {
-            if (e.type == 65537)
+            if (e.type == 65537) {
                 hover[&sender] = 1;
-            else if (e.type == 65538)
+            } else if (e.type == 65538) {
                 hover[&sender] = -1;
-            else if (e.type == 17)
+            } else if (e.type == 17) {
                 sender.color = { 0, 175, 190, 255 };
-            else if (e.type == 30) {
+            } else if (e.type == 30) {
                 auto& state = hover[&sender];
                 if (state > 0) {
                     const auto next = state + 32;
@@ -95,8 +89,9 @@ void ApplicationGameUiController::State::open_menu(bool retain) {
                 host.play_ui_sound(193);
                 menu_action(sender.id);
                 return 0;
-            } else if (e.type == 20)
+            } else if (e.type == 20) {
                 hover.erase(&sender);
+            }
             return ui.secondary(sender, e);
         });
         y += height + 5;
@@ -109,21 +104,23 @@ void ApplicationGameUiController::State::open_menu(bool retain) {
 
 void ApplicationGameUiController::State::transition(ApplicationGamePayload action) {
     const auto proceed = [this, action] {
-        if (std::holds_alternative<ApplicationQuitRequest>(action))
+        if (std::holds_alternative<ApplicationQuitRequest>(action)) {
             message_resource(773, [this] {
-                enqueue({ .payload = ApplicationQuitRequest{} });
+                enqueue({ .payload = ApplicationQuitRequest {} });
             });
-        else
+        } else {
             enqueue({ .payload = action });
+        }
     };
     if (host.status().pending_postcards) {
         //50BE60: b_cancel continues the pending transition; b_okay connects.
         //This is deliberately not a conventional Yes/No interpretation.
         message(text(749), text(981), proceed, [this] {
-            enqueue({ .payload = ApplicationGoOnlineRequest{} }, true);
+            enqueue({ .payload = ApplicationGoOnlineRequest {} }, true);
         });
-    } else
+    } else {
         proceed();
+    }
 }
 
 void ApplicationGameUiController::State::menu_action(std::uint32_t action) {
@@ -153,24 +150,24 @@ void ApplicationGameUiController::State::menu_action(std::uint32_t action) {
             return;
         }
         case 6 or 26 => {
-            transition(ApplicationChangePlayerRequest{});
+            transition(ApplicationChangePlayerRequest {});
             return;
         }
         case 7 or 31 => {
-            enqueue({ .payload = ApplicationGoOfflineRequest{} });
+            enqueue({ .payload = ApplicationGoOfflineRequest {} });
             return;
         }
         case 8 or 32 => {
-            enqueue({ .payload = ApplicationGoOnlineRequest{} });
+            enqueue({ .payload = ApplicationGoOnlineRequest {} });
             return;
         }
         case 9 or 22 or 27 => {
-            transition(ApplicationQuitRequest{});
+            transition(ApplicationQuitRequest {});
             return;
         }
         case 10 => {
             close();
-            transition(ApplicationChooseCoasterSourceRequest{});
+            transition(ApplicationChooseCoasterSourceRequest {});
             return;
         }
         case 29 => {
@@ -178,13 +175,13 @@ void ApplicationGameUiController::State::menu_action(std::uint32_t action) {
             return;
         }
         case 34 => {
-            enqueue({ .payload = ApplicationLeaveCoasterDesignerRequest{} });
+            enqueue({ .payload = ApplicationLeaveCoasterDesignerRequest {} });
             return;
         }
         case 35 => {
             close();
             message_resource(773, [this] {
-                enqueue({ .payload = ApplicationQuitRequest{} });
+                enqueue({ .payload = ApplicationQuitRequest {} });
             });
             return;
         }

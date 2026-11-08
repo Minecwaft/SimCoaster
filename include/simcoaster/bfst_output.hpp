@@ -10,10 +10,5 @@ struct BfstWideOutput {
     std::optional<BfstError> error;
 };
 
-BfstWideOutput format_bfst_wide_output(std::span<const std::byte>,
-                                       const MbToUnicodeMap&,
-                                       std::uint32_t row,
-                                       std::size_t capacity,
-                                       std::span<const BfstWideStringArgument> arguments = {},
-                                       std::span<const BfstSignedIntegerArgument> integers = {});
+BfstWideOutput format_bfst_wide_output(std::span<const std::byte>, const MbToUnicodeMap&, std::uint32_t row, std::size_t capacity, std::span<const BfstWideStringArgument> arguments = {}, std::span<const BfstSignedIntegerArgument> integers = {});
 } //namespace simcoaster

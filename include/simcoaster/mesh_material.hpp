@@ -20,11 +20,11 @@ enum class MeshBlendFactor : std::uint8_t {
 };
 
 struct MeshMaterial {
-    std::uint32_t flags{ 0x1256 };
-    bool generated_uv{}, secondary_texture{};
+    std::uint32_t flags { 0x1256 };
+    bool generated_uv {}, secondary_texture {};
     //Native705AC0 source window: scale XY followed by origin XY. Generated
     //surfaces with already mapped UVs retain the identity transform.
-    std::array<float, 4> texture_uv{ 1, 1, 0, 0 };
+    std::array<float, 4> texture_uv { 1, 1, 0, 0 };
 
     bool blended() const {
         return (flags & 0x100u) != 0;
@@ -64,11 +64,7 @@ struct MeshMaterial {
 };
 
 //0x706630 +0x6EFD40: preserve source modes, slot overrides, group/node bits.
-MeshMaterial derive_mesh_material(std::uint32_t node_flags,
-                                  std::uint8_t group_flags,
-                                  const MeshTextureSlot* slot,
-                                  const TextureImage* texture,
-                                  bool secondary = false);
+MeshMaterial derive_mesh_material(std::uint32_t node_flags, std::uint8_t group_flags, const MeshTextureSlot* slot, const TextureImage* texture, bool secondary = false);
 std::array<float, 4> mesh_texture_uv_transform(const TextureImage&, std::uint16_t slot_flags = 0);
 //0x6EE050 sphere-map kernel. Inputs have already received node.local*view;
 //the native singular division is replaced with the texture center.
@@ -80,22 +76,21 @@ enum class MeshLightKind : std::uint8_t {
 };
 
 struct MeshLight {
-    MeshLightKind kind{ MeshLightKind::directional };
-    MeshPoint color{ 1, 1, 1 }, position{}, direction{ 0, 0, 1 };
-    float radius_squared{ 10000 }, attenuation{ 0.0001f };
+    MeshLightKind kind { MeshLightKind::directional };
+    MeshPoint color { 1, 1, 1 }, position {}, direction { 0, 0, 1 };
+    float radius_squared { 10000 }, attenuation { 0.0001f };
 };
 
 struct MeshLighting {
-    MeshPoint ambient{ 1, 1, 1 }; //Empty/default scene explicitly requests an unlit asset preview.
+    MeshPoint ambient { 1, 1, 1 }; //Empty/default scene explicitly requests an unlit asset preview.
     std::vector<MeshLight> lights;
-    std::uint32_t diffuse_mask{ 0xFFFFFFFFu };
+    std::uint32_t diffuse_mask { 0xFFFFFFFFu };
 };
 enum class MeshLightingTransformFailure {
     singular,
     nonfinite
 };
-std::expected<MeshLighting, MeshLightingTransformFailure>
-mesh_lighting_in_local_space(const MeshLighting&, const MeshMatrix& model_to_world);
+std::expected<MeshLighting, MeshLightingTransformFailure> mesh_lighting_in_local_space(const MeshLighting&, const MeshMatrix& model_to_world);
 RgbaPixel mesh_vertex_lighting(const MeshLighting& local_lights, const MeshPoint& position, const MeshPoint& normal);
 RgbaPixel mesh_argb_color(std::uint32_t);
 
@@ -105,8 +100,7 @@ struct ThemeRenderSettings {
     TerrainTileBounds procedural_bounds;
 };
 
-ThemeRenderSettings load_installed_theme_render_settings(const std::filesystem::path& game_root,
-                                                         std::string_view theme);
+ThemeRenderSettings load_installed_theme_render_settings(const std::filesystem::path& game_root, std::string_view theme);
 //Standard.sam followed by the theme override; missing files leave context
 //defaults.
 MeshLighting load_installed_mesh_lighting(const std::filesystem::path& game_root, std::string_view theme);

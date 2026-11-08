@@ -15,14 +15,7 @@ class ParkAuthoringFrontend {
     std::unique_ptr<State> state_;
 
 public:
-    ParkAuthoringFrontend(ParkRuntime&,
-                          SceneCamera&,
-                          TerrainGridView,
-                          const std::filesystem::path& original_save,
-                          HWND,
-                          bool diagnostic_ui = true,
-                          std::function<void()> release_pointer = {},
-                          UiCursorWin32* cursors = nullptr);
+    ParkAuthoringFrontend(ParkRuntime&, SceneCamera&, TerrainGridView, const std::filesystem::path& original_save, HWND, bool diagnostic_ui = true, std::function<void()> release_pointer = {}, UiCursorWin32* cursors = nullptr);
     ~ParkAuthoringFrontend();
     bool message(HWND, UINT, WPARAM, LPARAM);
     //Root506280 has already installed/admitted this map handler. Preserve
@@ -39,11 +32,6 @@ public:
     bool select_tool(ParkAuthoringTool);
     bool delete_object(ThingId);
     bool buy_object(ThingId);
-    void frame(HWND,
-               std::uint32_t width,
-               std::uint32_t height,
-               bool staff_editing,
-               bool paused,
-               bool path_hover_inspection = false);
+    void frame(HWND, std::uint32_t width, std::uint32_t height, bool staff_editing, bool paused, bool path_hover_inspection = false);
 };
 } //namespace simcoaster

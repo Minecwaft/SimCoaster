@@ -5,8 +5,9 @@
 namespace simcoaster {
 namespace {
 const ThemeGlobalSaveInfo& resolved_info(MissionWorld& c, ThemeGlobalInfoManager& manager, std::uint32_t ordinal) {
-    if (ordinal >= theme_source_count)
+    if (ordinal >= theme_source_count) {
         throw std::out_of_range("theme source ordinal");
+    }
     const auto* info = get_or_create_theme_global_info_for_ordinal(c, manager, ordinal);
     return require_bound<std::runtime_error>(info, "theme information could not be loaded");
 }
@@ -18,8 +19,9 @@ void clear_research_action_532_eligibility(MissionWorld& c) {
 
 std::uint32_t selected_research_theme_ordinal(MissionWorld& c) {
     auto& manager = get_or_create_theme_global_info_manager(c);
-    if (!manager.selected_theme_info)
+    if (!manager.selected_theme_info) {
         throw std::logic_error("no selected theme information");
+    }
     return resolved_info(c, manager, manager.selected_theme_info->source_ordinal).source_ordinal;
 }
 

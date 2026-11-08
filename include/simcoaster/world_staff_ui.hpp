@@ -8,67 +8,68 @@
 namespace simcoaster {
 struct StaffCandidate;
 bool matches_staff_hire_snapshot(const StaffCandidate&, const StaffCandidate&);
+
 //UI identities are World IDs (or candidate-pool slots), never visible row
 //numbers. The owner reconciles every borrowed identity before retirement.
 struct StaffUiRow {
-    ThingId staff{};
+    ThingId staff {};
     StaffType role = StaffType::unclassified;
     std::u16string name, role_name, ability, activity;
-    std::int32_t experience_meter{}, wage{}, happiness_meter{}, energy_meter{};
-    ThemeAbility ability_id{};
+    std::int32_t experience_meter {}, wage {}, happiness_meter {}, energy_meter {};
+    ThemeAbility ability_id {};
 };
 
 struct StaffHireUiRow {
-    std::size_t slot{};
+    std::size_t slot {};
     StaffType role = StaffType::unclassified;
     std::u16string name, agency;
-    std::int32_t experience_meter{}, wage{};
-    std::uint8_t sprite_variant{};
+    std::int32_t experience_meter {}, wage {};
+    std::uint8_t sprite_variant {};
 };
 
 struct StaffHireUiState {
-    bool open{};
+    bool open {};
     StaffType filter = StaffType::unsupported_index;
     std::int32_t selected_slot = -1, sort_key = 1;
-    std::array<bool, 6> available{};
-    std::uint32_t heading_row{}, message_row = 222;
+    std::array<bool, 6> available {};
+    std::uint32_t heading_row {}, message_row = 222;
     std::vector<StaffHireUiRow> rows;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct StaffListUiState {
-    bool open{};
+    bool open {};
     StaffType filter = StaffType::handyman;
-    ThingId selected{};
-    std::int32_t sort_key = 1, role_happiness_meter{}, all_happiness_meter{};
-    std::array<bool, 6> available{};
+    ThingId selected {};
+    std::int32_t sort_key = 1, role_happiness_meter {}, all_happiness_meter {};
+    std::array<bool, 6> available {};
     std::u16string status;
     std::vector<StaffUiRow> rows;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct StaffDetailsUiState {
-    bool open{}, can_navigate{};
-    ThingId staff{};
+    bool open {}, can_navigate {};
+    ThingId staff {};
     StaffUiRow row;
     std::u16string agency, status, thought, tenure;
-    std::int32_t motivation_meter{}, staged_wage{};
-    StaffActivityStatus activity{};
-    MobileThoughtCode thought_code{};
-    std::int32_t activity_icon{}, thought_icon = 999, thought_help = -1;
-    std::uint32_t sprite_category{}, sprite_variant{};
-    std::uint64_t revision{};
+    std::int32_t motivation_meter {}, staged_wage {};
+    StaffActivityStatus activity {};
+    MobileThoughtCode thought_code {};
+    std::int32_t activity_icon {}, thought_icon = 999, thought_help = -1;
+    std::uint32_t sprite_category {}, sprite_variant {};
+    std::uint64_t revision {};
 };
 
 struct StaffLocatorUiState {
-    bool open{};
+    bool open {};
     StaffType filter = StaffType::unsupported_index;
-    ThingId target{};
-    std::array<bool, 6> available{};
+    ThingId target {};
+    std::array<bool, 6> available {};
     std::u16string caption;
-    std::array<float, 3> position{};
-    StaffAreaBounds area{};
-    std::uint64_t revision{};
+    std::array<float, 3> position {};
+    StaffAreaBounds area {};
+    std::uint64_t revision {};
 };
 enum class StaffFinanceAdjustment {
     amount = 0,
@@ -77,37 +78,37 @@ enum class StaffFinanceAdjustment {
 };
 
 struct StaffFinanceUiState {
-    bool open{};
-    StaffFinanceAdjustment mode{};
+    bool open {};
+    StaffFinanceAdjustment mode {};
     //Indexed by StaffType, independently of the native widget ordering.
-    std::array<std::int32_t, 6> values{};
-    std::array<bool, 6> enabled{};
+    std::array<std::int32_t, 6> values {};
+    std::array<bool, 6> enabled {};
 };
 
 struct StaffActivityUiState {
-    bool open{};
-    ThingId staff{};
+    bool open {};
+    ThingId staff {};
     //Idle plus the six native activity-ring channels, in display order.
-    std::array<double, 7> percentages{};
-    std::uint64_t revision{};
+    std::array<double, 7> percentages {};
+    std::uint64_t revision {};
 };
 
 struct StaffSelectorUiState {
-    bool open{};
+    bool open {};
     StaffType filter = StaffType::unsupported_index;
-    ThingId selected{};
+    ThingId selected {};
     std::int32_t sort_key = 1;
-    std::array<bool, 6> available{};
+    std::array<bool, 6> available {};
     std::vector<ThingId> excluded;
-    std::array<bool, 6> excluded_roles{};
+    std::array<bool, 6> excluded_roles {};
     std::vector<StaffUiRow> rows;
 };
 
 struct StaffTrainingRoomUiState {
-    bool open{};
-    ThingId room{};
-    std::array<StaffTrainingPendingRow, 3> baseline{};
-    std::uint32_t message_row{};
+    bool open {};
+    ThingId room {};
+    std::array<StaffTrainingPendingRow, 3> baseline {};
+    std::uint32_t message_row {};
     std::optional<std::size_t> ability_picker_slot;
 };
 enum class StaffWageOutcome {
@@ -122,23 +123,23 @@ enum class StaffRejectedWageChoice {
 };
 
 struct StaffWageUiState {
-    bool open{}, showing_result{};
-    ThingId staff{};
-    std::int32_t demanded_raise{}, offered_raise{};
-    StaffWageOutcome outcome{};
-    std::uint32_t response_row{};
+    bool open {}, showing_result {};
+    ThingId staff {};
+    std::int32_t demanded_raise {}, offered_raise {};
+    StaffWageOutcome outcome {};
+    std::uint32_t response_row {};
 };
 
 struct StaffTrainingBudgetUiState {
-    std::array<std::int32_t, 6> budgets{}, experience_meters{};
-    bool have_ever_trained{};
-    std::int32_t history_6{}, history_4{}, history_3_minus_4{}, total{}, remainder{};
+    std::array<std::int32_t, 6> budgets {}, experience_meters {};
+    bool have_ever_trained {};
+    std::int32_t history_6 {}, history_4 {}, history_3_minus_4 {}, total {}, remainder {};
 };
 
 struct StaffContextUiState {
-    StaffType role{};
+    StaffType role {};
     std::u16string name;
-    bool on_strike{}, can_set_patrol{}, can_edit_patrol{}, can_clear_patrol{}, can_train{}, can_pickup{}, can_hire{};
+    bool on_strike {}, can_set_patrol {}, can_edit_patrol {}, can_clear_patrol {}, can_train {}, can_pickup {}, can_hire {};
 };
 
 struct StaffUiState {
@@ -151,7 +152,7 @@ struct StaffUiState {
     StaffSelectorUiState selector;
     StaffTrainingRoomUiState training;
     StaffWageUiState wage;
-    ThingId staff_room{};
+    ThingId staff_room {};
 };
 
 //Gameplay/model half of the original Staff UI. Control trees, bitmap fonts,

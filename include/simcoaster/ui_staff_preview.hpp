@@ -7,10 +7,10 @@ namespace simcoaster {
 struct WorldRuntime;
 
 struct UiStaffPreviewPlacement {
-    std::array<std::int32_t, 4> bounds{};
-    std::array<float, 4> clip{ 0, 0, 2048, 1536 };
+    std::array<std::int32_t, 4> bounds {};
+    std::array<float, 4> clip { 0, 0, 2048, 1536 };
     //Pass the control attachment depth + 1, as in native 58F8D0.
-    std::int16_t depth{};
+    std::int16_t depth {};
     float adjustment = 8.f;
 };
 

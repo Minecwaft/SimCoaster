@@ -31,11 +31,7 @@ struct ListSpec {
     std::span<const unsigned char> words;
 };
 
-constexpr std::array specs { ListSpec { ObjectUiCategory::rides, 38018, 342, 38100, ride_words },
-                             ListSpec { ObjectUiCategory::shops, 38017, 343, 38300, shop_words },
-                             ListSpec { ObjectUiCategory::sideshows, 38016, 344, 38200, side_words },
-                             ListSpec { ObjectUiCategory::features, 38019, 345, 38500, feature_words },
-                             ListSpec { ObjectUiCategory::facilities, 38020, 346, 38400, facility_words } };
+constexpr std::array specs { ListSpec { ObjectUiCategory::rides, 38018, 342, 38100, ride_words }, ListSpec { ObjectUiCategory::shops, 38017, 343, 38300, shop_words }, ListSpec { ObjectUiCategory::sideshows, 38016, 344, 38200, side_words }, ListSpec { ObjectUiCategory::features, 38019, 345, 38500, feature_words }, ListSpec { ObjectUiCategory::facilities, 38020, 346, 38400, facility_words } };
 
 const ListSpec& list_spec(ObjectUiCategory category) {
     const auto found = std::ranges::find(specs, category, &ListSpec::category);

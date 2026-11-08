@@ -7,7 +7,7 @@ namespace simcoaster {
 struct WorldRuntime;
 
 struct PostcardOnlineStatus {
-    bool session_active{}, services_active{}, permission = true;
+    bool session_active {}, services_active {}, permission = true;
     std::string from = "nobody@nowhere.net";
 };
 
@@ -36,12 +36,7 @@ class ApplicationPostcardUiController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationPostcardUiController(WorldRuntime&,
-                                    UiRuntime&,
-                                    UiControl* parent,
-                                    const std::filesystem::path& game_root,
-                                    ApplicationPostcards&,
-                                    ApplicationPostcardUiHost);
+    ApplicationPostcardUiController(WorldRuntime&, UiRuntime&, UiControl* parent, const std::filesystem::path& game_root, ApplicationPostcards&, ApplicationPostcardUiHost);
     ~ApplicationPostcardUiController();
     void open_composer();
     void open_outbox();

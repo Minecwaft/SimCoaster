@@ -23,14 +23,13 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
             auto& world = person_detail::base_world(c);
             if (can_person_proceed_from_arrival_vehicle(c, world)) {
                 const auto count = static_cast<std::uint32_t>(c.visitors.environment.FixedItemInfo.NumTicketBooths);
-                if (!count)
+                if (!count) {
                     throw std::domain_error("arrival has no ticket booths");
+                }
                 const auto booth = static_cast<std::uint32_t>(next_world_prng_value(world)) % count;
                 const auto cell = static_cast<std::uint32_t>(get_ticket_booth_cell(c.visitors.environment, booth)) - 1u;
-                const auto fraction_x = static_cast<std::uint8_t>(next_world_prng_value(world)),
-                           fraction_y = static_cast<std::uint8_t>(next_world_prng_value(world));
-                const auto x = static_cast<std::uint16_t>(((cell & 127u) << 8) | fraction_x),
-                           y = static_cast<std::uint16_t>((((cell >> 7) & 255u) << 8) | fraction_y);
+                const auto fraction_x = static_cast<std::uint8_t>(next_world_prng_value(world)), fraction_y = static_cast<std::uint8_t>(next_world_prng_value(world));
+                const auto x = static_cast<std::uint16_t>(((cell & 127u) << 8) | fraction_x), y = static_cast<std::uint16_t>((((cell >> 7) & 255u) << 8) | fraction_y);
                 (void)request_mobile_entity_path_to_destination(c, person.base, person.mobile, x, y);
                 enter(PersonState::walk_to_entrance);
             }
@@ -59,17 +58,18 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
         case PersonState::travel_to_destination => {
             const auto navigation = navigate();
             if (navigation == NavigationResult::arrived || navigation == NavigationResult::unreachable) {
-                if ((static_cast<std::uint32_t>(next_world_prng_value(person_detail::base_world(c))) & 3u)
-                    || !try_set_mobile_entity_destination(c, person.base, person.mobile))
+                if ((static_cast<std::uint32_t>(next_world_prng_value(person_detail::base_world(c))) & 3u) || !try_set_mobile_entity_destination(c, person.base, person.mobile)) {
                     enter(PersonState::roaming);
-                else
+                } else {
                     enter(PersonState::travel_to_destination);
+                }
             }
             return;
         }
         case PersonState::temporary_appearance => {
-            if (person_detail::base_world(c).saved.game_tick > person.time_of_last_spot_animation + 10u)
+            if (person_detail::base_world(c).saved.game_tick > person.time_of_last_spot_animation + 10u) {
                 restore_world_person_saved_state(c, person);
+            }
             return;
         }
         case PersonState::use_litter_bin => {
@@ -102,8 +102,9 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
         }
         case PersonState::move_to_queue_position => {
             const auto navigation = navigate();
-            if (navigation == NavigationResult::arrived || navigation == NavigationResult::unreachable)
+            if (navigation == NavigationResult::arrived || navigation == NavigationResult::unreachable) {
                 enter(PersonState::wait_in_object_queue);
+            }
             return;
         }
         case PersonState::admission_step => {
@@ -134,11 +135,13 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
             auto id = person_detail::base_world(c).saved.first_guard;
             std::size_t visited = 0;
             while (id) {
-                if (visited++ >= thing_slot_count)
+                if (visited++ >= thing_slot_count) {
                     throw std::length_error("cyclic guard roster");
+                }
                 const auto& guard = *reinterpret_cast<GuardRuntimeRecord*>(&person_detail::map_object(c, id));
-                if (guard.perpetrator == person.base.header.id && guard.staff.state == StaffState::walking_to_entrance)
+                if (guard.perpetrator == person.base.header.id && guard.staff.state == StaffState::walking_to_entrance) {
                     return;
+                }
                 id = guard.staff.next_staff;
             }
             (void)retire_world_used_thing(c, &person.base.header);
@@ -164,10 +167,12 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
             --person.mobile.whinge_timeout;
             if (std::bit_cast<std::int32_t>(person.mobile.whinge_timeout) <= 0) {
                 person.state = person.saved_state;
-                if (person.saved_state == PersonState::listen_to_vicious_rumours)
+                if (person.saved_state == PersonState::listen_to_vicious_rumours) {
                     enter(PersonState::roaming);
-            } else
+                }
+            } else {
                 person.happiness = person_detail::meter(static_cast<double>(person.happiness) - 1.0);
+            }
             return;
         }
         case PersonState::first_aid_recovery => {
@@ -177,7 +182,7 @@ void update_person_state_machine(VisitorWorld& c, PersonRuntimeView& person) {
         case PersonState::departure_routing => {
             update_person_departure_routing(c, person);
             return;
-        //Original dispatcher has no cases for the two road-crossing display states.
+            //Original dispatcher has no cases for the two road-crossing display states.
         }
         case _ => return;
     }

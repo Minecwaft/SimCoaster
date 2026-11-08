@@ -11,20 +11,24 @@
 namespace simcoaster {
 namespace {
 std::int32_t divide(std::int32_t numerator, std::int32_t denominator) {
-    if (!denominator)
+    if (!denominator) {
         throw std::domain_error("staff work divisor is zero");
-    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1)
+    }
+    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1) {
         throw std::overflow_error("staff work quotient is not representable");
+    }
     return numerator / denominator;
 }
 
 std::int64_t truncate_integer(double value) {
     const auto truncated = std::trunc(value);
-    if (!std::isfinite(truncated))
+    if (!std::isfinite(truncated)) {
         throw std::domain_error("research numerical value is not finite");
+    }
     const auto limit = std::ldexp(1.0, 63);
-    if (truncated < -limit || truncated >= limit)
+    if (truncated < -limit || truncated >= limit) {
         throw std::overflow_error("research numerical value is not representable");
+    }
     return static_cast<std::int64_t>(truncated);
 }
 
@@ -90,16 +94,19 @@ int calculate_staff_work_value(ResearchWorld& c, const StaffRuntimeRecord* staff
     const auto kind = staff->base.header.kind;
     const auto rates = c.staff.work_balance.by_role.at(work_role(kind));
     const bool difference = kind == ThingKind::mechanic || kind == ThingKind::handyman;
-    if (staff->salary < 10u)
+    if (staff->salary < 10u) {
         return difference ? 200 : 1;
+    }
     const auto maximum = c.staff.work_balance.max_experience;
-    if (experience > maximum)
+    if (experience > maximum) {
         return rates.trained;
+    }
     const auto factor = divide(numeric::word(numeric::bits(experience) << 14u), maximum);
     //Keep the two native integer interpolation formulas: their truncation
     //differs, and several shipped role endpoints run from a larger to smaller value.
-    if (difference)
+    if (difference) {
         return numeric::subtract(rates.base, divide(numeric::product(numeric::subtract(rates.base, rates.trained), factor), 16384));
+    }
     return divide(numeric::add(numeric::product(rates.trained, factor), numeric::product(rates.base, numeric::subtract(16384, factor))), 16384);
 }
 
@@ -108,17 +115,18 @@ float calculate_research_slot_work_increment(ResearchWorld& c, ResearchLabRecord
     float increment = 0.0f;
     for (std::size_t i = 0; i < selected.workers.size(); ++i) {
         const auto id = selected.workers[i];
-        if (!id)
+        if (!id) {
             continue;
+        }
         const auto* staff = worker(c, id);
-        if (staff->state != StaffState::researching)
+        if (staff->state != StaffState::researching) {
             continue;
+        }
         //Workload is a signed DWORD snapshot before calculating work. Scale is
         //read afterwards, and each contributor stores a new single-precision sum.
         const auto workload = numeric::word(lab->workload);
         const auto work = calculate_staff_work_value(c, staff);
-        increment =
-            static_cast<float>(static_cast<double>(work) * workload * c.research.balance.speed_scale_down + increment);
+        increment = static_cast<float>(static_cast<double>(work) * workload * c.research.balance.speed_scale_down + increment);
     }
     return increment;
 }
@@ -133,15 +141,17 @@ void update_research_slot_staffing_status(ResearchWorld& c, ResearchLabRecord* l
         selected.available = 1;
         return;
     }
-    std::array<std::int32_t, 6> available{}, required{};
-    std::array<std::int32_t, 15> abilities{}, required_abilities{};
+    std::array<std::int32_t, 6> available {}, required {};
+    std::array<std::int32_t, 15> abilities {}, required_abilities {};
     for (auto id : lab->primary_staff) {
-        if (!id)
+        if (!id) {
             continue;
+        }
         const auto* staff = worker(c, id);
         const auto kind = requirement_kind(staff->base.header.kind);
-        if (kind < available.size())
+        if (kind < available.size()) {
             ++available[kind];
+        }
         ++abilities.at(static_cast<std::size_t>(staff->first_known_ability));
     }
     const auto& project = lab->projects.at(static_cast<std::size_t>(selected.project));
@@ -151,13 +161,17 @@ void update_research_slot_staffing_status(ResearchWorld& c, ResearchLabRecord* l
         ++required_abilities.at(static_cast<std::size_t>(project.staff_ability));
     }
     selected.available = 1;
-    for (std::size_t i = 0; i < available.size(); ++i)
-        if (available[i] < required[i])
+    for (std::size_t i = 0; i < available.size(); ++i) {
+        if (available[i] < required[i]) {
             selected.available = 0;
+        }
+    }
     //NONE is counted but deliberately not required by this helper's comparison.
-    for (std::size_t i = 1; i < abilities.size(); ++i)
-        if (abilities[i] < required_abilities[i])
+    for (std::size_t i = 1; i < abilities.size(); ++i) {
+        if (abilities[i] < required_abilities[i]) {
             selected.available = 0;
+        }
+    }
 }
 
 void advance_world_research_project(ResearchWorld& c, ResearchProject* entry, float increment, ResearchWorkSlot slot) {
@@ -167,30 +181,29 @@ void advance_world_research_project(ResearchWorld& c, ResearchProject* entry, fl
     }
     //Unordered progress enters work, while an unordered sum never triggers the
     //upper cap or completion. Negative increments have no additional floor.
-    if (static_cast<double>(increment) + entry->research_done > entry->cost)
+    if (static_cast<double>(increment) + entry->research_done > entry->cost) {
         increment = entry->cost - entry->research_done;
+    }
     entry->research_done += increment;
     const auto amount = numeric::word(static_cast<std::uint32_t>(truncate_integer(static_cast<double>(entry->cash_per_brain_point) * increment)));
     auto* bank = c.entities.at_payload<BankRecord>(c.referenced_world()->saved.bank_account);
     charge_world_bank_account_expense(c, bank, amount);
-    if (!(entry->research_done >= entry->cost))
+    if (!(entry->research_done >= entry->cost)) {
         return;
+    }
 
     world_operations::find_object_control(c, entry->object_definition_id)->available = 1;
     const std::uint32_t upgrade = entry->upgrade_level;
     world_operations::find_object_control(c, entry->object_definition_id)->research_option_index = upgrade;
-    WorldEvent event{ ResearchAvailabilityEvent{ entry->object_definition_id, entry->category } };
-    dispatch_world_event_to_subscribers(c,
-                                        get_world_event_subscription_registry(c),
-                                        &event,
-                                        deliver_world_record_event,
-                                        nullptr);
+    WorldEvent event { ResearchAvailabilityEvent { entry->object_definition_id, entry->category } };
+    dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &event, deliver_world_record_event, nullptr);
     //Dispatch can mutate this entry and the shared catalog iterator. Start a
     //fresh traversal, then keep each lookup and next-entry operation live.
-    for (auto* definition = first_object_catalog_entry(&c.resources.object_catalog); definition;
-         definition = next_object_catalog_entry(&c.resources.object_catalog))
-        if (definition->research.linked_with == entry->object_definition_id)
+    for (auto* definition = first_object_catalog_entry(&c.resources.object_catalog); definition; definition = next_object_catalog_entry(&c.resources.object_catalog)) {
+        if (definition->research.linked_with == entry->object_definition_id) {
             world_operations::find_object_control(c, definition->id)->available = 1;
+        }
+    }
     clear_world_research_lab_worker_ids(c, base_world_lab(c), slot);
 }
 
@@ -200,20 +213,16 @@ void update_world_research_lab_state(ResearchWorld& c, ResearchLabRecord* lab) {
     }
     for (auto slot : { ResearchWorkSlot::primary, ResearchWorkSlot::secondary }) {
         auto selected = lane(*lab, slot);
-        if (selected.project < 0)
+        if (selected.project < 0) {
             continue;
-        if (!selected.consultant
-            && map_research_staff_requirement_to_staff_type_index(
-                   lab->projects.at(static_cast<std::size_t>(selected.project)).staff_required)
-                   != StaffType::unsupported_index)
+        }
+        if (!selected.consultant && map_research_staff_requirement_to_staff_type_index(lab->projects.at(static_cast<std::size_t>(selected.project)).staff_required) != StaffType::unsupported_index) {
             continue;
+        }
         const auto increment = calculate_research_slot_work_increment(c, lab, slot);
         //Re-read the selected project after work calculation and after any effects
         //of completing the preceding lane; do not replace it with a cached index.
-        advance_world_research_project(c,
-                                       &lab->projects.at(static_cast<std::size_t>(selected.project)),
-                                       increment,
-                                       slot);
+        advance_world_research_project(c, &lab->projects.at(static_cast<std::size_t>(selected.project)), increment, slot);
     }
 }
 } //namespace simcoaster

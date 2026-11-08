@@ -23,14 +23,7 @@ enum class RsseTourCommand : std::uint32_t {
 };
 void initialize_rsse_tours(ScriptWorld&);
 void update_rsse_tour_bounds(ScriptWorld&);
-std::uint32_t create_rsse_tour(ScriptWorld&,
-                               std::uint16_t owner,
-                               std::uint32_t script,
-                               std::int32_t x,
-                               std::int32_t y,
-                               std::int32_t z,
-                               std::int32_t heading,
-                               std::int32_t short_approach);
+std::uint32_t create_rsse_tour(ScriptWorld&, std::uint16_t owner, std::uint32_t script, std::int32_t x, std::int32_t y, std::int32_t z, std::int32_t heading, std::int32_t short_approach);
 int spawn_rsse_tour_element(ScriptWorld&, std::uint32_t handle);
 int board_rsse_tour_passenger(ScriptWorld&, std::uint32_t handle, std::uint32_t person);
 std::uint32_t unload_rsse_tour_passenger(ScriptWorld&, std::uint32_t handle, bool force = false);

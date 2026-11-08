@@ -15,24 +15,24 @@ enum class ApplicationThemeCategory : std::uint8_t {
 };
 
 struct ApplicationProfileTheme {
-    bool available{};
-    std::uint16_t completed_challenges{};
+    bool available {};
+    std::uint16_t completed_challenges {};
 };
 
 struct ApplicationProfileView {
-    bool present{};
-    std::uint64_t generation{};
+    bool present {};
+    std::uint64_t generation {};
     std::u16string name;
-    std::int32_t promotion{}, share_percentage{}, share_price{}, shares_owned{}, golden_tickets{};
-    std::array<ApplicationProfileTheme, 3> themes{};
+    std::int32_t promotion {}, share_percentage {}, share_price {}, shares_owned {}, golden_tickets {};
+    std::array<ApplicationProfileTheme, 3> themes {};
     std::int32_t last_mission = -1;
-    ApplicationThemeCategory last_theme{};
+    ApplicationThemeCategory last_theme {};
 };
 
 struct ApplicationLobbyView {
-    MeshMatrix camera_to_world{};
-    std::uint32_t directional_rgb{}, ambient_rgb{};
-    std::uint16_t selection_mode{};
+    MeshMatrix camera_to_world {};
+    std::uint32_t directional_rgb {}, ambient_rgb {};
+    std::uint16_t selection_mode {};
     std::int32_t selected_area = -1;
 };
 
@@ -76,9 +76,9 @@ enum class ApplicationFrontendPhase {
 };
 
 struct ApplicationFrontendResumeState {
-    ApplicationFrontendPhase phase{};
-    std::uint16_t selection_mode{};
-    bool hide_close{}, suppress_intro_buttons{};
+    ApplicationFrontendPhase phase {};
+    std::uint16_t selection_mode {};
+    bool hide_close {}, suppress_intro_buttons {};
     struct Detail;
     std::shared_ptr<const Detail> detail;
 };
@@ -88,12 +88,7 @@ class ApplicationFrontendController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationFrontendController(WorldRuntime&,
-                                  UiRuntime&,
-                                  UiControl* routing_root,
-                                  const std::filesystem::path&,
-                                  ApplicationFrontendHost,
-                                  std::string language = "American");
+    ApplicationFrontendController(WorldRuntime&, UiRuntime&, UiControl* routing_root, const std::filesystem::path&, ApplicationFrontendHost, std::string language = "American");
     ~ApplicationFrontendController();
     ApplicationFrontendController(const ApplicationFrontendController&) = delete;
     ApplicationFrontendController& operator=(const ApplicationFrontendController&) = delete;

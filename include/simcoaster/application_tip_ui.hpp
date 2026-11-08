@@ -22,12 +22,7 @@ class ApplicationTipUiController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationTipUiController(WorldRuntime&,
-                               UiRuntime&,
-                               UiControl* primary,
-                               const std::filesystem::path& game_root,
-                               ApplicationTipUiHost,
-                               std::string language = "American");
+    ApplicationTipUiController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, ApplicationTipUiHost, std::string language = "American");
     ~ApplicationTipUiController();
     ApplicationTipUiController(const ApplicationTipUiController&) = delete;
     ApplicationTipUiController& operator=(const ApplicationTipUiController&) = delete;

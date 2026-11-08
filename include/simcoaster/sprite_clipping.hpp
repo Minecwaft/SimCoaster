@@ -13,13 +13,13 @@ enum class ClipPlane : std::uint8_t {
 };
 
 struct ClipVertex {
-    SpriteVertex position{};
-    std::uint32_t diffuse{}, specular{};
-    std::array<float, 2> uv{};
+    SpriteVertex position {};
+    std::uint32_t diffuse {}, specular {};
+    std::array<float, 2> uv {};
 };
 
 struct ClipSummary {
-    std::uint8_t common{}, combined{};
+    std::uint8_t common {}, combined {};
 };
 
 //The original uses the bit patterns of float inputs, including signed zero
@@ -29,9 +29,9 @@ ClipSummary sprite_clip_summary(std::span<const ClipVertex>, std::uint8_t enable
 std::vector<ClipVertex> clip_sprite_polygon(std::span<const ClipVertex>, std::uint8_t planes);
 
 struct SpriteIndexedBatch {
-    std::uint32_t render_state{};
-    std::uint64_t texture_storage{};
-    SpriteDepthMode depth_mode{};
+    std::uint32_t render_state {};
+    std::uint64_t texture_storage {};
+    SpriteDepthMode depth_mode {};
     //Needed to resolve the pixel source when a GPU storage handle is not yet assigned.
     SpriteFrameReference frame;
     std::vector<ClipVertex> vertices;
@@ -40,9 +40,7 @@ struct SpriteIndexedBatch {
 
 //Group consecutive compatible quads, preserving input order and using owned
 //vertex/index storage. Empty or fully clipped quads produce no batch entries.
-std::vector<SpriteIndexedBatch> build_sprite_indexed_batches(const SpriteGeometryPass&,
-                                                             std::uint8_t enabled_clip_planes = 255,
-                                                             std::uint32_t diffuse_mask = 0xffffffffu);
+std::vector<SpriteIndexedBatch> build_sprite_indexed_batches(const SpriteGeometryPass&, std::uint8_t enabled_clip_planes = 255, std::uint32_t diffuse_mask = 0xffffffffu);
 
 struct SpriteIndexedBatchSink {
     virtual ~SpriteIndexedBatchSink() = default;

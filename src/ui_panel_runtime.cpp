@@ -15,19 +15,22 @@ UiControl* UiPanelBindings::find(UiControl* root, std::uint32_t id) const {
         controls_.clear();
         revision_ = revision;
     }
-    const auto key = std::pair{ static_cast<const UiControl*>(root), id };
-    if (const auto found = controls_.find(key); found != controls_.end())
+    const auto key = std::pair { static_cast<const UiControl*>(root), id };
+    if (const auto found = controls_.find(key); found != controls_.end()) {
         return found->second;
+    }
     auto* control = ui_.find_recursive(root, id);
     //A missing optional control can be created later in this same frame.
-    if (control)
+    if (control) {
         controls_.emplace(key, control);
+    }
     return control;
 }
 
 UiControl& UiPanelBindings::required(UiControl* root, std::uint32_t id, std::string_view missing) const {
-    if (auto* control = find(root, id))
+    if (auto* control = find(root, id)) {
         return *control;
+    }
     throw std::runtime_error(std::string(missing) + std::to_string(id));
 }
 
@@ -36,21 +39,24 @@ constexpr unsigned char message_template[] {
 #embed "ui_templates/message.bin"
 };
 
-constexpr auto message_fields =
-    std::define_static_array(schema::members_of(^^UiMessageControls, std::meta::access_context::current()));
+constexpr auto message_fields = std::define_static_array(schema::members_of(^^UiMessageControls, std::meta::access_context::current()));
 constexpr auto message_ids = [] consteval {
-    std::array<std::uint32_t, message_fields.size()> result{};
-    std::size_t index{};
+    std::array<std::uint32_t, message_fields.size()> result {};
+    std::size_t index {};
     for (auto field : message_fields) {
-        if (std::meta::type_of(field) != ^^UiControl*)
+        if (std::meta::type_of(field) != ^^UiControl*) {
             throw "incompatible UI control binding";
+        }
         auto annotations = std::meta::annotations_of(field);
-        if (annotations.size() != 1)
+        if (annotations.size() != 1) {
             throw "required UI binding needs exactly one ID";
+        }
         const auto id = schema::annotation<UiRequiredControl>(field, "required UI binding needs exactly one ID").id;
-        for (std::size_t previous = 0; previous < index; ++previous)
-            if (result[previous] == id)
+        for (std::size_t previous = 0; previous < index; ++previous) {
+            if (result[previous] == id) {
                 throw "duplicate required UI binding";
+            }
+        }
         result[index++] = id;
     }
     return result;
@@ -59,7 +65,7 @@ constexpr auto message_ids = [] consteval {
 
 UiMessageControls bind_ui_message_controls(UiPanelBindings& bindings, UiControl* root, std::string_view missing) {
     UiMessageControls controls;
-    template for (constexpr auto index : std::views::iota(std::size_t{ 0 }, message_fields.size())) {
+    template for (constexpr auto index : std::views::iota(std::size_t { 0 }, message_fields.size())) {
         constexpr auto member = message_fields[index];
         controls.[:member:] = &bindings.required(root, message_ids[index], missing);
     }
@@ -114,8 +120,9 @@ std::u16string localize_ui_panel(const WorldRuntime& world, std::optional<std::s
     auto value = format_bfst_wide_string(table ? *table : std::span<const std::byte> { language.ui_text }, language.conversion, row, 16383, strings, integers);
     if (!value) {
         auto error = std::string(policy.text_error);
-        if (policy.text_error_row)
+        if (policy.text_error_row) {
             error += std::to_string(row) + ": ";
+        }
         throw std::runtime_error(error + value.error().reason);
     }
     return std::move(*value);
@@ -126,17 +133,20 @@ UiControl& ui_panel_detail::parse(UiRuntime& ui, UiControl* parent, std::span<co
     const auto parsed = ui.parse_template(parent, std::as_bytes(bytes));
     if (!parsed) {
         auto message = std::string(policy.parse_error);
-        if (policy.include_word)
+        if (policy.include_word) {
             message += std::to_string(parsed.error().word) + ": ";
+        }
         throw std::runtime_error(message + parsed.error().reason);
     }
-    UiControl* selected{};
+    UiControl* selected {};
     for (auto* child : parent->children) {
-        if (std::ranges::find(previous, child) != previous.end())
+        if (std::ranges::find(previous, child) != previous.end()) {
             continue;
+        }
         bind(ui, *child, binder, true);
-        if (owners)
+        if (owners) {
             owners->push_back(child);
+        }
         auto* found = policy.lookup == UiPanelRootLookup::recursive ? ui.find_recursive(child, root_id) : child->id == root_id ? child : nullptr;
         if (found) {
             selected = found;

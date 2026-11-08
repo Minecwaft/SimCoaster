@@ -13,8 +13,9 @@ consteval auto members_of(std::meta::info type, std::meta::access_context access
 template <class Annotation>
 consteval Annotation annotation(std::meta::info entity, const char* error) {
     const auto annotations = std::meta::annotations_of_with_type(entity, ^^Annotation);
-    if (annotations.size() != 1)
+    if (annotations.size() != 1) {
         throw error;
+    }
     return std::meta::extract<Annotation>(std::meta::constant_of(annotations.front()));
 }
 

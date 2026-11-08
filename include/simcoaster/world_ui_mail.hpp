@@ -22,11 +22,7 @@ class WorldMailUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldMailUiController(WorldRuntime&,
-                          UiRuntime&,
-                          UiControl* primary_root,
-                          const std::filesystem::path&,
-                          WorldMailUiHost);
+    WorldMailUiController(WorldRuntime&, UiRuntime&, UiControl* primary_root, const std::filesystem::path&, WorldMailUiHost);
     ~WorldMailUiController();
     WorldMailUiController(const WorldMailUiController&) = delete;
     WorldMailUiController& operator=(const WorldMailUiController&) = delete;

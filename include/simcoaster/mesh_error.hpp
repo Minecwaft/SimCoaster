@@ -32,7 +32,7 @@ enum class MeshFailure {
 
 struct MeshError {
     MeshFailure reason;
-    std::size_t offset{};
+    std::size_t offset {};
     std::string resource;
     std::optional<AssetError> archive_error;
 };

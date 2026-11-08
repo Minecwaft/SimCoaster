@@ -25,10 +25,7 @@ void mark_all_research_lab_projects_available(ResearchWorld&, ResearchLabRecord*
 void synchronize_research_lab_project_object_availability(ResearchWorld&, ResearchLabRecord*);
 bool set_research_lab_active_and_notify_subscribers(ResearchWorld&, ResearchLabRecord*);
 bool clear_research_lab_active_and_notify_subscribers(ResearchWorld&, ResearchLabRecord*);
-ThingId find_staff_matching_research_project_requirement(ResearchWorld&,
-                                                         ResearchLabRecord*,
-                                                         std::int32_t project,
-                                                         ThingId excluded = 0);
+ThingId find_staff_matching_research_project_requirement(ResearchWorld&, ResearchLabRecord*, std::int32_t project, ThingId excluded = 0);
 void remove_world_research_lab_staff_reference(ResearchWorld&, ResearchLabRecord*, const ThingHeader*);
 void clear_world_research_lab_staffing(ResearchWorld&, ResearchLabRecord*);
 bool set_research_slot_worker_ids(ResearchWorld&, ResearchLabRecord*, ResearchWorkSlot, std::span<const ThingId, 20>);
@@ -38,14 +35,9 @@ void handle_world_research_lab_event(ResearchWorld&, ResearchLabRecord*, WorldEv
 void try_add_research_project_from_selected_source(ResearchWorld&, ResearchLabRecord*);
 std::int32_t select_next_research_category_project(ResearchWorld&, ResearchLabRecord*, ResearchCategory);
 std::int32_t select_previous_research_category_project(ResearchWorld&, ResearchLabRecord*, ResearchCategory);
-std::int32_t choose_research_project_in_cost_band(ResearchWorld&,
-                                                  const ResearchLabRecord*,
-                                                  ResearchProjectCostBand,
-                                                  std::uint32_t type,
-                                                  ResearchCategory);
+std::int32_t choose_research_project_in_cost_band(ResearchWorld&, const ResearchLabRecord*, ResearchProjectCostBand, std::uint32_t type, ResearchCategory);
 std::int32_t count_available_research_projects(ResearchWorld&, const ResearchLabRecord*, ResearchCategory);
-std::int32_t
-find_nth_available_research_project(ResearchWorld&, const ResearchLabRecord*, ResearchCategory, std::int32_t ordinal);
+std::int32_t find_nth_available_research_project(ResearchWorld&, const ResearchLabRecord*, ResearchCategory, std::int32_t ordinal);
 std::uint32_t get_research_category_effort(const ResearchLabRecord*, ResearchCategory);
 std::uint32_t get_total_research_effort(const ResearchLabRecord*);
 std::uint32_t get_active_research_effort(const ResearchLabRecord*);
@@ -61,8 +53,7 @@ std::int32_t get_research_project_completion_percent(const ResearchProject*);
 bool is_research_project_complete(const ResearchProject*);
 bool preferred_research_project_matches_object(const ResearchLabRecord*, std::uint16_t definition);
 std::int32_t estimate_research_project_days_remaining(ResearchWorld&, ResearchLabRecord*, ResearchWorkSlot);
-bool
-set_research_lab_current_project_for_slot(ResearchWorld&, ResearchLabRecord*, std::int32_t project, ResearchWorkSlot);
+bool set_research_lab_current_project_for_slot(ResearchWorld&, ResearchLabRecord*, std::int32_t project, ResearchWorkSlot);
 void clear_research_lab_project_slot(ResearchWorld&, ResearchLabRecord*, ResearchWorkSlot);
 std::uint16_t get_research_project_object_id(const ResearchLabRecord*, std::int32_t project);
 bool is_research_project_selectable(ResearchWorld&, ResearchWorkSlot, std::int32_t project);

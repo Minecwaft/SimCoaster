@@ -30,8 +30,9 @@ constexpr std::array ports { ^^AllocationPort, ^^EntityEnginePort, ^^WorldUiHost
 consteval {
     std::meta::token_sequence bases;
     for (auto port : park_runtime_binding_detail::ports) {
-        if (!bases.empty())
+        if (!bases.empty()) {
             bases += ^^{ , };
+        }
         bases += ^^{
             public
             ${port}

@@ -6,14 +6,7 @@
 #include <limits>
 
 namespace simcoaster {
-AdvisorQueueEntry& init_advisor_action_candidate(VisitorWorld& c,
-                                                 AdvisorQueueEntry& candidate,
-                                                 std::int32_t action,
-                                                 std::uint16_t event_word,
-                                                 std::uint32_t event_dword,
-                                                 std::uint32_t parameter,
-                                                 std::uint8_t bypass,
-                                                 std::int32_t score_or_auto) {
+AdvisorQueueEntry& init_advisor_action_candidate(VisitorWorld& c, AdvisorQueueEntry& candidate, std::int32_t action, std::uint16_t event_word, std::uint32_t event_dword, std::uint32_t parameter, std::uint8_t bypass, std::int32_t score_or_auto) {
     candidate.thing_id = event_word;
     candidate.message = static_cast<std::uint32_t>(action);
     candidate.secondary = event_dword;
@@ -35,7 +28,7 @@ AdvisorQueueEntry& init_advisor_action_candidate(VisitorWorld& c,
 }
 
 AdvisorQueueEntry world_operations::builtin::make_advisor_action_candidate(WorldRuntime& c, std::int32_t action) {
-    AdvisorQueueEntry candidate{};
+    AdvisorQueueEntry candidate {};
     init_advisor_action_candidate(c, candidate, action, 0, 0, 4294967295u, 0, -1);
     return candidate;
 }
@@ -53,10 +46,10 @@ bool is_advisor_action_active(VisitorWorld& c, std::int32_t action) {
 }
 
 void update_person_crossing_park_entrance(VisitorWorld& c, PersonRuntimeView& person) {
-    if (!person_detail::base_world(c).saved.park_closed
-        && get_world_park_gates_rsse_slot1(c, person_detail::base_world(c)) == 1) {
-        if (update_mobile_entity_navigation(c, person.base, person.mobile) != NavigationResult::arrived)
+    if (!person_detail::base_world(c).saved.park_closed && get_world_park_gates_rsse_slot1(c, person_detail::base_world(c)) == 1) {
+        if (update_mobile_entity_navigation(c, person.base, person.mobile) != NavigationResult::arrived) {
             return;
+        }
         person.arrival_index = increment_world_visitor_count(person_detail::base_world(c));
         if (!(c.visitors.visitor_advisor_initialized & 1u)) {
             c.visitors.visitor_advisor_initialized |= 1u;
@@ -66,31 +59,32 @@ void update_person_crossing_park_entrance(VisitorWorld& c, PersonRuntimeView& pe
             const auto count = count_eligible_person_records(c, 4);
             const auto& balance = c.visitors.visitor_advisor_balance.New;
             std::int32_t action = -1;
-            if (count == static_cast<std::uint32_t>(balance.ADVISORSTUTWELLDONE1NUMVIS))
+            if (count == static_cast<std::uint32_t>(balance.ADVISORSTUTWELLDONE1NUMVIS)) {
                 action = 519;
-            else if (count == static_cast<std::uint32_t>(balance.ADVISORSTUTVISITORINFONUMVIS))
+            } else if (count == static_cast<std::uint32_t>(balance.ADVISORSTUTVISITORINFONUMVIS)) {
                 action = 520;
+            }
             if (action != -1 && !is_advisor_action_active(c, action)) {
                 auto candidate = world_operations::make_advisor_action_candidate(c, action);
                 auto* payload = c.entities.at(person_detail::base_world(c).saved.advisor).payload;
-                if (!payload)
+                if (!payload) {
                     throw std::logic_error("visitor advisor is missing");
-                (void)world_operations::queue_advisor_action_candidate(c,
-                                                                       reinterpret_cast<AdvisorRecord*>(payload),
-                                                                       candidate);
+                }
+                (void)world_operations::queue_advisor_action_candidate(c, reinterpret_cast<AdvisorRecord*>(payload), candidate);
             }
         }
         world_operations::enter_world_person_state(c, &person, PersonState::roaming);
         return;
     }
     const auto booth_count = static_cast<std::uint32_t>(c.visitors.environment.FixedItemInfo.NumTicketBooths);
-    if (!booth_count)
+    if (!booth_count) {
         throw std::domain_error("no crossing ticket booths");
+    }
     auto candidate = person.base.header.id % booth_count;
     for (std::int32_t index = 0; index < std::bit_cast<std::int32_t>(booth_count); ++index) {
-        if (person_detail::cell_id(person.base)
-            != get_ticket_booth_cell(c.visitors.environment, static_cast<std::size_t>(index)))
+        if (person_detail::cell_id(person.base) != get_ticket_booth_cell(c.visitors.environment, static_cast<std::size_t>(index))) {
             continue;
+        }
         const auto destination = get_ticket_booth_cell(c.visitors.environment, candidate);
         if (try_set_mobile_entity_path_to_cell(c, person.base, person.mobile, destination)) {
             world_operations::enter_world_person_state(c, &person, PersonState::wait_for_park_open);
@@ -102,10 +96,7 @@ void update_person_crossing_park_entrance(VisitorWorld& c, PersonRuntimeView& pe
 }
 
 void update_person_walking_to_park_exit(VisitorWorld& c, PersonRuntimeView& person) {
-    if (person.exit_level > 0
-        && truncate_park_object_condition(person.happiness)
-        && !person_detail::base_world(c).saved.park_closed
-        && record_passes_grid_predicates(c, &person.base)) {
+    if (person.exit_level > 0 && truncate_park_object_condition(person.happiness) && !person_detail::base_world(c).saved.park_closed && record_passes_grid_predicates(c, &person.base)) {
         person.mobile.navigation.navigation_mode = 0;
         world_operations::enter_world_person_state(c, &person, PersonState::roaming);
         return;
@@ -125,28 +116,26 @@ void update_person_departure_routing(VisitorWorld& c, PersonRuntimeView& person)
     if (status == 4) {
         if (std::to_underlying(person.prank) != 0) {
             auto* payload = c.entities.at(person_detail::base_world(c).saved.tag_system).payload;
-            if (!payload)
+            if (!payload) {
                 throw std::logic_error("departure tag system is missing");
-            (void)mark_tag_messages_by_format_word_for_deletion(c,
-                                                                reinterpret_cast<TagSystemRecord*>(payload),
-                                                                person.base.header.id);
+            }
+            (void)mark_tag_messages_by_format_word_for_deletion(c, reinterpret_cast<TagSystemRecord*>(payload), person.base.header.id);
         }
         (void)create_runtime_template_at_mobile_entity_resource_position(c, person.mobile, 19, 0, 0);
         (void)retire_world_used_thing(c, &person.base.header);
         return;
     }
-    if (status != 1 && status != 2 && status != 3)
+    if (status != 1 && status != 2 && status != 3) {
         return;
-    const auto stop = get_bus_stop_cell(c.visitors.environment, BusStopSelector::a),
-               next = static_cast<CellId>(stop + 1u), current = person_detail::cell_id(person.base);
-    if (current == stop || current == next)
+    }
+    const auto stop = get_bus_stop_cell(c.visitors.environment, BusStopSelector::a), next = static_cast<CellId>(stop + 1u), current = person_detail::cell_id(person.base);
+    if (current == stop || current == next) {
         return;
+    }
     const auto destination = (next_world_prng_value(person_detail::base_world(c)) & 1u) ? next : stop;
     const auto index = static_cast<std::uint32_t>(destination) - 1u;
-    const auto x = static_cast<std::uint16_t>(((index & 127u) << 8)
-                                              | (next_world_prng_value(person_detail::base_world(c)) & 255u));
-    const auto y = static_cast<std::uint16_t>((((index >> 7) & 255u) << 8)
-                                              | (next_world_prng_value(person_detail::base_world(c)) & 255u));
+    const auto x = static_cast<std::uint16_t>(((index & 127u) << 8) | (next_world_prng_value(person_detail::base_world(c)) & 255u));
+    const auto y = static_cast<std::uint16_t>((((index >> 7) & 255u) << 8) | (next_world_prng_value(person_detail::base_world(c)) & 255u));
     (void)request_mobile_entity_path_to_destination(c, person.base, person.mobile, x, y);
     world_operations::enter_world_person_state(c, &person, PersonState::walk_to_exit);
 }

@@ -11,12 +11,12 @@ enum class ApplicationFileKind {
 };
 
 struct ApplicationFileDate {
-    std::int32_t year{}, month{}, day{}, hour{}, minute{};
+    std::int32_t year {}, month {}, day {}, hour {}, minute {};
 };
 
 struct ApplicationFileEntry {
     //Stable within the returned listing, independently of displayed sort order.
-    std::uint64_t identity{};
+    std::uint64_t identity {};
     std::u16string name;
     ApplicationFileDate local_modified;
 };
@@ -28,34 +28,34 @@ struct ApplicationUiError {
 struct ApplicationMenuStatus {
     //gameplay_running is the current gameplay-pause transition latch, including
     //other UI pause owners; it is not inferred from WorldState alone.
-    bool online_session_active{}, online_services_active{}, gameplay_running{};
-    std::uint32_t pending_postcards{};
+    bool online_session_active {}, online_services_active {}, gameplay_running {};
+    std::uint32_t pending_postcards {};
 };
 
 struct ApplicationFileSelection {
-    std::u16string basename{};
-    std::optional<std::uint64_t> file_identity{};
+    std::u16string basename {};
+    std::optional<std::uint64_t> file_identity {};
 };
 
 struct ApplicationLoadParkRequest : ApplicationFileSelection {
-    bool from_profile{};
+    bool from_profile {};
 };
 
 struct ApplicationFileWrite : ApplicationFileSelection {
-    bool overwrite{};
+    bool overwrite {};
 };
 
 struct ApplicationSaveParkRequest : ApplicationFileWrite {};
 
 struct ApplicationCoasterNameEdit {
-    std::array<std::u16string, 2> components{};
-    bool refresh_sign{};
+    std::array<std::u16string, 2> components {};
+    bool refresh_sign {};
 };
 
 struct ApplicationSaveCoasterRequest : ApplicationFileWrite {
-    ThingId coaster{};
-    const ThingHeader* coaster_identity{};
-    std::uint64_t coaster_generation{};
+    ThingId coaster {};
+    const ThingHeader* coaster_identity {};
+    std::uint64_t coaster_generation {};
     std::optional<ApplicationCoasterNameEdit> naming;
 };
 
@@ -76,24 +76,13 @@ struct ApplicationLeaveCoasterDesignerRequest {};
 struct ApplicationQuitRequest {};
 
 struct ApplicationCancelLoadRequest {
-    bool from_profile{};
+    bool from_profile {};
 };
 
-using ApplicationGamePayload = std::variant<ApplicationLoadParkRequest,
-                                            ApplicationSaveParkRequest,
-                                            ApplicationSaveCoasterRequest,
-                                            ApplicationDeleteParkRequest,
-                                            ApplicationDeleteCoasterRequest,
-                                            ApplicationChangePlayerRequest,
-                                            ApplicationGoOnlineRequest,
-                                            ApplicationGoOfflineRequest,
-                                            ApplicationChooseCoasterSourceRequest,
-                                            ApplicationLeaveCoasterDesignerRequest,
-                                            ApplicationQuitRequest,
-                                            ApplicationCancelLoadRequest>;
+using ApplicationGamePayload = std::variant<ApplicationLoadParkRequest, ApplicationSaveParkRequest, ApplicationSaveCoasterRequest, ApplicationDeleteParkRequest, ApplicationDeleteCoasterRequest, ApplicationChangePlayerRequest, ApplicationGoOnlineRequest, ApplicationGoOfflineRequest, ApplicationChooseCoasterSourceRequest, ApplicationLeaveCoasterDesignerRequest, ApplicationQuitRequest, ApplicationCancelLoadRequest>;
 
 struct ApplicationGameRequest {
-    std::uint64_t serial{};
+    std::uint64_t serial {};
     ApplicationGamePayload payload;
 };
 
@@ -123,11 +112,7 @@ class ApplicationGameUiController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationGameUiController(WorldRuntime&,
-                                UiRuntime&,
-                                UiControl* primary,
-                                const std::filesystem::path& game_root,
-                                ApplicationGameUiHost);
+    ApplicationGameUiController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, ApplicationGameUiHost);
     ~ApplicationGameUiController();
     ApplicationGameUiController(const ApplicationGameUiController&) = delete;
     ApplicationGameUiController& operator=(const ApplicationGameUiController&) = delete;

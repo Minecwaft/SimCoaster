@@ -14,11 +14,11 @@ enum class WorldUiCommand : std::int32_t;
 //the UI never pretends that changing a caption changed a device.
 struct ManagementGraphicsPreferences {
     bool hardware = true;
-    std::int32_t quality{}, resolution{}, video_device{};
+    std::int32_t quality {}, resolution {}, video_device {};
 };
 
 struct ManagementGraphicsCapabilities {
-    bool show_renderer_choices{};
+    bool show_renderer_choices {};
     std::vector<std::u16string> devices;
 };
 enum class ManagementOptionsChange {
@@ -51,11 +51,7 @@ class WorldManagementUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldManagementUiController(WorldRuntime&,
-                                UiRuntime&,
-                                UiControl* primary,
-                                const std::filesystem::path& game_root,
-                                WorldManagementUiHost);
+    WorldManagementUiController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, WorldManagementUiHost);
     ~WorldManagementUiController();
     WorldManagementUiController(const WorldManagementUiController&) = delete;
     WorldManagementUiController& operator=(const WorldManagementUiController&) = delete;

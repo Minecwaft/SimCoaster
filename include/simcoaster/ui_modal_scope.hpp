@@ -8,7 +8,7 @@ struct WorldRuntime;
 //pairs each acquired effect with one release, including construction failure.
 class UiModalScope {
     WorldRuntime& world_;
-    bool commands_{}, saved_commands_{}, advisor_paused_{}, gameplay_paused_{};
+    bool commands_ {}, saved_commands_ {}, advisor_paused_ {}, gameplay_paused_ {};
     std::function<void(bool)> gameplay_pause_;
 
 public:
@@ -27,8 +27,8 @@ public:
 };
 
 struct UiFocusBookmark {
-    UiControl* control{};
-    std::uint64_t serial{};
+    UiControl* control {};
+    std::uint64_t serial {};
 
     void capture(const UiRuntime& ui, UiControl* target) {
         control = target;

@@ -38,17 +38,20 @@ void ensure_mode(WorldRuntime& c, std::uint8_t& initialized) {
 
 void update_awards(WorldRuntime& c, void* receiver) {
     ensure_mode(c, c.mode.award_mode_initialized);
-    if (c.mode.game == GameMode::code_0)
+    if (c.mode.game == GameMode::code_0) {
         world_operations::evaluate_awards(c, receiver);
+    }
 }
 
 void check_closed_park_gate(WorldRuntime& c, World* world) {
-    if (!world->saved.park_gates || world->saved.game_tick % 30 != 0 || !world->saved.park_closed)
+    if (!world->saved.park_gates || world->saved.game_tick % 30 != 0 || !world->saved.park_closed) {
         return;
+    }
     auto* gate = c.entities[world->saved.park_gates].payload;
     auto* script = world_operations::find_script(c, reinterpret_cast<ParkObjectRuntimeView*>(gate)->script_id);
-    if (world_operations::script_slot(c, script, 1) != 1 || count_eligible_person_records(c, 4))
+    if (world_operations::script_slot(c, script, 1) != 1 || count_eligible_person_records(c, 4)) {
         return;
+    }
     for (ThingId id = first_id(c); id;) {
         auto* record = c.entities[id].payload;
         if (!record->retirement_pending && is_staff_record_kind(record->kind) && !record_passes_grid_predicates(c, base(record))) {
@@ -67,11 +70,11 @@ void check_closed_park_gate(WorldRuntime& c, World* world) {
 EventRegistry* get_world_event_subscription_registry(WorldRuntime& c) {
     if (!c.simulation.event_registry) {
         void* storage = c.ports.memory.allocate(Allocation::event_registry, sizeof(EventRegistry));
-        if (!storage)
+        if (!storage) {
             throw std::bad_alloc();
+        }
         try {
-            c.simulation.event_registry =
-                initialize_world_event_subscription_registry(c, static_cast<EventRegistry*>(storage));
+            c.simulation.event_registry = initialize_world_event_subscription_registry(c, static_cast<EventRegistry*>(storage));
         } catch (...) {
             //Constructed standard-container members unwind before the owner is freed.
             c.ports.memory.release(Allocation::event_registry, storage);
@@ -110,8 +113,9 @@ void activate_used_thing_metadata_entry(WorldRuntime& c, ThingMetadata* entry, T
     c.entities.free_head = entry->free_next;
     entry->free_next = nullptr;
     entry->active_next = c.entities.active_head;
-    if (c.entities.active_head)
+    if (c.entities.active_head) {
         c.entities.active_head->active_previous = entry;
+    }
     c.entities.active_head = entry;
     entry->allocation_kind = payload->kind;
     entry->payload = payload; //active_previous is already null in a valid free row.
@@ -135,10 +139,11 @@ void rebuild_used_thing_free_list(WorldRuntime& c) {
         auto& entry = c.entities[id];
         entry.free_next = nullptr;
         if (!entry.payload) {
-            if (previous)
+            if (previous) {
                 previous->free_next = &entry;
-            else
+            } else {
                 c.entities.free_head = &entry;
+            }
             previous = &entry;
         }
     }
@@ -146,8 +151,7 @@ void rebuild_used_thing_free_list(WorldRuntime& c) {
 }
 
 //Game.exe 6516992. The panel-navigation pointers are deliberately untouched.
-MapObjectBase*
-initialize_world_map_object_base(WorldRuntime& c, MapObjectBase* record, CellId cell, std::uint32_t kind) {
+MapObjectBase* initialize_world_map_object_base(WorldRuntime& c, MapObjectBase* record, CellId cell, std::uint32_t kind) {
     record->header.id = 0;
     record->header.kind = static_cast<ThingKind>(static_cast<std::uint8_t>(kind));
     record->header.retirement_pending = 0;
@@ -156,16 +160,18 @@ initialize_world_map_object_base(WorldRuntime& c, MapObjectBase* record, CellId 
     const std::uint32_t index = static_cast<std::uint32_t>(cell) - 1;
     record->x = static_cast<std::uint16_t>(((index & 127) << 8) | 128);
     record->y = static_cast<std::uint16_t>(((index >> 7) << 8) | 128);
-    if (!c.simulation.map_cell_records || !cell || cell > map_cell_count)
+    if (!c.simulation.map_cell_records || !cell || cell > map_cell_count) {
         throw std::out_of_range("unbound or invalid map cell");
+    }
     link_world_used_thing_into_map_cell(c, &c.simulation.map_cell_records[cell - 1], record->header.id);
     return record;
 }
 
 ThingId link_world_used_thing_into_map_cell(WorldRuntime& c, MapCell* cell, ThingId id) {
     auto* record = base(c.entities[id].payload);
-    if (cell->who)
+    if (cell->who) {
         base(c.entities[cell->who].payload)->map_parent = id;
+    }
     const ThingId previous = cell->who;
     record->map_parent = 0;
     record->map_child = previous;
@@ -177,12 +183,14 @@ MapObjectBase* unlink_world_used_thing_from_map_cell(WorldRuntime& c, MapCell* c
     auto* record = base(c.entities[id].payload);
     if (record->map_parent) {
         base(c.entities[record->map_parent].payload)->map_child = record->map_child;
-        if (record->map_child)
+        if (record->map_child) {
             base(c.entities[record->map_child].payload)->map_parent = record->map_parent;
+        }
     } else {
         cell->who = record->map_child;
-        if (cell->who)
+        if (cell->who) {
             base(c.entities[cell->who].payload)->map_parent = 0;
+        }
     }
     record->map_parent = record->map_child = 0;
     return record;
@@ -195,13 +203,16 @@ bool is_world_used_thing_mobile(const ThingHeader* record) {
 void unlink_world_used_thing_map_and_event_lists(WorldRuntime& c, ThingHeader* record) {
     const auto* object = base(record);
     const CellId cell = static_cast<CellId>(((object->y >> 8) << 7) + (object->x >> 8) + 1);
-    if (!c.simulation.map_cell_records || !cell || cell > map_cell_count)
+    if (!c.simulation.map_cell_records || !cell || cell > map_cell_count) {
         throw std::out_of_range("unbound or invalid map cell");
+    }
     unlink_world_used_thing_from_map_cell(c, &c.simulation.map_cell_records[cell - 1], record->id);
-    if (record->kind == ThingKind::park_object)
+    if (record->kind == ThingKind::park_object) {
         world_operations::destroy_mesh(c, reinterpret_cast<ParkObjectRuntimeView*>(record)->mesh_instance_id);
-    if (is_world_used_thing_mobile(record) && c.view.cursor_hit == record)
+    }
+    if (is_world_used_thing_mobile(record) && c.view.cursor_hit == record) {
         c.view.cursor_hit = nullptr;
+    }
     remove_world_used_thing_from_all_events(c, get_world_event_subscription_registry(c), record);
 }
 
@@ -211,18 +222,20 @@ std::uint32_t append_pending_world_used_thing_removal(WorldRuntime& c, ThingId i
 
 std::uint32_t append_pending_world_used_thing_removal(WorldRuntime& c, RemovalQueue& queue, ThingId id) {
     auto* node = static_cast<RemovalNode*>(c.ports.memory.allocate(Allocation::removal_node, sizeof(RemovalNode)));
-    if (!node)
+    if (!node) {
         throw std::bad_alloc();
+    }
     if (node) {
         node->previous = nullptr;
         node->id = id;
         node->next = nullptr;
     }
     node->previous = queue.tail;
-    if (queue.tail)
+    if (queue.tail) {
         queue.tail->next = node;
-    else
+    } else {
         queue.head = node;
+    }
     queue.tail = node;
     return ++queue.count;
 }
@@ -233,13 +246,15 @@ ThingId* pop_pending_world_used_thing_removal(WorldRuntime& c, ThingId* out) {
 
 ThingId* pop_pending_world_used_thing_removal(WorldRuntime& c, RemovalQueue& queue, ThingId* out) {
     auto* tail = queue.tail;
-    if (!tail)
+    if (!tail) {
         return out; //Empty pop leaves *out untouched.
+    }
     queue.tail = tail->previous;
-    if (queue.tail)
+    if (queue.tail) {
         queue.tail->next = nullptr;
-    else
+    } else {
         queue.head = nullptr;
+    }
     const ThingId id = tail->id;
     --queue.count;
     c.ports.memory.release(Allocation::removal_node, tail);
@@ -248,25 +263,29 @@ ThingId* pop_pending_world_used_thing_removal(WorldRuntime& c, RemovalQueue& que
 }
 
 void unlink_and_free_world_used_thing(WorldRuntime& c, ThingMetadata* entry) {
-    if (entry->active_next)
+    if (entry->active_next) {
         entry->active_next->active_previous = entry->active_previous;
-    if (entry->active_previous)
+    }
+    if (entry->active_previous) {
         entry->active_previous->active_next = entry->active_next;
-    else
+    } else {
         c.entities.active_head = entry->active_next;
+    }
     entry->active_next = entry->active_previous = nullptr;
     entry->free_next = c.entities.free_head;
     c.entities.free_head = entry;
-    if (entry->payload && is_staff_record_kind(entry->payload->kind))
+    if (entry->payload && is_staff_record_kind(entry->payload->kind)) {
         release_staff_membership_storage(c, *reinterpret_cast<StaffRuntimeRecord*>(entry->payload));
+    }
     c.entities.release_payload(c.ports.memory, entry->payload);
     entry->payload = nullptr;
 }
 
 void drain_pending_world_used_thing_removals(WorldRuntime& c) {
     while (c.entities.removals.count) {
-        if (!c.entities.removals.tail)
+        if (!c.entities.removals.tail) {
             throw std::logic_error("removal queue count disagrees with its nodes");
+        }
         ThingId id = c.entities.removals.tail->id;
         pop_pending_world_used_thing_removal(c, &id);
         unlink_and_free_world_used_thing(c, &c.entities[id]);
@@ -274,8 +293,9 @@ void drain_pending_world_used_thing_removals(WorldRuntime& c) {
 }
 
 void release_world_used_thing_removal_queue_nodes(WorldRuntime& c) {
-    if (c.entities.removal_queue_released & 1)
+    if (c.entities.removal_queue_released & 1) {
         return;
+    }
     c.entities.removal_queue_released |= 1;
     delete_world_used_thing_removal_queue(c, &c.entities.removals, 0);
 }
@@ -289,22 +309,19 @@ RemovalQueue* delete_world_used_thing_removal_queue(WorldRuntime& c, RemovalQueu
         node = previous;
     }
     queue->count = 0; //Queue teardown does not release used-thing payloads.
-    if (flags & 1)
+    if (flags & 1) {
         c.ports.memory.release(Allocation::removal_queue, queue);
+    }
     return queue;
 }
 
 //Game.exe 6519872: notification/cleanup precede both pending flag and tombstone.
 std::uint32_t retire_world_used_thing(WorldRuntime& c, ThingHeader* record) {
-    if (auto* prepared = c.missions.mission_transition.prepared.get();
-        prepared && prepared->target == record->id && !prepared->target_consumed)
+    if (auto* prepared = c.missions.mission_transition.prepared.get(); prepared && prepared->target == record->id && !prepared->target_consumed) {
         prepared->target_invalidated = true;
-    WorldEvent event{ RetirementEvent{ record->id } };
-    dispatch_world_event_to_subscribers(c,
-                                        get_world_event_subscription_registry(c),
-                                        &event,
-                                        deliver_world_record_event,
-                                        nullptr);
+    }
+    WorldEvent event { RetirementEvent { record->id } };
+    dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &event, deliver_world_record_event, nullptr);
     cleanup_entity_payload(c, record);
     const ThingId id = record->id;
     record->retirement_pending = 1;
@@ -336,8 +353,9 @@ void update_world_managers(WorldRuntime& c, World* world) {
     world_operations::arrivals(c, &world->arrival);
     world_operations::staff_pool(c, world);
     process_world_calendar_changes(c, &world->calendar);
-    if (c.referenced_world()->saved.game_tick % 100 == 0 && c.mode.scheduler != 17)
+    if (c.referenced_world()->saved.game_tick % 100 == 0 && c.mode.scheduler != 17) {
         update_awards(c, world->award_receiver.data());
+    }
 }
 
 //Game.exe 6591568. next_id is read AFTER callbacks, never cached in advance.
@@ -350,10 +368,11 @@ void run_world_simulation_tick(WorldRuntime& c, World* world) {
     if (c.mode.source_recreation) {
         for (ThingId id = first_id(c); id;) {
             auto* record = c.entities[id].payload;
-            if (record->kind == ThingKind::advisor)
+            if (record->kind == ThingKind::advisor) {
                 world_operations::record_update(c, RecordUpdate::advisor, record);
-            else if (record->kind == ThingKind::animation_manager)
+            } else if (record->kind == ThingKind::animation_manager) {
                 update_world_animation_state(c, reinterpret_cast<AnimationManagerRecord*>(record));
+            }
             id = next_id(c, record);
         }
         return;
@@ -390,8 +409,9 @@ void clear_world_records_before_save_restore(WorldRuntime& c, World* world) {
     world->saved.state = WorldState::clearing;
     for (ThingId id = first_id(c); id;) {
         auto* record = c.entities[id].payload;
-        if (!record->retirement_pending)
+        if (!record->retirement_pending) {
             retire_world_used_thing(c, record);
+        }
         id = next_id(c, record);
     }
     drain_pending_world_used_thing_removals(c);

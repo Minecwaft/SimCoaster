@@ -106,8 +106,7 @@ void complete_world_staff_ability_learning(StaffRuntimeRecord&);
 std::size_t find_free_world_staff_candidate_slot(const World&);
 std::size_t count_world_staff_candidates(const World&, StaffType);
 void recount_world_staff_counts(StaffWorld&, World&);
-std::int32_t
-calculate_staff_salary_from_experience(const StaffQuery&, std::int32_t experience, std::int32_t maximum_wage);
+std::int32_t calculate_staff_salary_from_experience(const StaffQuery&, std::int32_t experience, std::int32_t maximum_wage);
 void initialize_world_staff_candidate(StaffWorld&, StaffCandidate&, StaffType, std::size_t slot);
 bool generate_opening_staff_pool(StaffWorld&, World&);
 void initialize_world_opening_staff_pool(StaffWorld&, World&);

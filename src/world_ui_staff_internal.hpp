@@ -81,6 +81,7 @@ struct WorldStaffUiController::State : UiPanelPresentation {
     UiControl& parse(std::span<const unsigned char> bytes, std::uint32_t id, Callback callback, std::vector<UiControl*>* owners = nullptr) {
         return parse_ui_panel(ui, primary, bytes, id, std::move(callback), owners, { "Staff template word ", true, "Original Staff template has no requested root ", true, UiPanelRootLookup::direct });
     }
+
     void begin(Page);
     void stage_advisor(std::int32_t);
     void close();

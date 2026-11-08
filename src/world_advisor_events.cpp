@@ -18,15 +18,17 @@ void receive_world_advisor_message(AdvisorWorld& c, AdvisorRecord& advisor, cons
     match (event.type()) {
         case 5 => {
             const auto& candidate = event.get<AdvisorActionEvent>().candidate;
-            if (candidate.valid)
+            if (candidate.valid) {
                 (void)world_operations::queue_advisor_action_candidate(c, &advisor, candidate);
+            }
         }
         case 8  => queue(219, event.get<ParkObjectCondemnedEvent>().park_object_id);
         case 14 => {
             const auto& prank = event.get<PersonActionEvent>();
             const auto* payload = c.entities.at(prank.person_id).payload;
-            if (!payload)
+            if (!payload) {
                 throw std::logic_error("Advisor prank actor is missing");
+            }
             const auto& actor = *reinterpret_cast<const PersonRuntimeView*>(payload);
             const auto cell = static_cast<CellId>((actor.base.x >> 8) + ((actor.base.y >> 8) << 7) + 1u);
             queue(is_first_hour_of_gameplay(c) ? 516 : active(393) ? 292 : 393, prank.person_id, cell);
@@ -61,21 +63,23 @@ void receive_world_advisor_message(AdvisorWorld& c, AdvisorRecord& advisor, cons
             };
             if (action != -1) {
                 queue(action, 0, research.definition_id);
-                if (category == ResearchCategory::facilities)
-                    c.ports.diagnostics.log_debug_message(c,
-                                                          "unknown research category in CAdvisor::ReceiveMessage.\n");
+                if (category == ResearchCategory::facilities) {
+                    c.ports.diagnostics.log_debug_message(c, "unknown research category in CAdvisor::ReceiveMessage.\n");
+                }
                 return;
             }
             if (category != ResearchCategory::upgrades) {
                 c.ports.diagnostics.log_debug_message(c, "unknown research category in CAdvisor::ReceiveMessage.\n");
                 return;
             }
-            if (!c.referenced_world())
+            if (!c.referenced_world()) {
                 throw std::logic_error("Advisor primary World is missing");
+            }
             for (auto id = c.referenced_world()->saved.first_mechanic; id;) {
                 const auto* staff = c.entities.at_payload<const StaffRuntimeRecord>(id);
-                if (!staff)
+                if (!staff) {
                     throw std::logic_error("Advisor mechanic roster entry is missing");
+                }
                 if (staff->first_known_ability == ThemeAbility::ride_upgrading) {
                     queue(89, 0, research.definition_id);
                     return;
@@ -87,8 +91,9 @@ void receive_world_advisor_message(AdvisorWorld& c, AdvisorRecord& advisor, cons
         case 19 => {
             match (event.get<Tag19Event>().tag) {
                 case 0 => {
-                    if (static_cast<std::int32_t>(c.mode.game) == 2)
+                    if (static_cast<std::int32_t>(c.mode.game) == 2) {
                         queue(255);
+                    }
                 }
                 case 2  => queue(102);
                 case 3  => queue(119);
@@ -111,15 +116,16 @@ void receive_world_advisor_message(AdvisorWorld& c, AdvisorRecord& advisor, cons
                 case 4 => 465;
                 case _ => -1;
             };
-            if (base == -1)
+            if (base == -1) {
                 base = match (strike.code) -> std::int32_t {
                     case 2 => 40;
                     case 3 => 46;
                     case 5 => 52;
                     case _ => -1;
                 };
+            }
             if (base != -1) {
-                constexpr std::array<std::int32_t, 6> offsets{ 1, 0, 3, 2, 4, 5 };
+                constexpr std::array<std::int32_t, 6> offsets { 1, 0, 3, 2, 4, 5 };
                 queue(base + offsets.at(static_cast<std::size_t>(strike.category)));
             }
         }

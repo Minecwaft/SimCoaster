@@ -35,7 +35,7 @@ enum class ApplicationSessionFailure {
 };
 
 struct ApplicationSessionError {
-    ApplicationSessionFailure failure{};
+    ApplicationSessionFailure failure {};
     std::filesystem::path path;
     std::string detail;
 };
@@ -60,8 +60,7 @@ struct ApplicationSessionHost {
     //Mailbox/address-book and hardware configuration have separate codecs and
     //owners. These hooks report actual errors; they are not successful no-ops.
     //An empty directory with loading=true clears the selected profile services.
-    std::function<std::expected<void, ApplicationSessionError>(const std::filesystem::path&, bool loading)>
-        profile_services;
+    std::function<std::expected<void, ApplicationSessionError>(const std::filesystem::path&, bool loading)> profile_services;
     std::function<std::expected<void, ApplicationSessionError>()> save_configuration;
     std::function<std::expected<void, ApplicationSessionError>(const ApplicationGameRequest&)> external_request;
 };
@@ -75,10 +74,7 @@ class ApplicationSession {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationSession(const std::filesystem::path& game_root,
-                       std::span<const std::string_view> registered_sources,
-                       UiPreferences native_defaults,
-                       ApplicationSessionHost);
+    ApplicationSession(const std::filesystem::path& game_root, std::span<const std::string_view> registered_sources, UiPreferences native_defaults, ApplicationSessionHost);
     ~ApplicationSession();
     ApplicationSession(const ApplicationSession&) = delete;
     ApplicationSession& operator=(const ApplicationSession&) = delete;
@@ -97,8 +93,7 @@ public:
     void select_source(std::int32_t);
     std::expected<void, ApplicationSessionError> boot_intro();
     std::expected<void, ApplicationSessionError> activate_profile(std::uint32_t);
-    std::expected<void, ApplicationSessionError>
-    create_profile(std::uint32_t, std::u16string_view, bool easy_template = false);
+    std::expected<void, ApplicationSessionError> create_profile(std::uint32_t, std::u16string_view, bool easy_template = false);
     std::expected<void, ApplicationSessionError> erase_profile(std::uint32_t, std::uint64_t expected_generation);
     void request_source(std::int32_t, bool from_profile = false, bool coaster_designer = false);
     void request_coaster_source(ApplicationCoasterSourceSelection);

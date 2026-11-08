@@ -13,8 +13,8 @@ enum class CoasterEditorEntryTool : std::uint32_t;
 //The persistent UI owns panel focus and external camera/construction actions.
 //Concrete controllers retain their own roots, previews and staged gameplay.
 struct WorldUiPanelHost {
-    ParkConstructionRuntime* construction{};
-    NativeCoasterEditor* native_coaster_editor{};
+    ParkConstructionRuntime* construction {};
+    NativeCoasterEditor* native_coaster_editor {};
     std::function<void()> dismiss;
     std::function<void(UiControl*)> activate;
     std::function<void(UiControl*)> deactivate;

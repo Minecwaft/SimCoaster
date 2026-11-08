@@ -21,29 +21,22 @@ using TooltipOffsets = StandardTooltipOffsets; //Native World Balance descriptor
 
 struct UiTooltipController::State {
     UiRuntime& ui;
-    UiControl *event_root{}, *control{};
+    UiControl *event_root {}, *control {};
     UiFontLibrary& fonts;
     WorldRuntime& context;
     TooltipPolicy policy;
-    std::array<TooltipOffsets, tooltip_offset_count> table_offsets{};
-    bool enabled = true, created{}, pending{}, clipped_rate{};
-    bool has_pointer{};
-    UiPoint pointer{}, anchor{}, query_offsets{}, direct_offsets{};
-    std::uint32_t deadline{}, next_step{}, pixel_width{}, pixel_height{};
-    std::int32_t step{};
+    std::array<TooltipOffsets, tooltip_offset_count> table_offsets {};
+    bool enabled = true, created {}, pending {}, clipped_rate {};
+    bool has_pointer {};
+    UiPoint pointer {}, anchor {}, query_offsets {}, direct_offsets {};
+    std::uint32_t deadline {}, next_step {}, pixel_width {}, pixel_height {};
+    std::int32_t step {};
     std::u16string cached_text;
 
-    State(UiRuntime& runtime,
-          UiControl* parent,
-          UiFontLibrary& library,
-          WorldRuntime& c,
-          const std::filesystem::path& path)
-        : ui(runtime),
-          event_root(parent),
-          fonts(library),
-          context(c) {
-        if (parent && !ui.owns(parent))
+    State(UiRuntime& runtime, UiControl* parent, UiFontLibrary& library, WorldRuntime& c, const std::filesystem::path& path) : ui(runtime), event_root(parent), fonts(library), context(c) {
+        if (parent && !ui.owns(parent)) {
             throw std::invalid_argument("Tooltip requires its live UI event root");
+        }
         const auto& balance = ensure_world_standard_ui_balance(c, path);
         policy = balance.user_interface;
         table_offsets = balance.offsets;
@@ -59,20 +52,23 @@ struct UiTooltipController::State {
 
     void hide() {
         pending = false;
-        if (ui.owns(control))
+        if (ui.owns(control)) {
             ui.set_visible(*control, false);
+        }
     }
 
     std::shared_ptr<const UiBitmapFont> font(std::uint32_t width) {
         auto result = fonts.slot(7, width);
-        if (!result)
+        if (!result) {
             throw std::runtime_error("Original tooltip font: " + result.error().reason);
+        }
         return *result;
     }
 
     void create(std::uint32_t width, std::uint32_t height) {
-        if (created)
+        if (created) {
             return;
+        }
         created = true;
         const auto line = font(width)->line_advance;
         const auto top = 1520 - static_cast<std::int32_t>(4608u * line / height + 10u);
@@ -87,8 +83,9 @@ struct UiTooltipController::State {
         ui.set_depth(*control, 38);
         ui.set_visible(*control, false);
         ui.set_primary_callback(*control, [this](UiControl& sender, const UiEvent& event) -> std::intptr_t {
-            if (event.type == 13)
+            if (event.type == 13) {
                 return 0;
+            }
             if (event.type == 20 && &sender == control) {
                 control = nullptr;
                 pending = false;
@@ -98,8 +95,9 @@ struct UiTooltipController::State {
     }
 
     void position(UiPoint point) {
-        if (!ui.owns(control))
+        if (!ui.owns(control)) {
             return;
+        }
         const auto width = control->rect.width(), height = control->rect.height();
         //Native5170D0 deliberately consumes per-query X/Y offsets transposed.
         const auto x = point.x + policy.tooltip_x + query_offsets.y;
@@ -121,8 +119,7 @@ struct UiTooltipController::State {
             case _ => {
                 //Native preserves the queried rectangle for unknown enums.
             }
-        }
-        if (area.right > 2048) {
+        } if (area.right > 2048) {
             area.right = 2048;
             area.left = 2048 - width;
         }
@@ -140,14 +137,13 @@ struct UiTooltipController::State {
         style.vertical = cached_text.contains(u'\n') ? UiTextVertical::top : UiTextVertical::middle;
         const auto layout_width = 700u * width / 2048u;
         auto measured = fonts.measure(*face, cached_text, { 0, 0, static_cast<float>(layout_width), 1536 }, style);
-        if (!measured)
+        if (!measured) {
             throw std::runtime_error("Original tooltip layout: " + measured.error().reason);
+        }
         const auto measured_width = static_cast<std::int32_t>(measured->bounds[2] - measured->bounds[0]);
         const auto measured_height = static_cast<std::int32_t>(measured->bounds[3] - measured->bounds[1]);
-        const auto logical_width =
-            std::max(80, static_cast<std::int32_t>((static_cast<std::int64_t>(measured_width) + 12) * 2048 / width));
-        const auto logical_height =
-            std::max(80, static_cast<std::int32_t>((static_cast<std::int64_t>(measured_height) + 12) * 1536 / height));
+        const auto logical_width = std::max(80, static_cast<std::int32_t>((static_cast<std::int64_t>(measured_width) + 12) * 2048 / width));
+        const auto logical_height = std::max(80, static_cast<std::int32_t>((static_cast<std::int64_t>(measured_height) + 12) * 1536 / height));
         ui.set_bounds(*control, { 0, 0, logical_width, logical_height });
         control->attachment_rect = control->rect;
         control->horizontal_alignment = control->vertical_alignment = 1;
@@ -170,8 +166,9 @@ struct UiTooltipController::State {
             anchor = pointer;
             position(pointer);
         }
-        if (!control->visible() || step >= 7)
+        if (!control->visible() || step >= 7) {
             return;
+        }
         if (numeric::word(now - next_step) > 500 || clipped_rate) {
             step = 7;
             ui.set_attachment_part(*control, 7);
@@ -184,23 +181,15 @@ struct UiTooltipController::State {
         }
     }
 
-    void update(std::u16string_view text,
-                UiPoint point,
-                std::uint32_t width,
-                std::uint32_t height,
-                bool refresh_text = true);
+    void update(std::u16string_view text, UiPoint point, std::uint32_t width, std::uint32_t height, bool refresh_text = true);
 };
 
-UiTooltipController::UiTooltipController(UiRuntime& runtime,
-                                         UiControl* event_root,
-                                         UiFontLibrary& fonts,
-                                         WorldRuntime& c,
-                                         const std::filesystem::path& path)
-    : state_(std::make_unique<State>(runtime, event_root, fonts, c, path)) {}
+UiTooltipController::UiTooltipController(UiRuntime& runtime, UiControl* event_root, UiFontLibrary& fonts, WorldRuntime& c, const std::filesystem::path& path) : state_(std::make_unique<State>(runtime, event_root, fonts, c, path)) {}
 
 UiTooltipController::~UiTooltipController() {
-    if (state_->ui.owns(state_->control))
+    if (state_->ui.owns(state_->control)) {
         state_->ui.destroy(state_->control);
+    }
 }
 
 UiControl* UiTooltipController::root() const {
@@ -230,8 +219,9 @@ void UiTooltipController::update(std::u16string_view text, UiPoint pointer, std:
 
 void UiTooltipController::update_help(UiControl* source, UiPoint pointer, std::uint32_t width, std::uint32_t height) {
     auto& s = *state_;
-    if (!s.enabled)
+    if (!s.enabled) {
         return;
+    }
     if (!s.ui.owns(source)) {
         s.query_offsets = {};
         s.update({}, pointer, width, height);
@@ -249,7 +239,7 @@ void UiTooltipController::update_help(UiControl* source, UiPoint pointer, std::u
     if (query.text) {
         //Copy before any further event dispatch: the owner may use a reusable
         //query buffer, or its control may disappear while the tooltip is laid out.
-        const std::u16string text{ query.text };
+        const std::u16string text { query.text };
         s.query_offsets = {};
         s.update(text, pointer, width, height);
         return;
@@ -267,39 +257,36 @@ void UiTooltipController::update_help(UiControl* source, UiPoint pointer, std::u
         };
         s.query_offsets = { low_word(pair.x), low_word(pair.y) };
     }
-    auto text = format_bfst_wide_string(s.context.messages.mail_language.ui_help,
-                                        s.context.messages.mail_language.conversion,
-                                        query.index,
-                                        16383);
-    if (!text)
-        throw std::runtime_error(
-            "Original tooltip UIHELPTEXT row " + std::to_string(query.index) + ": " + text.error().reason);
+    auto text = format_bfst_wide_string(s.context.messages.mail_language.ui_help, s.context.messages.mail_language.conversion, query.index, 16383);
+    if (!text) {
+        throw std::runtime_error("Original tooltip UIHELPTEXT row " + std::to_string(query.index) + ": " + text.error().reason);
+    }
     s.update(*text, pointer, width, height);
 }
 
-void UiTooltipController::State::update(std::u16string_view text,
-                                        UiPoint point,
-                                        std::uint32_t width,
-                                        std::uint32_t height,
-                                        bool refresh_text) {
+void UiTooltipController::State::update(std::u16string_view text, UiPoint point, std::uint32_t width, std::uint32_t height, bool refresh_text) {
     auto& s = *this;
-    if (!width || !height)
+    if (!width || !height) {
         throw std::invalid_argument("Tooltip viewport must have nonzero dimensions");
-    if (!s.enabled)
+    }
+    if (!s.enabled) {
         return;
+    }
     s.create(width, height);
-    if (!s.ui.owns(s.control))
+    if (!s.ui.owns(s.control)) {
         return; //Native event20 permanently clears this controller's reset gate.
+    }
     const bool moved = !s.has_pointer || point.x != s.pointer.x || point.y != s.pointer.y;
     s.pointer = point;
     s.has_pointer = true;
     if (moved) {
         if (s.control->visible()) {
-            if (std::abs(point.x - s.anchor.x) > s.policy.tooltip_max_x
-                || std::abs(point.y - s.anchor.y) > s.policy.tooltip_max_y)
+            if (std::abs(point.x - s.anchor.x) > s.policy.tooltip_max_x || std::abs(point.y - s.anchor.y) > s.policy.tooltip_max_y) {
                 s.hide();
-        } else
+            }
+        } else {
             s.deadline = s.delayed();
+        }
     }
     if (!refresh_text) {
         s.animate();

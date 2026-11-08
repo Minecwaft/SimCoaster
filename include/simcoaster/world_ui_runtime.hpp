@@ -61,10 +61,7 @@ class WorldUiRuntime {
     std::unique_ptr<State> state_;
 
 public:
-    WorldUiRuntime(WorldRuntime&,
-                   const std::filesystem::path& game_root,
-                   std::function<void()> reset_world_interaction,
-                   ParkConstructionRuntime* construction = nullptr);
+    WorldUiRuntime(WorldRuntime&, const std::filesystem::path& game_root, std::function<void()> reset_world_interaction, ParkConstructionRuntime* construction = nullptr);
     ~WorldUiRuntime();
     WorldUiRuntime(const WorldUiRuntime&) = delete;
     WorldUiRuntime& operator=(const WorldUiRuntime&) = delete;
@@ -84,14 +81,8 @@ public:
     void bind_management(WorldManagementUiHost);
     void dispatch_command(WorldUiCommand);
     void dispatch_mail_action(const WorldMailUiAction&);
-    void bind_construction_actions(std::function<bool(std::uint16_t)> object,
-                                   std::function<bool(const std::filesystem::path&, std::int32_t)> design,
-                                   std::function<void(ThingId)> retire = {});
-    void bind_object_actions(std::function<bool(ThingId)> queue,
-                             std::function<bool(ThingId)> track,
-                             std::function<void(ThingId)> ride,
-                             std::function<bool(ThingId)> relocate,
-                             std::function<bool(ThingId, CoasterEditorEntryTool)> coaster_tool = {});
+    void bind_construction_actions(std::function<bool(std::uint16_t)> object, std::function<bool(const std::filesystem::path&, std::int32_t)> design, std::function<void(ThingId)> retire = {});
+    void bind_object_actions(std::function<bool(ThingId)> queue, std::function<bool(ThingId)> track, std::function<void(ThingId)> ride, std::function<bool(ThingId)> relocate, std::function<bool(ThingId, CoasterEditorEntryTool)> coaster_tool = {});
     void bind_toolbar_actions(std::function<bool(std::uint32_t, bool)>);
     bool select_toolbar_tool(std::uint32_t id);
     void preferences(const UiPreferences&);
@@ -99,8 +90,7 @@ public:
     //body retains wrapping, clipping, measured overflow and text ownership.
     void bind_scrollable_text(UiControl&, std::optional<std::uint32_t> scrollbar);
     void set_draw_underlay(std::function<void(UiDrawList&, std::uint32_t, std::uint32_t)>);
-    void
-        set_control_draw_hook(std::function<void(UiDrawList&, const UiControl&, UiRect, std::uint32_t, std::uint32_t)>);
+    void set_control_draw_hook(std::function<void(UiDrawList&, const UiControl&, UiRect, std::uint32_t, std::uint32_t)>);
     void set_shortcut_handler(std::function<bool(const UiEvent&, WorldUiShortcutRoute)>);
     void set_tooltip_override(std::optional<std::u16string>);
     void set_world_cursor_help(std::u16string);

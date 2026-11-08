@@ -13,25 +13,25 @@ enum class ScapeOmpRecordKind : std::uint32_t {
 //6A6110 reads a zero-filled60-byte prefix of each declared-width record.
 //Unknown kinds and trailing bytes are retained as data and perform no action.
 struct ScapeOmpRecord {
-    [[=save::Field{ "kind", 0 }]] ScapeOmpRecordKind kind{};
-    [[=save::Field{ "option_or_template", 1 }]] std::uint32_t option_or_template{};
-    [[=save::Field{ "event", 2 }]] std::uint32_t event_id{};
-    [[=save::Field{ "position", 3 }]] std::array<std::int32_t, 3> position{};
-    [[=save::Field{ "radius_parameter", 4 }]] std::int32_t radius_parameter{};
-    [[=save::Field{ "area_width", 5 }]] std::int32_t area_width{};
-    [[=save::Field{ "area_depth", 6 }]] std::int32_t area_depth{};
-    [[=save::Field{ "unknown_tail", 7 }]] std::array<std::uint32_t, 6> unknown_tail{};
+    [[=save::Field { "kind", 0 }]] ScapeOmpRecordKind kind {};
+    [[=save::Field { "option_or_template", 1 }]] std::uint32_t option_or_template {};
+    [[=save::Field { "event", 2 }]] std::uint32_t event_id {};
+    [[=save::Field { "position", 3 }]] std::array<std::int32_t, 3> position {};
+    [[=save::Field { "radius_parameter", 4 }]] std::int32_t radius_parameter {};
+    [[=save::Field { "area_width", 5 }]] std::int32_t area_width {};
+    [[=save::Field { "area_depth", 6 }]] std::int32_t area_depth {};
+    [[=save::Field { "unknown_tail", 7 }]] std::array<std::uint32_t, 6> unknown_tail {};
 };
 
 static_assert(save::value_width<ScapeOmpRecord> == 60);
 
 struct ScapeOmpFile {
-    std::uint32_t record_width{};
+    std::uint32_t record_width {};
     std::vector<ScapeOmpRecord> records;
 };
 
 struct ScapeOmpError {
-    std::size_t offset{};
+    std::size_t offset {};
     std::string reason;
 };
 
@@ -45,8 +45,8 @@ std::expected<ScapeOmpFile, ScapeOmpError> load_scape_omp(const std::filesystem:
 class ScapeOmpRuntime {
     WorldRuntime& context_;
     SoundRuntime& audio_;
-    std::uint32_t source_{};
-    bool loaded_{};
+    std::uint32_t source_ {};
+    bool loaded_ {};
     std::vector<std::uint32_t> sounds_, particles_;
     //Native live-list traversal order, opposite CampaignAuxiliaryState wire
     //order. Only local type1 records participate in the ATM mute/restore list.

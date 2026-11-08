@@ -16,21 +16,24 @@
 namespace simcoaster {
 namespace {
 std::uint32_t index(std::size_t value) {
-    if (value > std::numeric_limits<std::uint32_t>::max())
+    if (value > std::numeric_limits<std::uint32_t>::max()) {
         throw std::length_error("Park-object UI preview index capacity");
+    }
     return static_cast<std::uint32_t>(value);
 }
 
 std::string lower(std::string value) {
-    for (auto& unit : value)
-        if (unit >= 'A' && unit <= 'Z')
+    for (auto& unit : value) {
+        if (unit >= 'A' && unit <= 'Z') {
             unit = static_cast<char>(unit + ('a' - 'A'));
+        }
+    }
     return value;
 }
 
 std::array<std::optional<std::size_t>, 2> sign_slots(const MeshModel& model) {
     std::array<std::optional<std::size_t>, 2> slots;
-    unsigned count{};
+    unsigned count {};
     for (std::size_t i = 0; i < model.textures.size(); ++i) {
         const auto& slot = model.textures[i];
         if (slot.metadata_flags & 8u) {
@@ -50,24 +53,29 @@ std::array<std::optional<std::size_t>, 2> sign_slots(const MeshModel& model) {
             }
         }
     }
-    return count == 2 ? slots : std::array<std::optional<std::size_t>, 2>{};
+    return count == 2 ? slots : std::array<std::optional<std::size_t>, 2> {};
 }
 
 void borrow_sign_bindings(MeshModel& preview, const MeshModel& source) {
     const auto original = sign_slots(source), replacement = sign_slots(preview);
-    if (!original[0] || !original[1] || !replacement[0] || !replacement[1])
+    if (!original[0] || !original[1] || !replacement[0] || !replacement[1]) {
         return;
+    }
     //4CC0E0 changes triangle-group bindings, not animated slot contents. A
     //private copy of each original source slot gives the same ownership without
     //native cross-instance resource pointers or a reverse-swap destructor.
     for (std::size_t bank = 0; bank < 2; ++bank) {
         const auto appended = preview.textures.size();
         preview.textures.push_back(source.textures[*original[bank]]);
-        for (auto& node : preview.nodes)
-            if (node.drawable)
-                for (auto& group : node.drawable->groups)
-                    if (group.texture_slot == replacement[bank])
+        for (auto& node : preview.nodes) {
+            if (node.drawable) {
+                for (auto& group : node.drawable->groups) {
+                    if (group.texture_slot == replacement[bank]) {
                         group.texture_slot = appended;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -97,8 +105,9 @@ void rotate_x(MeshMatrix& matrix, float cosine, float sin) {
 
 MeshPoint direction(const MeshMatrix& matrix, const MeshPoint& normal) {
     MeshPoint result;
-    for (std::size_t axis = 0; axis < 3; ++axis)
+    for (std::size_t axis = 0; axis < 3; ++axis) {
         result[axis] = normal[0] * matrix[axis] + normal[1] * matrix[axis + 4] + normal[2] * matrix[axis + 8];
+    }
     return result;
 }
 } //namespace
@@ -107,34 +116,35 @@ struct UiObjectPreview::State {
     WorldRuntime& c;
     std::filesystem::path root;
     const std::thread::id thread = std::this_thread::get_id();
-    const World* world{};
-    const WorldMeshRuntime* meshes{};
-    const ThingHeader* identity{}; //Compare addresses only; never dereference.
-    const ResearchCatalogDefinition* definition_identity{};
-    bool definition_only{};
-    ThingId id{};
-    std::uint64_t creation_time{};
-    std::uint16_t definition_id{};
-    std::uint32_t template_id{}, animation_id = 5;
+    const World* world {};
+    const WorldMeshRuntime* meshes {};
+    const ThingHeader* identity {}; //Compare addresses only; never dereference.
+    const ResearchCatalogDefinition* definition_identity {};
+    bool definition_only {};
+    ThingId id {};
+    std::uint64_t creation_time {};
+    std::uint16_t definition_id {};
+    std::uint32_t template_id {}, animation_id = 5;
     std::shared_ptr<const MeshPlaybackAssets> source_assets;
     std::optional<MeshPlaybackInstance> playback;
     std::optional<MeshModelLibrary> library;
     std::unique_ptr<MeshTextureLibrary> textures;
     MeshLighting lighting;
-    MeshBounds model_bounds{};
-    MeshMatrix unscaled_root{}, fitted_root{};
-    UiRect rectangle{};
-    bool fitted{}, reset_clock = true;
-    std::uint32_t last_tick{};
-    float rotation{}, render_rotation{}, half_x{}, half_z{}, midpoint_distance{}, vertical_ratio{};
+    MeshBounds model_bounds {};
+    MeshMatrix unscaled_root {}, fitted_root {};
+    UiRect rectangle {};
+    bool fitted {}, reset_clock = true;
+    std::uint32_t last_tick {};
+    float rotation {}, render_rotation {}, half_x {}, half_z {}, midpoint_distance {}, vertical_ratio {};
     MeshScene scene;
     std::vector<std::string> diagnostics;
 
     State(WorldRuntime& context, const std::filesystem::path& path) : c(context), root(path) {}
 
     void require_thread() const {
-        if (thread != std::this_thread::get_id())
+        if (thread != std::this_thread::get_id()) {
             throw std::logic_error("Park-object previews require their owning UI thread");
+        }
     }
 
     ParkObjectRuntimeView* object(ThingId candidate) const {
@@ -167,12 +177,7 @@ struct UiObjectPreview::State {
             }
             const auto* definition = find_object_definition_by_id(&c.resources.object_catalog, definition_id);
             const auto* source = meshes->definition(template_id);
-            if (!definition
-                || definition != definition_identity
-                || !definition->preview_mesh_template_loaded
-                || definition->preview_mesh_template_id != template_id
-                || !source
-                || (source->alternate ? source->alternate : source->assets) != source_assets) {
+            if (!definition || definition != definition_identity || !definition->preview_mesh_template_loaded || definition->preview_mesh_template_id != template_id || !source || (source->alternate ? source->alternate : source->assets) != source_assets) {
                 clear();
                 return false;
             }
@@ -185,10 +190,7 @@ struct UiObjectPreview::State {
         }
         const auto* definition = get_park_object_definition(c, current);
         const auto* source = meshes->definition(template_id);
-        if (!definition
-            || definition->preview_mesh_template_id != template_id
-            || !source
-            || (source->alternate ? source->alternate : source->assets) != source_assets) {
+        if (!definition || definition->preview_mesh_template_id != template_id || !source || (source->alternate ? source->alternate : source->assets) != source_assets) {
             clear();
             return false;
         }
@@ -197,56 +199,59 @@ struct UiObjectPreview::State {
 
     void prepare(const WorldMeshTemplate& source) {
         source_assets = source.alternate ? source.alternate : source.assets;
-        if (!source_assets || !source.assets)
+        if (!source_assets || !source.assets) {
             throw std::logic_error("Park-object preview template has no model owner");
+        }
         auto flags = (source.runtime_flags & ~1u) | 4u;
-        if (source.alternate)
+        if (source.alternate) {
             flags &= ~2u;
+        }
         auto clone = create_mesh_playback(source_assets, source.alternate ? 1 : source.control_count, flags, false);
-        if (!clone)
+        if (!clone) {
             throw std::runtime_error(describe_mesh_error(clone.error()));
+        }
         playback = std::move(*clone);
-        if (!playback->model.root)
+        if (!playback->model.root) {
             throw std::runtime_error("Original park-object preview has no model root");
-        if (source.alternate)
+        }
+        if (source.alternate) {
             borrow_sign_bindings(playback->model, source.assets->model);
+        }
         const auto embedded = initialize_mesh_resource_nodes(playback->model);
-        if (!embedded)
+        if (!embedded) {
             throw std::runtime_error(describe_mesh_error(embedded.error()));
+        }
         if (source_assets->animations.find(0)) {
             const auto start = request_mesh_playback(*playback, 0, { { 0, 0 }, 0, 1 }, c.resources.meshes->clocks);
-            if (!start)
+            if (!start) {
                 throw std::runtime_error(describe_mesh_error(start.error()));
+            }
             const auto hold = request_mesh_playback(*playback, 0, { { 13, 0 }, 0, 1 }, c.resources.meshes->clocks);
-            if (!hold)
+            if (!hold) {
                 throw std::runtime_error(describe_mesh_error(hold.error()));
+            }
         }
         unscaled_root = playback->model.nodes[*playback->model.root].local_transform;
         model_bounds = playback->model.bounds;
         std::string directory = source.source_directory;
-        while (!directory.empty() && (directory.back() == '/' || directory.back() == '\\'))
+        while (!directory.empty() && (directory.back() == '/' || directory.back() == '\\')) {
             directory.pop_back();
-        auto path = std::filesystem::path{ directory };
-        if (!std::filesystem::is_directory(path) && !std::filesystem::is_regular_file(path))
+        }
+        auto path = std::filesystem::path { directory };
+        if (!std::filesystem::is_directory(path) && !std::filesystem::is_regular_file(path)) {
             path += ".wad";
+        }
         auto opened = open_mesh_model_library(path);
-        if (!opened)
+        if (!opened) {
             throw std::runtime_error(describe_mesh_error(opened.error()));
+        }
         library = std::move(*opened);
-        textures = std::make_unique<MeshTextureLibrary>(*library,
-                                                        root,
-                                                        c.source.selected_resource_source_name,
-                                                        std::filesystem::path{},
-                                                        c.resources.meshes->texture_set(),
-                                                        c.resources.meshes->animated_textures());
+        textures = std::make_unique<MeshTextureLibrary>(*library, root, c.source.selected_resource_source_name, std::filesystem::path {}, c.resources.meshes->texture_set(), c.resources.meshes->animated_textures());
         lighting = load_installed_mesh_lighting(root, c.source.selected_resource_source_name);
-        const auto requested =
-            request_mesh_playback(*playback,
-                                  0,
-                                  { { animation_id, 0 }, std::to_underlying(MeshPlaybackTransitionFlag::loop), 1 },
-                                  c.resources.meshes->clocks);
-        if (!requested)
+        const auto requested = request_mesh_playback(*playback, 0, { { animation_id, 0 }, std::to_underlying(MeshPlaybackTransitionFlag::loop), 1 }, c.resources.meshes->clocks);
+        if (!requested) {
             throw std::runtime_error(describe_mesh_error(requested.error()));
+        }
         rotation = static_cast<float>(std::fmod(rotation, 6.283185482025146));
         reset_clock = true;
         fitted = false;
@@ -259,15 +264,18 @@ struct UiObjectPreview::State {
         const auto diagonal = std::sqrt(dx * dx * .25f + dz * dz * .25f);
         const auto midpoint = std::sqrt(dx * dx * .25f + y * y + dz * dz * .25f);
         const auto extent = std::sqrt(dx * dx + y * y + dz * dz);
-        if (!(diagonal > 0) || !(extent > 0) || !std::isfinite(diagonal) || !std::isfinite(extent))
+        if (!(diagonal > 0) || !(extent > 0) || !std::isfinite(diagonal) || !std::isfinite(extent)) {
             throw std::runtime_error("Original park-object preview has degenerate bounds");
+        }
         const auto width = static_cast<float>(area.width()) * .0009765625f;
         const auto height = static_cast<float>(area.height()) * .0013020834f;
         const auto scale = std::min(height / extent, width * .66666669f / diagonal);
         fitted_root = unscaled_root;
-        for (std::size_t row = 0; row < 3; ++row)
-            for (std::size_t axis = 0; axis < 3; ++axis)
+        for (std::size_t row = 0; row < 3; ++row) {
+            for (std::size_t axis = 0; axis < 3; ++axis) {
                 fitted_root[row * 4 + axis] *= scale;
+            }
+        }
         half_x = dx * scale * .5f;
         half_z = dz * scale * .5f;
         midpoint_distance = midpoint * scale;
@@ -277,14 +285,17 @@ struct UiObjectPreview::State {
     }
 
     void advance() {
-        if (!reconcile())
+        if (!reconcile()) {
             return;
+        }
         const auto now = c.ports.clock.get_simulation_clock_time_ms(c);
-        if (!reset_clock && now == last_tick)
+        if (!reset_clock && now == last_tick) {
             return;
+        }
         const auto result = advance_mesh_playback(*playback, c.resources.meshes->clocks);
-        if (!result)
+        if (!result) {
             throw std::runtime_error(describe_mesh_error(result.error()));
+        }
         if (reset_clock) {
             last_tick = now;
             reset_clock = false;
@@ -297,8 +308,7 @@ struct UiObjectPreview::State {
     }
 };
 
-UiObjectPreview::UiObjectPreview(WorldRuntime& c, const std::filesystem::path& root)
-    : state_(std::make_unique<State>(c, root)) {}
+UiObjectPreview::UiObjectPreview(WorldRuntime& c, const std::filesystem::path& root) : state_(std::make_unique<State>(c, root)) {}
 
 UiObjectPreview::~UiObjectPreview() = default;
 
@@ -310,17 +320,21 @@ bool UiObjectPreview::bind(ThingId id, std::uint32_t animation_id) {
         s.clear();
         return false;
     }
-    if (s.id == id && s.animation_id == animation_id && s.reconcile())
+    if (s.id == id && s.animation_id == animation_id && s.reconcile()) {
         return true;
+    }
     s.clear();
-    if (!s.c.resources.meshes)
+    if (!s.c.resources.meshes) {
         throw std::logic_error("Park-object preview requires the World mesh owner");
+    }
     const auto* definition = get_park_object_definition(s.c, object);
-    if (!definition || !definition->preview_mesh_template_loaded)
+    if (!definition || !definition->preview_mesh_template_loaded) {
         throw std::runtime_error("Park-object preview definition has not loaded its model");
+    }
     const auto* source = s.c.resources.meshes->definition(definition->preview_mesh_template_id);
-    if (!source)
+    if (!source) {
         throw std::runtime_error("Park-object preview model template is missing");
+    }
     s.world = s.c.referenced_world();
     s.meshes = s.c.resources.meshes;
     s.id = id;
@@ -341,19 +355,24 @@ bool UiObjectPreview::bind(ThingId id, std::uint32_t animation_id) {
 bool UiObjectPreview::bind_definition(std::uint16_t id, std::uint32_t animation_id) {
     auto& s = *state_;
     s.require_thread();
-    if (s.definition_only && s.definition_id == id && s.animation_id == animation_id && s.reconcile())
+    if (s.definition_only && s.definition_id == id && s.animation_id == animation_id && s.reconcile()) {
         return true;
+    }
     s.clear();
     const auto* definition = id ? find_object_definition_by_id(&s.c.resources.object_catalog, id) : nullptr;
-    if (!definition || !s.c.referenced_world())
+    if (!definition || !s.c.referenced_world()) {
         return false;
-    if (!s.c.resources.meshes)
+    }
+    if (!s.c.resources.meshes) {
         throw std::logic_error("Definition preview requires the World mesh owner");
-    if (!definition->preview_mesh_template_loaded)
+    }
+    if (!definition->preview_mesh_template_loaded) {
         throw std::runtime_error("Definition preview model has not been loaded");
+    }
     const auto* source = s.c.resources.meshes->definition(definition->preview_mesh_template_id);
-    if (!source)
+    if (!source) {
         throw std::runtime_error("Definition preview model template is missing");
+    }
     s.world = s.c.referenced_world();
     s.meshes = s.c.resources.meshes;
     s.definition_identity = definition;
@@ -377,8 +396,9 @@ void UiObjectPreview::clear() {
 
 void UiObjectPreview::retire(ThingId id) {
     state_->require_thread();
-    if (state_->id == id)
+    if (state_->id == id) {
         state_->clear();
+    }
 }
 
 bool UiObjectPreview::reconcile() {
@@ -396,31 +416,23 @@ const std::vector<std::string>& UiObjectPreview::diagnostics() const {
     return state_->diagnostics;
 }
 
-void UiObjectPreview::append(UiDrawList& output,
-                             UiControl& control,
-                             UiRect clip,
-                             std::uint32_t pixel_width,
-                             std::uint32_t pixel_height,
-                             std::int32_t depth_offset) {
+void UiObjectPreview::append(UiDrawList& output, UiControl& control, UiRect clip, std::uint32_t pixel_width, std::uint32_t pixel_height, std::int32_t depth_offset) {
     auto& s = *state_;
     s.require_thread();
-    if (!pixel_width || !pixel_height)
+    if (!pixel_width || !pixel_height) {
         throw std::invalid_argument("Park-object preview viewport is zero");
-    if (!control.runtime || !control.runtime->owns(&control) || !control.visible() || !s.reconcile())
+    }
+    if (!control.runtime || !control.runtime->owns(&control) || !control.visible() || !s.reconcile()) {
         return;
+    }
     const auto area = control.attachment_rect;
-    clip = { std::max({ clip.left, area.left, 0 }),
-             std::max({ clip.top, area.top, 0 }),
-             std::min({ clip.right, area.right, 2048 }),
-             std::min({ clip.bottom, area.bottom, 1536 }) };
-    if (area.width() <= 0 || area.height() <= 0 || clip.width() <= 0 || clip.height() <= 0)
+    clip = { std::max({ clip.left, area.left, 0 }), std::max({ clip.top, area.top, 0 }), std::min({ clip.right, area.right, 2048 }), std::min({ clip.bottom, area.bottom, 1536 }) };
+    if (area.width() <= 0 || area.height() <= 0 || clip.width() <= 0 || clip.height() <= 0) {
         return;
-    if (!s.fitted
-        || area.left != s.rectangle.left
-        || area.top != s.rectangle.top
-        || area.right != s.rectangle.right
-        || area.bottom != s.rectangle.bottom)
+    }
+    if (!s.fitted || area.left != s.rectangle.left || area.top != s.rectangle.top || area.right != s.rectangle.right || area.bottom != s.rectangle.bottom) {
         s.fit(area);
+    }
     s.advance();
     auto transform = s.fitted_root;
     const auto sin = sine(s.render_rotation), cosine = sine(s.render_rotation + 1.5707964f);
@@ -432,25 +444,25 @@ void UiObjectPreview::append(UiDrawList& output,
     const auto panel_height = static_cast<float>(area.height()) * .0013020834f;
     const auto corner_x = -s.half_z * sin - s.half_x * cosine;
     transform[12] += panel_width * .5f + corner_x * .75f + panel_x;
-    transform[13] += panel_height * .5f
-                   + panel_y
-                   - s.midpoint_distance * s.vertical_ratio * .34999999f
-                   + (-s.half_z * cosine + s.half_x * sin) * .69999999f;
-    for (std::size_t row = 0; row < 4; ++row)
+    transform[13] += panel_height * .5f + panel_y - s.midpoint_distance * s.vertical_ratio * .34999999f + (-s.half_z * cosine + s.half_x * sin) * .69999999f;
+    for (std::size_t row = 0; row < 4; ++row) {
         transform[row * 4 + 2] *= .1f;
-    for (std::size_t row = 0; row < 3; ++row)
+    }
+    for (std::size_t row = 0; row < 3; ++row) {
         transform[row * 4] *= .75f;
+    }
     auto& model = s.playback->model;
     model.nodes[*model.root].local_transform = transform;
     const auto poses = evaluate_mesh_pose(model);
-    if (!poses)
+    if (!poses) {
         throw std::runtime_error(describe_mesh_error(poses.error()));
+    }
     s.scene.clear();
     s.textures->set_animated_textures(s.meshes->animated_textures());
     append_mesh_scene(s.scene, model, *s.textures, s.lighting);
     const auto preview_depth = 1.f - static_cast<float>(control.render_depth + depth_offset) / 40.f;
     std::optional<std::size_t> previous_node;
-    std::size_t group_index{};
+    std::size_t group_index {};
     for (const auto& draw : s.scene.draws) {
         const auto& node = model.nodes.at(draw.source_node);
         const auto& drawable = *node.drawable;
@@ -458,10 +470,12 @@ void UiObjectPreview::append(UiDrawList& output,
             previous_node = draw.source_node;
             group_index = 0;
         }
-        while (group_index < drawable.groups.size() && !drawable.groups[group_index].triangle_count)
+        while (group_index < drawable.groups.size() && !drawable.groups[group_index].triangle_count) {
             ++group_index;
-        if (group_index >= drawable.groups.size())
+        }
+        if (group_index >= drawable.groups.size()) {
             throw std::logic_error("Park-object preview source group mismatch");
+        }
         const auto& group = drawable.groups[group_index++];
         const auto first_corner = drawable.triangles.at(group.first_triangle).corners[0];
         const auto source_base = s.scene.indices.at(draw.first_index) - first_corner;
@@ -470,22 +484,18 @@ void UiObjectPreview::append(UiDrawList& output,
         command.secondary_texture = draw.secondary_texture;
         command.material = draw.material;
         command.depth_buffered = true;
-        command.clip = { static_cast<float>(clip.left),
-                         static_cast<float>(clip.top),
-                         static_cast<float>(clip.right),
-                         static_cast<float>(clip.bottom) };
+        command.clip = { static_cast<float>(clip.left), static_cast<float>(clip.top), static_cast<float>(clip.right), static_cast<float>(clip.bottom) };
         if (group.texture_slot) {
             const auto& slot = model.textures.at(*group.texture_slot);
             const auto& name = s.textures->filename(slot);
-            if (!slot.image_override
-                && std::ranges::find(s.scene.missing_textures, name) != s.scene.missing_textures.end()) {
+            if (!slot.image_override && std::ranges::find(s.scene.missing_textures, name) != s.scene.missing_textures.end()) {
                 //Preserve the shared renderer's original NotFound source and its
                 //derived material. A recorded lookup miss does not make the slot
                 //unbound; the global missing source can itself be textured.
-                const auto diagnostic =
-                    "Missing original park-object preview texture: " + name + " (native missing-source policy)";
-                if (std::ranges::find(s.diagnostics, diagnostic) == s.diagnostics.end())
+                const auto diagnostic = "Missing original park-object preview texture: " + name + " (native missing-source policy)";
+                if (std::ranges::find(s.diagnostics, diagnostic) == s.diagnostics.end()) {
                     s.diagnostics.push_back(diagnostic);
+                }
             }
         }
         command.first_index = index(output.indices.size());
@@ -498,10 +508,10 @@ void UiObjectPreview::append(UiDrawList& output,
             //This independent screen context is affine (w=1). Native4B7280 ->
             //6E2C30 negates context Y BEFORE that test, reversing the determinant.
             //The ordinary UI renderer intentionally has CULL_NONE.
-            const auto facing = (static_cast<double>(b[0]) - a[0]) * (static_cast<double>(c[1]) - a[1])
-                              - (static_cast<double>(b[1]) - a[1]) * (static_cast<double>(c[0]) - a[0]);
-            if (!(facing < 0))
+            const auto facing = (static_cast<double>(b[0]) - a[0]) * (static_cast<double>(c[1]) - a[1]) - (static_cast<double>(b[1]) - a[1]) * (static_cast<double>(c[0]) - a[0]);
+            if (!(facing < 0)) {
                 continue;
+            }
             for (std::size_t corner_index = 0; corner_index < 3; ++corner_index) {
                 const auto i = triangle + corner_index;
                 const auto source_index = s.scene.indices.at(draw.first_index + i);
@@ -511,30 +521,29 @@ void UiObjectPreview::append(UiDrawList& output,
                 //4CC0E0 adds the selector depth in the independent screen context;
                 //model flag200 selects mode2 at6E35D3, whose final projection6E16C0
                 //scales the complete resulting Z by0.1 again.
-                vertex.position = { (source.position[0] + 1.f) * 1024.f,
-                                    (1.f - source.position[1]) * 768.f,
-                                    (source.position[2] + preview_depth) * .1f };
+                vertex.position = { (source.position[0] + 1.f) * 1024.f, (1.f - source.position[1]) * 768.f, (source.position[2] + preview_depth) * .1f };
                 vertex.uv = source.uv; //World model convention, not the UI MD2 adapter.
                 vertex.color = draw.unlit ? draw.diffuse_mask : source.diffuse;
                 if (command.material.generated_uv || command.material.secondary_texture) {
                     const auto corner = source_index - source_base;
                     const auto position = drawable.position_indices.at(corner);
-                    const auto normal =
-                        position < drawable.normals.size() ? drawable.normals[position] : MeshPoint{ 0, -1, 0 };
+                    const auto normal = position < drawable.normals.size() ? drawable.normals[position] : MeshPoint { 0, -1, 0 };
                     const auto view_normal = direction((*poses)[draw.source_node], normal);
                     auto view_position = source.position;
                     view_position[2] += preview_depth;
                     vertex.reflection_uv = mesh_reflection_uv(view_position, view_normal);
-                    if (command.material.generated_uv)
+                    if (command.material.generated_uv) {
                         vertex.uv = vertex.reflection_uv;
+                    }
                 }
                 output.indices.push_back(index(output.vertices.size()));
                 output.vertices.push_back(vertex);
             }
         }
         command.index_count = index(output.indices.size()) - command.first_index;
-        if (command.index_count)
+        if (command.index_count) {
             output.commands.push_back(std::move(command));
+        }
     }
 }
 } //namespace simcoaster

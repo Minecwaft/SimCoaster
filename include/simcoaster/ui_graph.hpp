@@ -5,8 +5,8 @@
 
 namespace simcoaster {
 struct UiGraphSeriesStyle {
-    std::uint32_t history_index{};
-    RgbaPixel color{ 255, 255, 255, 255 };
+    std::uint32_t history_index {};
+    RgbaPixel color { 255, 255, 255, 255 };
     bool operator==(const UiGraphSeriesStyle&) const = default;
 };
 
@@ -19,12 +19,6 @@ class UiGraphPresenter {
 public:
     explicit UiGraphPresenter(UiFontLibrary&);
     ~UiGraphPresenter();
-    void append(UiDrawList&,
-                const UiControl&,
-                const StatisticsGraphUiState&,
-                std::span<const UiGraphSeriesStyle>,
-                UiRect clip,
-                std::uint32_t pixel_width,
-                std::uint32_t pixel_height);
+    void append(UiDrawList&, const UiControl&, const StatisticsGraphUiState&, std::span<const UiGraphSeriesStyle>, UiRect clip, std::uint32_t pixel_width, std::uint32_t pixel_height);
 };
 } //namespace simcoaster

@@ -32,12 +32,14 @@ namespace {
 template <class T, class Initialize>
 T* create_payload(WorldRuntime& c, Initialize initialize) {
     auto* storage = static_cast<T*>(c.entities.allocate_payload(c.ports.memory, sizeof(T)));
-    if (!storage)
-        throw std::bad_alloc{};
+    if (!storage) {
+        throw std::bad_alloc {};
+    }
     std::construct_at(storage);
     try {
-        if (initialize(storage) != storage)
+        if (initialize(storage) != storage) {
             throw std::runtime_error("Fresh World constructor lost its allocation");
+        }
         return storage;
     } catch (...) {
         const auto id = storage->base.header.id;
@@ -59,22 +61,19 @@ ParkAnalyserState* create_analyser(WorldRuntime& c, ParkAnalyserState* analyser)
     analyser->map_squares_per_cell = 4;
     analyser->grid_size_x = analyser->grid_size_y = 32;
     analyser->map_size_x = analyser->map_size_y = 128;
-    FileTime time{};
+    FileTime time {};
     calculate_world_calendar_filetime(c, &c.referenced_world()->calendar, &time);
-    const auto timestamp = std::uint64_t{ time.low } | (std::uint64_t{ time.high } << 32);
-    analyser->last_strike = analyser->last_puke = analyser->last_prank = analyser->park_last_opened =
-        analyser->last_object_built = analyser->last_staff_hired = timestamp;
+    const auto timestamp = std::uint64_t { time.low } | (std::uint64_t { time.high } << 32);
+    analyser->last_strike = analyser->last_puke = analyser->last_prank = analyser->park_last_opened = analyser->last_object_built = analyser->last_staff_hired = timestamp;
     for (std::size_t i = 0; i < analyser->grid.size(); ++i) {
         auto& cell = analyser->grid[i];
         cell.start_x = static_cast<std::int32_t>(i % 32) * 4;
         cell.start_y = static_cast<std::int32_t>(i / 32) * 4;
         cell.size_x = cell.size_y = 4;
     }
-    for (const auto category : { 12, 17, 19, 7 })
-        register_world_used_thing_for_event(c,
-                                            get_world_event_subscription_registry(c),
-                                            &analyser->base.header,
-                                            category);
+    for (const auto category : { 12, 17, 19, 7 }) {
+        register_world_used_thing_for_event(c, get_world_event_subscription_registry(c), &analyser->base.header, category);
+    }
     return analyser;
 }
 
@@ -82,26 +81,30 @@ void apply_share_defaults(WorldRuntime& c, const ShareStartupParameters& balance
     //620930 fills only unset profile values. A new park must not erase the
     //already loaded campaign portfolio or company name.
     auto& state = c.finance.shares_finance;
-    if (!state.ownership_context)
+    if (!state.ownership_context) {
         state.ownership_context = std::make_unique<SharesOwnershipContext>();
-    if (!state.share_price_context)
+    }
+    if (!state.share_price_context) {
         state.share_price_context = std::make_unique<SharePriceContext>();
+    }
     auto& ownership = *state.ownership_context;
-    if (ownership.shares_owned == -1 && balance.InitialSharesOwned > 0)
+    if (ownership.shares_owned == -1 && balance.InitialSharesOwned > 0) {
         ownership.shares_owned = balance.InitialSharesOwned;
-    if (ownership.shares_owned > 0 && balance.CompanySharesIssued > 0)
-        ownership.ownership_percentage =
-            static_cast<std::int32_t>(std::int64_t{ 100 } * ownership.shares_owned / balance.CompanySharesIssued);
+    }
+    if (ownership.shares_owned > 0 && balance.CompanySharesIssued > 0) {
+        ownership.ownership_percentage = static_cast<std::int32_t>(std::int64_t { 100 } * ownership.shares_owned / balance.CompanySharesIssued);
+    }
     auto& price = *state.share_price_context;
     if (price.company_title.empty()) {
-        auto title =
-            format_bfst_wide_string(c.messages.mail_language.tag_system, c.messages.mail_language.conversion, 172, 30);
-        if (!title)
+        auto title = format_bfst_wide_string(c.messages.mail_language.tag_system, c.messages.mail_language.conversion, 172, 30);
+        if (!title) {
             throw std::runtime_error("Initial company title: " + title.error().reason);
+        }
         price.company_title = std::move(*title);
     }
-    if (price.current_share_price == -1 && balance.InitialSharePrice > 0)
+    if (price.current_share_price == -1 && balance.InitialSharePrice > 0) {
         price.current_share_price = balance.InitialSharePrice;
+    }
 }
 
 bool same_key(std::string_view a, std::string_view b) {
@@ -120,25 +123,23 @@ ParkObjectRuntimeView* create_catalog_object(WorldRuntime& c, CellId origin, std
 }
 } //namespace
 
-std::expected<void, sam::Error>
-load_world_source_startup_balance(WorldSourceStartupBalance& output, std::string_view text, bool preserve) {
+std::expected<void, sam::Error> load_world_source_startup_balance(WorldSourceStartupBalance& output, std::string_view text, bool preserve) {
     EconomyStartup economy;
     economy.bank = { output.initial_cash, output.initial_admission_fee };
     economy.cell_costs = output.cell_costs;
     for (std::size_t i = 0; i < economy.loans.size(); ++i) {
         const auto& loan = output.loan_offers[i];
-        economy.loans[i] = { loan.amount,
-                             loan.apr_in_percent,
-                             loan.repayment_period_in_months,
-                             loan.lender_name_index };
+        economy.loans[i] = { loan.amount, loan.apr_in_percent, loan.repayment_period_in_months, loan.lender_name_index };
     }
     auto world = output.world;
     auto parsed = sam::parse_record<WorldStartupBalance, true>(world, text, preserve);
-    if (!parsed)
+    if (!parsed) {
         return std::unexpected(parsed.error());
+    }
     parsed = sam::parse_record<EconomyStartup, true>(economy, text, preserve);
-    if (!parsed)
+    if (!parsed) {
         return std::unexpected(parsed.error());
+    }
     output.world = std::move(world);
     output.initial_cash = economy.bank.cash;
     output.initial_admission_fee = economy.bank.admission_fee;
@@ -151,8 +152,9 @@ load_world_source_startup_balance(WorldSourceStartupBalance& output, std::string
 }
 
 void initialize_world_runtime_state(WorldRuntime& c, World& world, const WorldSourceStartupBalance& balance) {
-    if (&world != c.simulation.current || &world != c.referenced_world() || c.entities.active_head)
+    if (&world != c.simulation.current || &world != c.referenced_world() || c.entities.active_head) {
         throw std::logic_error("Fresh source setup requires an empty primary World");
+    }
     //6A3150 enables the RSSE manager before creating the source World. The
     //restore reader initializes it separately; fresh object constructors must
     //also load and bind their real programs, including Gates/ATM and 4798.
@@ -195,28 +197,27 @@ void initialize_world_runtime_state(WorldRuntime& c, World& world, const WorldSo
     apply_share_defaults(c, balance.world.shares);
     world.saved.park_gates = world.saved.lobby = world.saved.traffic_lights = 0;
     for (const auto* definition : c.resources.object_catalog.entries) {
-        if (!definition)
+        if (!definition) {
             continue;
+        }
         const auto key = definition->resource_catalog_name;
-        if (same_key(key, "gates"))
+        if (same_key(key, "gates")) {
             world.saved.park_gates = create_catalog_object(c, 1, definition->id)->base.header.id;
-        else if (same_key(key, "atm"))
+        } else if (same_key(key, "atm")) {
             world.saved.lobby = create_catalog_object(c, 1, definition->id)->base.header.id;
-        else if (same_key(key, "lights") || same_key(key, "atmdesk"))
+        } else if (same_key(key, "lights") || same_key(key, "atmdesk")) {
             (void)create_catalog_object(c, 1, definition->id);
+        }
     }
-    WorldEvent startup{ Tag19Event{ 0 } };
-    dispatch_world_event_to_subscribers(c,
-                                        get_world_event_subscription_registry(c),
-                                        &startup,
-                                        deliver_world_record_event,
-                                        nullptr);
+    WorldEvent startup { Tag19Event { 0 } };
+    dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &startup, deliver_world_record_event, nullptr);
     world.saved.state = WorldState::code_0;
 }
 
 void initialize_world_source_interaction(WorldRuntime& c, World& world, ParkConstructionRuntime& editor) {
-    if (&world != c.simulation.current || &world != c.referenced_world())
+    if (&world != c.simulation.current || &world != c.referenced_world()) {
         throw std::logic_error("Source grid setup requires the primary World");
+    }
     editor.reset_after_restore();
     c.construction.mode = 0;
     c.construction.previous_object_definition_id = 0;
@@ -229,14 +230,12 @@ void initialize_world_source_interaction(WorldRuntime& c, World& world, ParkCons
     initialize_source_hoarding_interaction(c, editor);
     if (c.ports.assets.selected_resource_source(c) == 3) {
         const auto& map = c.visitors.environment.MapInfo;
-        if (map.HeightfieldWidth < 0
-            || map.HeightfieldWidth > 128
-            || map.HeightfieldHeight < 0
-            || map.HeightfieldHeight > 128)
+        if (map.HeightfieldWidth < 0 || map.HeightfieldWidth > 128 || map.HeightfieldHeight < 0 || map.HeightfieldHeight > 128) {
             throw std::out_of_range("Intro active map dimensions exceed World");
+        }
         //Native65DA60 intentionally starts at0,0; it does not add MapInfo's
         //heightfield start offsets. Raw selector8 is preserved as a cell command.
-        for (int y = 0; y < map.HeightfieldHeight; ++y)
+        for (int y = 0; y < map.HeightfieldHeight; ++y) {
             for (int x = 0; x < map.HeightfieldWidth; ++x) {
                 auto& cell = world.map_cells.at(static_cast<std::size_t>(y) * 128 + x);
                 (void)editor.command(c, cell.base, 0);
@@ -244,49 +243,58 @@ void initialize_world_source_interaction(WorldRuntime& c, World& world, ParkCons
                 (void)editor.command(c, cell.base, 8);
                 refresh_world_cell_render_state(c, &cell.base);
             }
+        }
     }
 }
 
 void populate_world_from_object_definition_catalog(WorldRuntime& c, World& world, ParkConstructionRuntime& editor) {
     using namespace construction_detail;
-    if (&world != c.simulation.current || &world != c.referenced_world())
+    if (&world != c.simulation.current || &world != c.referenced_world()) {
         throw std::logic_error("Source population requires the primary World");
+    }
 
     const auto surround_special = [&](const ParkObjectRuntimeView& owner, const ResearchCatalogDefinition& d) {
         //647930(false): only the footprint's own linked cells can seed the
         //one-cell exclusion border. Unrelated objects and existing paths survive.
-        const auto offset = rotate_park_object_local_cell_offset({ d.cached_map_offset[0], d.cached_map_offset[1] },
-                                                                 std::bit_cast<int>(owner.angle));
+        const auto offset = rotate_park_object_local_cell_offset({ d.cached_map_offset[0], d.cached_map_offset[1] }, std::bit_cast<int>(owner.angle));
         const auto origin = coordinate(owner.top_left);
         const auto& shape = *d.balance->Info.Shape;
-        for (int row = 0; row < shape.height; ++row)
+        for (int row = 0; row < shape.height; ++row) {
             for (int column = 0; column < shape.width; ++column) {
-                const WorldCellCoordinates p{ origin.x + offset.x + column, origin.y + offset.y + row };
-                if (!bounds(p))
+                const WorldCellCoordinates p { origin.x + offset.x + column, origin.y + offset.y + row };
+                if (!bounds(p)) {
                     throw std::out_of_range("Source special footprint outside map");
+                }
                 const auto parent = map(c, cell_id(p)).base.common.parent_id;
-                if (!parent || find_first_park_object_id_in_map_cell(c, &map(c, parent)) != owner.base.header.id)
+                if (!parent || find_first_park_object_id_in_map_cell(c, &map(c, parent)) != owner.base.header.id) {
                     continue;
-                for (int dy = -1; dy <= 1; ++dy)
+                }
+                for (int dy = -1; dy <= 1; ++dy) {
                     for (int dx = -1; dx <= 1; ++dx) {
-                        const WorldCellCoordinates adjacent{ p.x + dx, p.y + dy };
-                        if (!bounds(adjacent))
+                        const WorldCellCoordinates adjacent { p.x + dx, p.y + dy };
+                        if (!bounds(adjacent)) {
                             continue;
+                        }
                         auto& neighbor = map(c, cell_id(adjacent));
-                        if (find_first_park_object_id_in_map_cell(c, &neighbor))
+                        if (find_first_park_object_id_in_map_cell(c, &neighbor)) {
                             continue;
-                        if (neighbor.base.common.type == 0 || neighbor.base.common.type == 5)
+                        }
+                        if (neighbor.base.common.type == 0 || neighbor.base.common.type == 5) {
                             (void)try_change_world_cell_type(c, &neighbor.base, 5);
+                        }
                     }
+                }
             }
+        }
     };
 
     //647BF0 iterates the loaded catalog, not a hardcoded list of attractions.
     //Allocation failures abort this staged source rather than leave a partial
     //obstacle raster with no owner, as the original unchecked path could do.
     for (const auto* d : c.resources.object_catalog.entries) {
-        if (!d || !d->balance)
+        if (!d || !d->balance) {
             continue;
+        }
         const auto& balance = *d->balance;
         const auto& info = balance.Info;
         if (info.IsSpecial == 1 && c.mode.game != GameMode::code_3) {
@@ -294,40 +302,39 @@ void populate_world_from_object_definition_catalog(WorldRuntime& c, World& world
             apply_set_ride_action(c, &d->id, 0);
             editor.state.rotation_degrees = 0;
             editor.state.placement_from_origin = false;
-            const auto placed = editor.process_grid(c,
-                                                    { info.EngineMapOffsetOverrideX, info.EngineMapOffsetOverrideY },
-                                                    0,
-                                                    0,
-                                                    true,
-                                                    false,
-                                                    info.Shape.get());
-            if (!placed || !placed->created_object)
+            const auto placed = editor.process_grid(c, { info.EngineMapOffsetOverrideX, info.EngineMapOffsetOverrideY }, 0, 0, true, false, info.Shape.get());
+            if (!placed || !placed->created_object) {
                 throw std::runtime_error("Source special placement did not create an owner");
-            if (balance.DefaultCoaster.AddDefaultPylons == 1)
+            }
+            if (balance.DefaultCoaster.AddDefaultPylons == 1) {
                 build_default_coaster_catalog_layout(c, editor, placed->created_object);
+            }
             auto* owner = object(c, placed->created_object);
-            if (!owner)
+            if (!owner) {
                 throw std::runtime_error("Source special owner disappeared");
+            }
             surround_special(*owner, *d);
         } else if (info.IsCameraPath == 1 || info.IsOutsideFeature == 1) {
             (void)create_catalog_object(c, 1, d->id);
         } else if (info.IsObstacle == 1) {
             const auto& offset = balance.Obstacle;
-            const WorldCellCoordinates origin{ offset.ShapeOffsetX + info.MapOffsetX,
-                                               offset.ShapeOffsetY + info.MapOffsetY };
-            if (!bounds(origin) || !info.Shape)
+            const WorldCellCoordinates origin { offset.ShapeOffsetX + info.MapOffsetX, offset.ShapeOffsetY + info.MapOffsetY };
+            if (!bounds(origin) || !info.Shape) {
                 throw std::out_of_range("Source obstacle has invalid origin or Shape");
+            }
             const auto parent = cell_id(origin);
             (void)create_catalog_object(c, parent, d->id);
             const auto& shape = *info.Shape;
-            for (int row = 0; row < shape.height; ++row)
+            for (int row = 0; row < shape.height; ++row) {
                 for (int column = 0; column < shape.width; ++column) {
                     const auto code = shape.cells.at(static_cast<std::size_t>(row) * 40 + column).code;
-                    if (code == 33)
+                    if (code == 33) {
                         continue;
-                    const WorldCellCoordinates p{ offset.ShapeOffsetX + column, offset.ShapeOffsetY + row };
-                    if (!bounds(p))
+                    }
+                    const WorldCellCoordinates p { offset.ShapeOffsetX + column, offset.ShapeOffsetY + row };
+                    if (!bounds(p)) {
                         throw std::out_of_range("Source obstacle footprint outside map");
+                    }
                     auto& cell = map(c, cell_id(p));
                     (void)editor.command(c, cell.base, 0);
                     refresh_world_cell_render_state(c, &cell.base);
@@ -338,6 +345,7 @@ void populate_world_from_object_definition_catalog(WorldRuntime& c, World& world
                         set_world_cell_parent_id_unchecked(&cell.base, parent);
                     }
                 }
+            }
         }
     }
     c.ports.meshes.rebuild_terrain_cell_shading(c);

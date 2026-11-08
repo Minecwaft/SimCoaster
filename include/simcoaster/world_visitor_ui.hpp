@@ -14,22 +14,22 @@ enum class VisitorPopulation : std::int32_t {
 };
 
 struct VisitorUiMetrics {
-    ThingId id{};
-    const ThingHeader* identity{};
-    std::uint32_t arrival_date{}, arrival_index{};
+    ThingId id {};
+    const ThingHeader* identity {};
+    std::uint32_t arrival_date {}, arrival_index {};
     std::u16string name, generation, activity, thought;
-    std::int32_t happiness_meter{}, preferred_excitement_meter{};
-    std::array<std::int32_t, 4> counters{}; //purchases, rides, sideshows, wins
+    std::int32_t happiness_meter {}, preferred_excitement_meter {};
+    std::array<std::int32_t, 4> counters {}; //purchases, rides, sideshows, wins
     std::int32_t thought_part = 999, thought_help = -1;
-    bool can_context{};
+    bool can_context {};
 };
 
 struct VisitorUiStatistics {
-    std::int32_t current{}, lifetime{}, average_happiness_meter{};
-    std::array<std::int32_t, 3> population_meters{}; //happy, undecided, sad
-    std::array<std::int32_t, 3> averages{};          //purchases, rides, sideshows
+    std::int32_t current {}, lifetime {}, average_happiness_meter {};
+    std::array<std::int32_t, 3> population_meters {}; //happy, undecided, sad
+    std::array<std::int32_t, 3> averages {};          //purchases, rides, sideshows
     //Native top-three output slots are deliberately not a sorted array.
-    std::array<std::uint8_t, 3> thoughts{ 31, 31, 31 };
+    std::array<std::uint8_t, 3> thoughts { 31, 31, 31 };
 };
 
 PersonRuntimeView* find_ui_visitor(WorldRuntime&, ThingId);
@@ -44,8 +44,8 @@ ThingId next_ui_visitor(WorldRuntime&, ThingId, bool previous, std::int32_t demo
 std::array<bool, 6> visitor_ui_demographics(WorldRuntime&, ThingId excluded = 0);
 
 struct VisitorContextAction {
-    std::uint32_t caption{};
-    bool enabled{};
+    std::uint32_t caption {};
+    bool enabled {};
 };
 
 std::array<VisitorContextAction, 4> visitor_ui_context(WorldRuntime&, const PersonRuntimeView&);

@@ -85,10 +85,7 @@ public:
     std::optional<std::int32_t> geometry_interaction_cost() const;
     //Mesh slots come from the actual world ray hit; pixels are physical client
     //coordinates, as in488230. No terrain-cell stand-in for a selected pylon.
-    bool geometry_pointer(AttractionWorld&,
-                          std::uint32_t mesh_slot,
-                          std::array<std::int32_t, 2> pixel,
-                          CoasterGeometryPointerPhase);
+    bool geometry_pointer(AttractionWorld&, std::uint32_t mesh_slot, std::array<std::int32_t, 2> pixel, CoasterGeometryPointerPhase);
     bool coaster_key(AttractionWorld&, std::uint32_t packed_key, std::uint32_t event_type);
     void deactivate_ui_context(AttractionWorld&);
     bool consume_followup() noexcept;
@@ -98,20 +95,9 @@ public:
     void delete_range(AttractionWorld&, std::uint16_t first, std::uint16_t second, bool record_action = true);
     //Shared complete insertion operation; live selection records its midpoint.
     void insert_support(AttractionWorld&, const CoasterInsertReplayCommand&, bool record_action = false);
-    bool hover(AttractionWorld&,
-               ParkConstructionRuntime&,
-               WorldCellCoordinates,
-               WorldInputModifierMask = WorldInputModifierMask::none);
-    void mouse_down(AttractionWorld&,
-                    ParkConstructionRuntime&,
-                    WorldCellCoordinates,
-                    WorldInputModifierMask,
-                    bool use_preview_coordinates = false);
-    std::uint8_t mouse_up(AttractionWorld&,
-                          ParkConstructionRuntime&,
-                          WorldCellCoordinates,
-                          WorldInputModifierMask,
-                          bool use_preview_coordinates = false);
+    bool hover(AttractionWorld&, ParkConstructionRuntime&, WorldCellCoordinates, WorldInputModifierMask = WorldInputModifierMask::none);
+    void mouse_down(AttractionWorld&, ParkConstructionRuntime&, WorldCellCoordinates, WorldInputModifierMask, bool use_preview_coordinates = false);
+    std::uint8_t mouse_up(AttractionWorld&, ParkConstructionRuntime&, WorldCellCoordinates, WorldInputModifierMask, bool use_preview_coordinates = false);
     //cancel restores the detached source cell/selection and leaves the active
     //context. finalize generates the native closing support and vehicle state.
     void cancel(AttractionWorld&, ParkConstructionRuntime&) override;

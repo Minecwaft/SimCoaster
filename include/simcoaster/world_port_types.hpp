@@ -42,8 +42,7 @@ struct WeatherEffectsRuntime;
 struct AdvisorBalance;
 
 struct TrackRideLayoutMetrics {
-    std::int32_t segment_break_count, longest_supported_run, type_b_part_count, unconfigured_cd_part_count,
-        visited_entry_count;
+    std::int32_t segment_break_count, longest_supported_run, type_b_part_count, unconfigured_cd_part_count, visited_entry_count;
 };
 
 struct RideRuntimeRatings {
@@ -51,7 +50,7 @@ struct RideRuntimeRatings {
 };
 
 struct CommandMenuBuilderView {
-    std::int32_t visible{};
+    std::int32_t visible {};
 };
 enum class MailCountAnimation {
     slot_2,
@@ -121,6 +120,6 @@ enum class RecordCleanup {
 //production owners bind the supported engine paths and tests can override
 //them.
 [[noreturn]] inline void missing_runtime_service(std::source_location site = std::source_location::current()) {
-    throw std::logic_error(std::string{ "Required runtime service: " } + site.function_name());
+    throw std::logic_error(std::string { "Required runtime service: " } + site.function_name());
 }
 } //namespace simcoaster

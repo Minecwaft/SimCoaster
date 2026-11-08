@@ -15,19 +15,10 @@ ParkConstructionRuntime& construction(const WorldUiPanelHost& host) {
 }
 } //namespace
 
-WorldParkObjectUiController::State::State(WorldRuntime& context_owner,
-                                          UiRuntime& runtime,
-                                          UiControl* parent,
-                                          const std::filesystem::path& path,
-                                          WorldUiPanelHost panel_host)
-    : c(context_owner),
-      game_root(path),
-      ui(runtime),
-      primary(parent),
-      host(std::move(panel_host)),
-      model(c, construction(host)) {
-    if (!ui.owns(primary))
+WorldParkObjectUiController::State::State(WorldRuntime& context_owner, UiRuntime& runtime, UiControl* parent, const std::filesystem::path& path, WorldUiPanelHost panel_host) : c(context_owner), game_root(path), ui(runtime), primary(parent), host(std::move(panel_host)), model(c, construction(host)) {
+    if (!ui.owns(primary)) {
         throw std::invalid_argument("Park-object UI requires its persistent primary root");
+    }
     model.set_retirement_observer([this](ThingId id) {
         retire(id);
     });
@@ -41,21 +32,18 @@ WorldParkObjectUiController::State::~State() {
 std::u16string WorldParkObjectUiController::State::money(std::int32_t value) const {
     const bool negative = value < 0;
     const auto magnitude = negative ? 0u - std::bit_cast<std::uint32_t>(value) : static_cast<std::uint32_t>(value);
-    const std::array argument{ BfstSignedIntegerArgument{ negative ? 44u : 39u,
-                                                          std::bit_cast<std::int32_t>(magnitude) } };
+    const std::array argument { BfstSignedIntegerArgument { negative ? 44u : 39u, std::bit_cast<std::int32_t>(magnitude) } };
     return text(negative ? 958u : 957u, argument);
 }
 
 UiFontLibrary& WorldParkObjectUiController::State::fonts() {
-    if (!local_fonts)
+    if (!local_fonts) {
         local_fonts = std::make_unique<UiFontLibrary>(game_root);
+    }
     return *local_fonts;
 }
 
-void WorldParkObjectUiController::State::label(std::uint32_t id,
-                                               std::uint32_t row,
-                                               std::uint32_t font,
-                                               std::int32_t horizontal) {
+void WorldParkObjectUiController::State::label(std::uint32_t id, std::uint32_t row, std::uint32_t font, std::int32_t horizontal) {
     caption(required(root, id), text(row), font, horizontal);
 }
 
@@ -69,15 +57,12 @@ void WorldParkObjectUiController::State::scalar(std::uint32_t id, std::int32_t v
 
 void WorldParkObjectUiController::State::meter(std::uint32_t id, std::int32_t value, std::int32_t inset) {
     auto& control = required(root, id);
-    control.meter_presentation = UiMeterPresentation{ "ridestatbar.tga", { 0, inset } };
+    control.meter_presentation = UiMeterPresentation { "ridestatbar.tga", { 0, inset } };
     ui.set_range(control, 0, 1024);
     ui.set_value(control, value);
 }
 
-void WorldParkObjectUiController::State::affixed_edit(UiControl& stepper,
-                                                      std::u16string_view affix,
-                                                      std::size_t capacity,
-                                                      std::uint32_t font) {
+void WorldParkObjectUiController::State::affixed_edit(UiControl& stepper, std::u16string_view affix, std::size_t capacity, std::uint32_t font) {
     auto& edit = required(&stepper, 3);
     stepper.associated_edit = &edit;
     caption(edit, edit.text, font, 1);
@@ -90,18 +75,21 @@ void WorldParkObjectUiController::State::affixed_edit(UiControl& stepper,
 
 void WorldParkObjectUiController::State::preview(UiControl& control, ThingId id, std::uint32_t animation) {
     auto& provider = previews[&control];
-    if (!provider)
+    if (!provider) {
         provider = std::make_unique<UiObjectPreview>(c, game_root);
+    }
     (void)provider->bind(id, animation);
 }
 
 void WorldParkObjectUiController::State::stage_advisor(std::int32_t action) {
     advisor_action = action;
-    if (action < 0 || !c.simulation.current)
+    if (action < 0 || !c.simulation.current) {
         return;
+    }
     const auto id = c.simulation.current->saved.advisor;
-    if (!id || id >= c.entities.size() || !c.entities[id].payload || c.entities[id].payload->kind != ThingKind::advisor)
+    if (!id || id >= c.entities.size() || !c.entities[id].payload || c.entities[id].payload->kind != ThingKind::advisor) {
         throw std::logic_error("Park-object panel Advisor owner is absent");
+    }
     auto& advisor = *c.entities.payload<AdvisorRecord>(id);
     advisor.from_ui_panel = 1;
     advisor.delayed_message = action;
@@ -109,27 +97,31 @@ void WorldParkObjectUiController::State::stage_advisor(std::int32_t action) {
 }
 
 void WorldParkObjectUiController::State::help_advisor(std::int32_t action) {
-    if (action >= 0)
+    if (action >= 0) {
         queue_world_advisor_help_action(c, action);
+    }
 }
 
 void WorldParkObjectUiController::State::begin(Page next) {
     close();
-    if (host.dismiss)
+    if (host.dismiss) {
         host.dismiss();
+    }
     page = next;
     next_refresh = ui.clock();
 }
 
 void WorldParkObjectUiController::State::activate() {
-    if (host.activate)
+    if (host.activate) {
         host.activate(root);
+    }
 }
 
 void WorldParkObjectUiController::State::close_auxiliary() {
     for (auto** slot : { &message_wrapper, &context, &name_editor }) {
-        if (*slot && ui.owns(*slot))
+        if (*slot && ui.owns(*slot)) {
             ui.destroy(*slot);
+        }
         *slot = nullptr;
     }
     message_root = nullptr;
@@ -140,15 +132,18 @@ void WorldParkObjectUiController::State::close_auxiliary() {
 }
 
 void WorldParkObjectUiController::State::close() {
-    if (closing)
+    if (closing) {
         return;
+    }
     closing = true;
     auto* old_root = root;
     close_auxiliary();
     const auto owners = roots;
-    for (auto* control : owners)
-        if (ui.owns(control))
+    for (auto* control : owners) {
+        if (ui.owns(control)) {
             ui.destroy(control);
+        }
+    }
     roots.clear();
     previews.clear();
     graph_control = nullptr;
@@ -158,18 +153,21 @@ void WorldParkObjectUiController::State::close() {
     page_target = 0;
     presented_category.reset();
     presented_finance.reset();
-    if (advisor_action >= 0)
+    if (advisor_action >= 0) {
         cancel_ui_advisor_action(c, advisor_action);
+    }
     advisor_action = -1;
-    if (old_root && host.deactivate)
+    if (old_root && host.deactivate) {
         host.deactivate(old_root);
+    }
     closing = false;
     restore_input();
 }
 
 void WorldParkObjectUiController::State::retire(ThingId id) {
-    if (host.retiring)
+    if (host.retiring) {
         host.retiring(id);
+    }
     for (auto& [control, provider] : previews) {
         (void)control;
         provider->retire(id);
@@ -177,13 +175,17 @@ void WorldParkObjectUiController::State::retire(ThingId id) {
     std::erase(research_workers, id);
     std::erase(research_available, id);
     research_identities.erase(id);
-    if (research_consultant == id)
+    if (research_consultant == id) {
         research_consultant = 0;
-    for (auto& consultant : research_cached_consultants)
-        if (consultant == id)
+    }
+    for (auto& consultant : research_cached_consultants) {
+        if (consultant == id) {
             consultant = 0;
-    if (auxiliary_target == id || confirmation_target == id)
+        }
+    }
+    if (auxiliary_target == id || confirmation_target == id) {
         close_auxiliary();
+    }
     if (page_target == id && !closing) {
         close();
         return;
@@ -204,16 +206,18 @@ void WorldParkObjectUiController::State::retire(ThingId id) {
 void WorldParkObjectUiController::State::open_object(ThingId id) {
     const auto route = model.route(id);
     match (route.panel) {
-        case ParkObjectUiPanel::none => return;
+        case ParkObjectUiPanel::none       => return;
         case ParkObjectUiPanel::staff_room => {
-            if (!host.open_staff_room)
+            if (!host.open_staff_room) {
                 throw std::logic_error("Park-object Staff Room route has no owner");
+            }
             host.open_staff_room(route.target);
             return;
         }
         case ParkObjectUiPanel::training_room => {
-            if (!host.open_training_room)
+            if (!host.open_training_room) {
                 throw std::logic_error("Park-object Training Room route has no owner");
+            }
             host.open_training_room(route.target);
             return;
         }
@@ -233,26 +237,28 @@ void WorldParkObjectUiController::State::open_object(ThingId id) {
 }
 
 void WorldParkObjectUiController::State::refresh_page() {
-    if (closing || refreshing)
+    if (closing || refreshing) {
         return;
+    }
     refreshing = true;
     try {
         match (page) {
-            case Page::settings => refresh_settings();
-            case Page::list => refresh_list();
-            case Page::finance => refresh_finance();
-            case Page::statistics => refresh_statistics();
-            case Page::opinions => refresh_opinions();
-            case Page::promotion => refresh_promotion();
-            case Page::upgrades => refresh_upgrade();
-            case Page::special => refresh_special();
-            case Page::research => refresh_research();
+            case Page::settings        => refresh_settings();
+            case Page::list            => refresh_list();
+            case Page::finance         => refresh_finance();
+            case Page::statistics      => refresh_statistics();
+            case Page::opinions        => refresh_opinions();
+            case Page::promotion       => refresh_promotion();
+            case Page::upgrades        => refresh_upgrade();
+            case Page::special         => refresh_special();
+            case Page::research        => refresh_research();
             case Page::research_picker => refresh_research_picker();
-            case Page::research_edit => refresh_research_edit();
-            case _ => {}
-        }
-        if (context)
+            case Page::research_edit   => refresh_research_edit();
+            case _                     => {
+            }
+        } if (context) {
             refresh_context();
+        }
         refreshing = false;
     } catch (...) {
         refreshing = false;
@@ -262,14 +268,12 @@ void WorldParkObjectUiController::State::refresh_page() {
 
 void WorldParkObjectUiController::State::refresh() {
     for (auto& [control, provider] : previews) {
-        if (ui.owns(control))
+        if (ui.owns(control)) {
             provider->advance();
+        }
     }
     if (ui.clock() >= next_refresh) {
-        next_refresh = ui.clock()
-                     + std::chrono::milliseconds{ page == Page::statistics                          ? 10000
-                                                  : page == Page::settings || page == Page::special ? 4000
-                                                                                                    : 2000 };
+        next_refresh = ui.clock() + std::chrono::milliseconds { page == Page::statistics ? 10000 : page == Page::settings || page == Page::special ? 4000 : 2000 };
         model.refresh();
         refresh_page();
     } else if (context) {
@@ -283,21 +287,14 @@ std::intptr_t WorldParkObjectUiController::State::common_event(UiControl& contro
         return 1;
     }
     const auto key = event.id > 255 ? event.id >> 8 : event.id;
-    if (!closing
-        && (event.type == 5
-            || (event.type == 65547 && key == 27 && (static_cast<std::uint32_t>(event.value) & 0xFF0000u) == 0))) {
+    if (!closing && (event.type == 5 || (event.type == 65547 && key == 27 && (static_cast<std::uint32_t>(event.value) & 0xFF0000u) == 0))) {
         close();
         return 1;
     }
     return ui.secondary(control, event);
 }
 
-WorldParkObjectUiController::WorldParkObjectUiController(WorldRuntime& c,
-                                                         UiRuntime& ui,
-                                                         UiControl* primary,
-                                                         const std::filesystem::path& root,
-                                                         WorldUiPanelHost host)
-    : state_(std::make_unique<State>(c, ui, primary, root, std::move(host))) {}
+WorldParkObjectUiController::WorldParkObjectUiController(WorldRuntime& c, UiRuntime& ui, UiControl* primary, const std::filesystem::path& root, WorldUiPanelHost host) : state_(std::make_unique<State>(c, ui, primary, root, std::move(host))) {}
 
 WorldParkObjectUiController::~WorldParkObjectUiController() = default;
 
@@ -335,8 +332,7 @@ void WorldParkObjectUiController::open_context(ThingId id, UiPoint p, bool filte
     state_->open_context(id, p, filtered);
 }
 
-void
-WorldParkObjectUiController::open_world_context(ThingId id, UiPoint point, std::int32_t family, std::uint32_t mesh) {
+void WorldParkObjectUiController::open_world_context(ThingId id, UiPoint point, std::int32_t family, std::uint32_t mesh) {
     state_->open_context(id, point, false, family, mesh);
 }
 
@@ -385,17 +381,14 @@ WorldParkObjectUiRuntime& WorldParkObjectUiController::model() {
     return state_->model;
 }
 
-void WorldParkObjectUiController::append(UiDrawList& draw,
-                                         UiControl& control,
-                                         UiRect clip,
-                                         std::uint32_t width,
-                                         std::uint32_t height) {
+void WorldParkObjectUiController::append(UiDrawList& draw, UiControl& control, UiRect clip, std::uint32_t width, std::uint32_t height) {
     state_->append(draw, control, clip, width, height);
 }
 
 bool WorldParkObjectUiController::dismiss_outside(UiPoint point) {
-    if (!state_->context || state_->context->rect.contains(point))
+    if (!state_->context || state_->context->rect.contains(point)) {
         return false;
+    }
     state_->ui.destroy(state_->context);
     state_->context = nullptr;
     state_->restore_input();
@@ -404,10 +397,12 @@ bool WorldParkObjectUiController::dismiss_outside(UiPoint point) {
 
 void WorldParkObjectUiController::close_context() {
     auto& s = *state_;
-    if (!s.context)
+    if (!s.context) {
         return;
-    if (s.context && s.ui.owns(s.context))
+    }
+    if (s.context && s.ui.owns(s.context)) {
         s.ui.destroy(s.context);
+    }
     s.context = nullptr;
     s.restore_input();
 }

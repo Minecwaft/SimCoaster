@@ -60,39 +60,39 @@ enum class LayoutActionFormat : std::uint8_t {
 };
 
 struct LayoutCoordinates {
-    std::uint8_t x{}, y{};
+    std::uint8_t x {}, y {};
 };
 
 struct LayoutWord {
-    std::uint16_t value{};
+    std::uint16_t value {};
 };
 
 struct LayoutModifiedCoordinates {
-    std::uint8_t x{}, y{};
-    std::uint16_t modifiers{};
+    std::uint8_t x {}, y {};
+    std::uint16_t modifiers {};
 };
 
 struct LayoutRide {
-    std::uint16_t definition{};
-    std::uint8_t secondary{};
+    std::uint16_t definition {};
+    std::uint8_t secondary {};
 };
 
 struct LayoutFloatWord {
-    float value{};
-    std::uint16_t ordinal{};
+    float value {};
+    std::uint16_t ordinal {};
 };
 
 struct LayoutTwoFloatsWord {
-    float first{}, second{};
-    std::uint16_t ordinal{};
+    float first {}, second {};
+    std::uint16_t ordinal {};
 };
 
 struct LayoutWordPair {
-    std::uint16_t first{}, second{};
+    std::uint16_t first {}, second {};
 };
 
 struct LayoutWordTriple {
-    std::uint16_t first{}, second{}, third{};
+    std::uint16_t first {}, second {}, third {};
 };
 
 struct LayoutLegacyName {
@@ -100,35 +100,24 @@ struct LayoutLegacyName {
 };
 
 struct LayoutMappedName {
-    std::uint16_t key{};
+    std::uint16_t key {};
     std::u16string text;
 };
 
 struct LayoutMarker {
-    std::array<std::byte, 128> bytes{};
+    std::array<std::byte, 128> bytes {};
 };
 
-using LayoutActionPayload = std::variant<LayoutCoordinates,
-                                         LayoutWord,
-                                         LayoutModifiedCoordinates,
-                                         LayoutRide,
-                                         LayoutFloatWord,
-                                         LayoutTwoFloatsWord,
-                                         LayoutWordPair,
-                                         LayoutWordTriple,
-                                         std::monostate,
-                                         LayoutLegacyName,
-                                         LayoutMappedName,
-                                         LayoutMarker>;
+using LayoutActionPayload = std::variant<LayoutCoordinates, LayoutWord, LayoutModifiedCoordinates, LayoutRide, LayoutFloatWord, LayoutTwoFloatsWord, LayoutWordPair, LayoutWordTriple, std::monostate, LayoutLegacyName, LayoutMappedName, LayoutMarker>;
 
 struct LayoutAction {
-    LayoutActionCode code{};
+    LayoutActionCode code {};
     LayoutActionPayload payload;
 };
 
 struct CoasterInsertReplayCommand {
-    std::uint16_t map{}, ordinal{};
-    std::uint8_t x{}, y{};
+    std::uint16_t map {}, ordinal {};
+    std::uint8_t x {}, y {};
 };
 enum class LayoutFailure {
     transfer,
@@ -143,8 +132,8 @@ enum class LayoutFailure {
 };
 
 struct LayoutError {
-    LayoutFailure reason{};
-    std::size_t offset{};
+    LayoutFailure reason {};
+    std::size_t offset {};
     std::optional<LayoutActionCode> action;
     std::string detail;
 };
@@ -164,7 +153,7 @@ std::expected<void, LayoutError> write_layout_action(Stream&, const LayoutAction
 //that emit the opcode and payload through separate Stream::write calls.
 class LayoutActionStream final : public PositionedStream {
     std::vector<std::byte> bytes_;
-    std::size_t cursor_{};
+    std::size_t cursor_ {};
 
 public:
     std::int64_t position() const override;
@@ -189,8 +178,9 @@ public:
 
     //Roll back an appended complete packet without allocating during unwinding.
     void truncate(std::size_t size) noexcept {
-        if (size < bytes_.size())
+        if (size < bytes_.size()) {
             bytes_.resize(size);
+        }
         cursor_ = std::min(cursor_, bytes_.size());
     }
 
@@ -209,9 +199,9 @@ enum class LayoutReplayState {
 };
 
 struct LayoutReplayProgress {
-    LayoutReplayState state{};
-    std::size_t offset{}, size{}, actions_dispatched{};
-    std::uint32_t ticks_until_next_action{}, loaded_published_park{};
+    LayoutReplayState state {};
+    std::size_t offset {}, size {}, actions_dispatched {};
+    std::uint32_t ticks_until_next_action {}, loaded_published_park {};
     std::optional<LayoutError> error;
 };
 
@@ -228,13 +218,13 @@ struct LayoutReplayBackend {
 
 class LayoutReplayRuntime {
     LayoutActionStream stream_;
-    LayoutReplayState state_{};
-    LayoutReplayTiming timing_{};
-    std::uint32_t countdown_{}, loaded_published_{};
-    std::size_t dispatched_{};
+    LayoutReplayState state_ {};
+    LayoutReplayTiming timing_ {};
+    std::uint32_t countdown_ {}, loaded_published_ {};
+    std::size_t dispatched_ {};
     std::optional<LayoutError> error_;
-    WorldRuntime* bound_{};
-    LayoutReplayBackend* backend_{};
+    WorldRuntime* bound_ {};
+    LayoutReplayBackend* backend_ {};
     std::expected<void, LayoutError> finish(WorldRuntime&, LayoutReplayBackend&);
     std::expected<bool, LayoutError> step(WorldRuntime&, LayoutReplayBackend&);
     std::expected<void, LayoutError> fail(WorldRuntime&, LayoutError);
@@ -250,8 +240,7 @@ public:
     //A fresh host session starts ready (countdown0), including after a prior
     //timed EOF wrap. Calling begin again while active is idempotent only for
     //the same backend; the native tick/EOF arithmetic is unchanged.
-    std::expected<void, LayoutError>
-    begin(WorldRuntime&, LayoutReplayBackend&, LayoutReplayTiming = LayoutReplayTiming::immediate);
+    std::expected<void, LayoutError> begin(WorldRuntime&, LayoutReplayBackend&, LayoutReplayTiming = LayoutReplayTiming::immediate);
     std::expected<void, LayoutError> tick(WorldRuntime&, LayoutReplayBackend&);
     //Native has no dedicated cancel method. Host cancellation explicitly
     //releases replay suppression/withdrawal ownership without claiming replay

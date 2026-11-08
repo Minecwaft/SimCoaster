@@ -12,14 +12,16 @@ void ParkConstructionRuntime::update_cursor_feedback(ConstructionWorld& c, World
     int help = 0, presentation = -1;
     match (c.construction.mode) {
         case 1 => {
-            if (state.queue_joined)
+            if (state.queue_joined) {
                 presentation = 5;
-            else if (state.existing_endpoint)
+            } else if (state.existing_endpoint) {
                 presentation = 18;
-            else
+            } else {
                 c.staff.interaction.cursor_presentation = 3;
-            if (!(construction_detail::map(c, construction_detail::cell_id(cursor)).base.common.flags & 64u))
+            }
+            if (!(construction_detail::map(c, construction_detail::cell_id(cursor)).base.common.flags & 64u)) {
                 help = 147 + (c.construction.path_start_x != -1 || c.construction.path_start_y != -1);
+            }
         }
         case 3 => {
             presentation = state.queue_joined ? 5 : state.existing_endpoint ? 18 : 4;
@@ -27,11 +29,7 @@ void ParkConstructionRuntime::update_cursor_feedback(ConstructionWorld& c, World
         }
         case 4 or 59 => {
             presentation = 7;
-            help = state.status_latch ? 308
-                 : construction_detail::definition(c, c.construction.selected_object_definition_id)
-                           .balance->Info.HasQueue
-                     ? 362
-                     : 146;
+            help = state.status_latch ? 308 : construction_detail::definition(c, c.construction.selected_object_definition_id).balance->Info.HasQueue ? 362 : 146;
         }
         case 11 or 16 => {
             presentation = state.queue_joined ? 5 : state.existing_endpoint ? 18 : 6;
@@ -50,24 +48,28 @@ void ParkConstructionRuntime::update_cursor_feedback(ConstructionWorld& c, World
             presentation = 11;
             help = 154;
         }
-        case _ => {}
-    }
-    if (state.status_latch)
+        case _ => {
+        }
+    } if (state.status_latch) {
         c.staff.interaction.cursor_presentation = 8;
+    }
     state.cursor_help.clear();
     if (help && !c.messages.mail_language.ui_help.empty()) {
-        auto text =
-            format_bfst_wide_string(c.messages.mail_language.ui_help, c.messages.mail_language.conversion, help, 16383);
-        if (!text)
+        auto text = format_bfst_wide_string(c.messages.mail_language.ui_help, c.messages.mail_language.conversion, help, 16383);
+        if (!text) {
             throw std::runtime_error("Invalid original construction help: " + text.error().reason);
+        }
         state.cursor_help = std::move(*text);
     }
-    if (state.insufficient_funds)
+    if (state.insufficient_funds) {
         c.staff.interaction.cursor_presentation = 20;
-    if (presentation != -1)
+    }
+    if (presentation != -1) {
         c.staff.interaction.cursor_presentation = presentation;
-    if (c.ui.persistent_root)
+    }
+    if (c.ui.persistent_root) {
         c.ui.persistent_root->cursor_id = c.staff.interaction.cursor_presentation;
+    }
 }
 
 namespace {
@@ -84,49 +86,39 @@ void ParkConstructionRuntime::invalidate_interaction_cost_quote() noexcept {
     state.pending_interaction_quote.reset();
 }
 
-bool
-ParkConstructionRuntime::preview(ConstructionWorld& c, WorldCellCoordinates cursor, WorldInputModifierMask modifiers) {
+bool ParkConstructionRuntime::preview(ConstructionWorld& c, WorldCellCoordinates cursor, WorldInputModifierMask modifiers) {
     invalidate_interaction_cost_quote();
     const auto mode = c.construction.mode;
     const auto definition = c.construction.selected_object_definition_id;
     const auto accepted = preview_impl(c, cursor, modifiers);
-    if (construction_detail::bounds(cursor) && mode)
+    if (construction_detail::bounds(cursor) && mode) {
         update_cursor_feedback(c, cursor);
-    else
+    } else {
         state.cursor_help.clear();
+    }
     //Rejected geometry or insufficient funds can still have a meaningful
     //quote. Only absent/out-of-map/inactive/stale input suppresses publication.
     //This bridge projects the separately owned modern construction frontend;
     //it does not claim its staff handler object has native kind3 or kind4.
-    if (mode
-        && c.construction.mode == mode
-        && c.construction.selected_object_definition_id == definition
-        && construction_detail::bounds(cursor)
-        && construction_detail::bounds(state.preview_coordinates))
-        state.pending_interaction_quote =
-            ParkInteractionCostQuote{ state.cost,     mode,           definition, state.preview_coordinates,
-                                      coaster_map(c), coaster_node(c) };
+    if (mode && c.construction.mode == mode && c.construction.selected_object_definition_id == definition && construction_detail::bounds(cursor) && construction_detail::bounds(state.preview_coordinates)) {
+        state.pending_interaction_quote = ParkInteractionCostQuote { state.cost, mode, definition, state.preview_coordinates, coaster_map(c), coaster_node(c) };
+    }
     return accepted;
 }
 
 std::optional<std::int32_t> ParkConstructionRuntime::take_interaction_cost_quote(const ConstructionQuery& c) {
     const auto quote = std::exchange(state.pending_interaction_quote, std::nullopt);
-    if (!quote
-        || !c.simulation.current
-        || !quote->mode
-        || quote->mode != c.construction.mode
-        || quote->definition != c.construction.selected_object_definition_id
-        || !construction_detail::bounds(quote->cursor)
-        || quote->coaster_map != coaster_map(c)
-        || quote->coaster_node != coaster_node(c))
+    if (!quote || !c.simulation.current || !quote->mode || quote->mode != c.construction.mode || quote->definition != c.construction.selected_object_definition_id || !construction_detail::bounds(quote->cursor) || quote->coaster_map != coaster_map(c) || quote->coaster_node != coaster_node(c)) {
         return std::nullopt;
+    }
     //Native54AF60 excludes staff placement/carry/patrol handlers. Construction
     //and staff share a modern pointer frontend, so an actual staff takeover
     //invalidates even a quote published earlier in the same UI frame.
     if (c.staff.interaction.initialized && c.construction.handler == &c.staff.interaction.handler) {
         const auto kind = world_staff_interaction_kind(c);
-        if (kind != WorldInteractionHandlerKind::default_ && kind != WorldInteractionHandlerKind::alternate)
+        if (kind != WorldInteractionHandlerKind::default_ && kind != WorldInteractionHandlerKind::alternate) {
             return std::nullopt;
+        }
     }
     //Native674900 projects0 only after its caller establishes eligibility.
     //Do not turn an absent quote into a spurious zero-dollar display in mode3.

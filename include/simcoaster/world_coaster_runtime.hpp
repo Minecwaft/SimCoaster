@@ -32,44 +32,44 @@ struct EditTransaction;
 
 struct CoasterPylonRuntime {
     struct Channel {
-        float minimum{}, maximum{ 1 }, scale{ 1 }, bias{};
+        float minimum {}, maximum { 1 }, scale { 1 }, bias {};
     };
 
-    std::uint32_t flags{};
+    std::uint32_t flags {};
     std::array<Channel, 5> channels;
     std::array<std::optional<std::size_t>, 4> cap_nodes;
     std::optional<std::size_t> profile_resource, stack_resource;
-    std::uint32_t first_attachment{ 1 }, attachment_count{}, component_attachment{};
-    float height_minimum{}, height_maximum{}, height_offset{};
-    float minimum_tangent_dot{ -0.99900001f };
-    float collision_radius{ 5 };
+    std::uint32_t first_attachment { 1 }, attachment_count {}, component_attachment {};
+    float height_minimum {}, height_maximum {}, height_offset {};
+    float minimum_tangent_dot { -0.99900001f };
+    float collision_radius { 5 };
 };
 
 struct WorldCoasterDefinition {
     DynamicTextureMeshBalance balance;
     RideTrainConfiguration trains;
-    std::array<std::uint32_t, 2> pylon_templates{};
+    std::array<std::uint32_t, 2> pylon_templates {};
     std::array<CoasterPylonRuntime, 2> pylons;
 };
 
 struct CoasterNodeState {
-    std::size_t placement{};
-    std::uint32_t mesh_slot{};
-    std::array<float, 5> controls{};
-    std::array<float, 4> angles{};
+    std::size_t placement {};
+    std::uint32_t mesh_slot {};
+    std::array<float, 5> controls {};
+    std::array<float, 4> angles {};
     std::optional<std::size_t> saved_ordinal;
 };
 
 struct CoasterNodeReference {
-    std::size_t ride{}, node{};
+    std::size_t ride {}, node {};
 };
 
 struct CoasterPlacement {
-    std::uint32_t flags{};
-    std::int32_t tile_x{}, tile_y{};
-    std::array<float, 3> position{};
+    std::uint32_t flags {};
+    std::int32_t tile_x {}, tile_y {};
+    std::array<float, 3> position {};
     std::shared_ptr<const WorldCoasterDefinition> definition;
-    std::size_t pylon{};
+    std::size_t pylon {};
     //Saves specify slots directly; another ride can restore a lower slot later.
     std::vector<std::optional<CoasterNodeReference>> links;
 };
@@ -78,16 +78,16 @@ struct CoasterPlacement {
 //spline, attachment, speed-profile and generated track mesh state. Live train
 //pose installation remains a separate consumer of that state.
 struct WorldCoasterBinding {
-    std::uint32_t mesh_slot{}, map_id{}, script_id{};
-    ParkObjectRuntimeView* park_object{};
+    std::uint32_t mesh_slot {}, map_id {}, script_id {};
+    ParkObjectRuntimeView* park_object {};
     std::optional<std::uint32_t> pulsing_geometry_slot;
     std::shared_ptr<const WorldCoasterDefinition> definition;
     RideTrainState train_state;
     CoasterRecordSave saved_geometry; //Train snapshots are consumed on restore.
     std::uint32_t speed_setting = 60;
-    float speed_cap{};
-    float default_attachment_height{ 10 };
-    std::uint32_t selection_texture_bias{};
+    float speed_cap {};
+    float default_attachment_height { 10 };
+    std::uint32_t selection_texture_bias {};
     bool geometry_dirty = true;
     std::vector<CoasterGeometryObjectInput> geometry;
     std::vector<CoasterNodeState> geometry_state;
@@ -98,40 +98,48 @@ struct WorldCoasterBinding {
     CoasterProfileResult metrics;
     std::optional<CoasterTrackMesh> generated_mesh;
     std::vector<float> texture_phases;
-    std::chrono::milliseconds last_texture_update{};
+    std::chrono::milliseconds last_texture_update {};
 };
 
 struct WorldCoasterRuntime {
-    coaster_editor_detail::EditTransaction* active_edit_transaction{};
-    std::uint32_t registered_record_count{}, available_id_holes{}, next_map_id{};
+    coaster_editor_detail::EditTransaction* active_edit_transaction {};
+    std::uint32_t registered_record_count {}, available_id_holes {}, next_map_id {};
     std::vector<WorldCoasterBinding> bindings;
     std::vector<CoasterPlacement> placements;
 
     WorldCoasterBinding* find(std::uint32_t slot) {
-        for (auto& row : bindings)
-            if (row.mesh_slot == slot)
+        for (auto& row : bindings) {
+            if (row.mesh_slot == slot) {
                 return &row;
+            }
+        }
         return nullptr;
     }
 
     const WorldCoasterBinding* find(std::uint32_t slot) const {
-        for (const auto& row : bindings)
-            if (row.mesh_slot == slot)
+        for (const auto& row : bindings) {
+            if (row.mesh_slot == slot) {
                 return &row;
+            }
+        }
         return nullptr;
     }
 
     WorldCoasterBinding* find_map(std::uint32_t id) {
-        for (auto& row : bindings)
-            if (row.map_id == id)
+        for (auto& row : bindings) {
+            if (row.map_id == id) {
                 return &row;
+            }
+        }
         return nullptr;
     }
 
     const WorldCoasterBinding* find_map(std::uint32_t id) const {
-        for (const auto& row : bindings)
-            if (row.map_id == id)
+        for (const auto& row : bindings) {
+            if (row.map_id == id) {
                 return &row;
+            }
+        }
         return nullptr;
     }
 };
@@ -154,8 +162,7 @@ std::expected<void, MeshError> regenerate_coaster_record(AttractionWorld&, World
 std::expected<void, MeshError> install_restored_coaster_train_poses(AttractionWorld&, WorldMeshRuntime&);
 void transition_coaster_detail_state(AttractionWorld&, WorldMeshRuntime&, WorldCoasterBinding&, RideDetailState);
 void step_rsse_coaster_instruction(ScriptWorld&, RsseScriptState&);
-std::expected<void, MeshError>
-advance_coaster_animation(AttractionWorld&, WorldMeshRuntime&, std::chrono::milliseconds);
+std::expected<void, MeshError> advance_coaster_animation(AttractionWorld&, WorldMeshRuntime&, std::chrono::milliseconds);
 //Clock-neutral frame consumer, shared with the fixed-step RSSE scheduler.
 std::expected<void, MeshError> update_coaster_animation(AttractionWorld&, WorldMeshRuntime&);
 } //namespace simcoaster

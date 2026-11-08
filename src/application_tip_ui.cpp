@@ -11,53 +11,32 @@ namespace simcoaster {
 namespace {
 //Original Game.exe9C8520, terminated by the outer END, not the following
 //training template. Its model surfaces and native seven-part icon are kept.
-constexpr unsigned char tip_template[]{
+constexpr unsigned char tip_template[] {
 #embed "ui_templates/application_tip.bin"
 };
 static_assert(sizeof(tip_template) == 468);
 using TipBalance = StandardTipBalance;
 
 bool escape(const UiEvent& event) {
-    return event.type == 65547
-        && (event.id > 255 ? event.id >> 8 : event.id) == 27
-        && !(static_cast<std::uint32_t>(event.value) & 0xFF0000u);
+    return event.type == 65547 && (event.id > 255 ? event.id >> 8 : event.id) == 27 && !(static_cast<std::uint32_t>(event.value) & 0xFF0000u);
 }
 } //namespace
 
 struct ApplicationTipUiController::State {
     WorldRuntime& c;
     UiRuntime& ui;
-    UiControl *primary{}, *dialog{};
+    UiControl *primary {}, *dialog {};
     ApplicationTipUiHost host;
     std::filesystem::path game_root;
     std::string language;
     std::vector<std::byte> table;
     std::optional<std::uint32_t> displayed_tip;
-    bool leased{}, closing{};
+    bool leased {}, closing {};
 
-    State(WorldRuntime& context,
-          UiRuntime& runtime,
-          UiControl* parent,
-          const std::filesystem::path& path,
-          ApplicationTipUiHost callbacks,
-          std::string locale)
-        : c(context),
-          ui(runtime),
-          primary(parent),
-          host(std::move(callbacks)),
-          game_root(path),
-          language(std::move(locale)) {
-        if (!ui.owns(primary)
-            || !host.history
-            || !host.enabled
-            || !host.set_enabled
-            || !host.pause
-            || !host.command_families_enabled
-            || !host.resume_ui_transition
-            || !host.panels.dismiss
-            || !host.panels.activate
-            || !host.panels.deactivate)
+    State(WorldRuntime& context, UiRuntime& runtime, UiControl* parent, const std::filesystem::path& path, ApplicationTipUiHost callbacks, std::string locale) : c(context), ui(runtime), primary(parent), host(std::move(callbacks)), game_root(path), language(std::move(locale)) {
+        if (!ui.owns(primary) || !host.history || !host.enabled || !host.set_enabled || !host.pause || !host.command_families_enabled || !host.resume_ui_transition || !host.panels.dismiss || !host.panels.activate || !host.panels.deactivate) {
             throw std::invalid_argument("Tip of the Day requires its complete campaign/application host");
+        }
     }
 
     ~State() {
@@ -65,8 +44,9 @@ struct ApplicationTipUiController::State {
     }
 
     UiControl& required(std::uint32_t id) {
-        if (auto* control = ui.find_recursive(dialog, id))
+        if (auto* control = ui.find_recursive(dialog, id)) {
             return *control;
+        }
         throw std::runtime_error("Original tip template missing control " + std::to_string(id));
     }
 
@@ -74,56 +54,63 @@ struct ApplicationTipUiController::State {
         if (table.empty()) {
             const auto path = (game_root / "Data/Language" / language / "TOTD.str").native_encoded_string();
             const auto contents = c.ports.assets.read_balance_asset(c, path);
-            if (!contents)
+            if (!contents) {
                 throw std::runtime_error("Missing original Tip of the Day table " + path);
+            }
             const auto bytes = std::as_bytes(std::span(contents->data(), contents->size()));
             table.assign(bytes.begin(), bytes.end());
         }
         const auto result = format_bfst_wide_string(table, c.messages.mail_language.conversion, row, 16383);
-        if (!result)
+        if (!result) {
             throw std::runtime_error("Original tip text " + std::to_string(row) + ": " + result.error().reason);
+        }
         return *result;
     }
 
     bool suppressed() {
         TipBalance balance;
-        bool configured{};
-        for (const auto& path : { game_root / "Data/levels/Standard.sam",
-                                  game_root / "Data/levels" / c.source.selected_resource_source_name / "Standard.sam" })
+        bool configured {};
+        for (const auto& path : { game_root / "Data/levels/Standard.sam", game_root / "Data/levels" / c.source.selected_resource_source_name / "Standard.sam" }) {
             if (const auto input = c.ports.assets.read_balance_asset(c, path.native_encoded_string())) {
                 const auto parsed = sam::parse_record<TipBalance, true>(balance, *input, configured);
-                if (!parsed)
-                    throw std::runtime_error("Invalid Tip of the Day balance at byte "
-                                             + std::to_string(parsed.error().offset));
+                if (!parsed) {
+                    throw std::runtime_error("Invalid Tip of the Day balance at byte " + std::to_string(parsed.error().offset));
+                }
                 configured = true;
             }
-        if (!configured)
+        }
+        if (!configured) {
             throw std::runtime_error("Missing original Tip of the Day balance");
+        }
         return balance.suppression.all || balance.suppression.tips;
     }
 
     void release(UiControl* old) {
         displayed_tip.reset();
-        if (!std::exchange(leased, false))
+        if (!std::exchange(leased, false)) {
             return;
+        }
         host.panels.deactivate(old);
         ui.set_input_root(primary);
-        if (host.panels.synchronize_focus)
+        if (host.panels.synchronize_focus) {
             host.panels.synchronize_focus();
-        else
+        } else {
             ui.set_focus(primary);
+        }
         host.pause(false);
         host.resume_ui_transition();
         host.command_families_enabled(true);
     }
 
     void close() {
-        if (closing)
+        if (closing) {
             return;
+        }
         closing = true;
         auto* old = std::exchange(dialog, nullptr);
-        if (ui.owns(old))
+        if (ui.owns(old)) {
             ui.destroy(old);
+        }
         release(old);
         closing = false;
     }
@@ -133,15 +120,17 @@ struct ApplicationTipUiController::State {
         //592040 intentionally obtains the World cutscene record before the
         //once-only mission event. The modern helper owns the actual TagSystem
         //event and profile mission latch; no synthetic UI notification is used.
-        if (c.simulation.current && c.simulation.current->saved.mission_controller)
+        if (c.simulation.current && c.simulation.current->saved.mission_controller) {
             (void)c.entities.at(c.simulation.current->saved.mission_controller).payload;
+        }
         dispatch_initial_mission_event_once(c);
     }
 
     std::intptr_t event(UiControl& control, const UiEvent& value) {
         if (value.type == 20 && control.id == 61000) {
-            if (dialog == &control)
+            if (dialog == &control) {
                 dialog = nullptr;
+            }
             release(&control);
             return ui.secondary(control, value);
         }
@@ -168,16 +157,19 @@ struct ApplicationTipUiController::State {
                 next();
                 return 0;
             }
-            if (value.id == 61005)
+            if (value.id == 61005) {
                 host.set_enabled(value.value == 0); //591FF0, inverted checkbox.
-        } else if (value.type == 257 && value.id == 61005)
+            }
+        } else if (value.type == 257 && value.id == 61005) {
             host.set_enabled(value.value == 1); //592040's separate root route.
+        }
         return ui.secondary(control, value);
     }
 
     void next() {
-        if (!ui.owns(dialog))
+        if (!ui.owns(dialog)) {
             return;
+        }
         auto& history = host.history();
         if (history.count >= 92) {
             history.count = 0;
@@ -191,12 +183,13 @@ struct ApplicationTipUiController::State {
                 history.seen,
                 [](auto flag) {
                     return flag != 0;
-                }))
+                })) {
             throw std::runtime_error("Invalid original Tip of the Day history");
-        std::uint32_t index{};
-        do
+        }
+        std::uint32_t index {};
+        do {
             index = static_cast<std::uint32_t>(next_crt_random(c)) % 92u;
-        while (history.seen[index]);
+        } while (history.seen[index]);
         //Resolve the original text before publishing a history mutation.
         const auto body = text(index);
         history.seen[index] = 1;
@@ -217,8 +210,9 @@ struct ApplicationTipUiController::State {
     bool show(bool force) {
         //Force bypasses only the stored checkbox preference. Neither the CDK
         //Mode3 guard nor CutTheCrap suppression is overridden.
-        if (c.mode.game == GameMode::code_3 || suppressed() || (!host.enabled() && !force))
+        if (c.mode.game == GameMode::code_3 || suppressed() || (!host.enabled() && !force)) {
             return false;
+        }
         close();
         host.command_families_enabled(false);
         host.pause(true);
@@ -226,14 +220,13 @@ struct ApplicationTipUiController::State {
         try {
             host.panels.dismiss();
             const auto parsed = ui.parse_template(primary, std::as_bytes(std::span(tip_template)));
-            if (!parsed)
-                throw std::runtime_error("Original tip template at word "
-                                         + std::to_string(parsed.error().word)
-                                         + ": "
-                                         + parsed.error().reason);
+            if (!parsed) {
+                throw std::runtime_error("Original tip template at word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
+            }
             dialog = *parsed;
-            if (!dialog || dialog->id != 61000)
+            if (!dialog || dialog->id != 61000) {
                 throw std::runtime_error("Original Tip of the Day root is absent");
+            }
             bind_ui_panel(ui, *dialog, [this](auto& sender, const auto& value) {
                 return event(sender, value);
             });
@@ -264,13 +257,7 @@ struct ApplicationTipUiController::State {
     }
 };
 
-ApplicationTipUiController::ApplicationTipUiController(WorldRuntime& c,
-                                                       UiRuntime& ui,
-                                                       UiControl* primary,
-                                                       const std::filesystem::path& game_root,
-                                                       ApplicationTipUiHost host,
-                                                       std::string language)
-    : state_(std::make_unique<State>(c, ui, primary, game_root, std::move(host), std::move(language))) {}
+ApplicationTipUiController::ApplicationTipUiController(WorldRuntime& c, UiRuntime& ui, UiControl* primary, const std::filesystem::path& game_root, ApplicationTipUiHost host, std::string language) : state_(std::make_unique<State>(c, ui, primary, game_root, std::move(host), std::move(language))) {}
 
 ApplicationTipUiController::~ApplicationTipUiController() = default;
 

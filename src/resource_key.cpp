@@ -2,19 +2,22 @@
 
 namespace simcoaster {
 std::string ascii_lowercase(std::string_view text) {
-    std::string result{ text };
-    for (char& c : result)
-        if (c >= 'A' && c <= 'Z')
+    std::string result { text };
+    for (char& c : result) {
+        if (c >= 'A' && c <= 'Z') {
             c = static_cast<char>(c + ('a' - 'A'));
+        }
+    }
     return result;
 }
 
 std::string canonical_asset_key(std::string text) {
     for (auto& c : text) {
-        if (c == '\\')
+        if (c == '\\') {
             c = '/';
-        else if (c >= 'A' && c <= 'Z')
+        } else if (c >= 'A' && c <= 'Z') {
             c = static_cast<char>(c + ('a' - 'A'));
+        }
     }
     return text;
 }
@@ -31,11 +34,13 @@ bool resource_name_matches(std::string_view pattern, std::string_view text) {
         } else if (star != std::string_view::npos) {
             p = star + 1;
             t = ++retry;
-        } else
+        } else {
             return false;
+        }
     }
-    while (p < pattern.size() && pattern[p] == '*')
+    while (p < pattern.size() && pattern[p] == '*') {
         ++p;
+    }
     return p == pattern.size();
 }
 } //namespace simcoaster

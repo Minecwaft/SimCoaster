@@ -102,18 +102,22 @@ namespace world_operation_detail {
 constexpr auto functions = std::define_static_array([] consteval {
     std::vector<std::meta::info> result;
     for (auto function : std::meta::members_of(^^world_operations::builtin, std::meta::access_context::current())) {
-        if (!std::meta::is_function(function))
+        if (!std::meta::is_function(function)) {
             continue;
+        }
         const auto annotations = std::meta::annotations_of_with_type(function, ^^WorldOperation);
         if (annotations.size() != 1) {
             throw "domain operation requires one annotation";
         }
         const auto parameters = std::meta::parameters_of(function);
-        if (parameters.empty() || std::meta::type_of(parameters.front()) != ^^WorldRuntime&)
+        if (parameters.empty() || std::meta::type_of(parameters.front()) != ^^WorldRuntime&) {
             throw "domain operation requires a WorldRuntime reference";
-        for (auto previous : result)
-            if (std::meta::identifier_of(previous) == std::meta::identifier_of(function))
+        }
+        for (auto previous : result) {
+            if (std::meta::identifier_of(previous) == std::meta::identifier_of(function)) {
                 throw "domain operations require unique names";
+            }
+        }
         result.push_back(function);
     }
     return result;
@@ -178,8 +182,7 @@ struct WorldOperationOverrides {
 namespace world_operations {
 consteval {
     for (auto function : world_operation_detail::functions) {
-        const auto declaration =
-            std::meta::set_name(std::meta::declaration_of(function), std::meta::identifier_of(function));
+        const auto declaration = std::meta::set_name(std::meta::declaration_of(function), std::meta::identifier_of(function));
         std::meta::queue_injection(^^{ ${declaration}; });
     }
 }

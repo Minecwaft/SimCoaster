@@ -21,11 +21,7 @@ void stop_active_advisor_response(AdvisorWorld&, AdvisorStopTargetAction);
 std::int32_t select_runtime_behavior_candidate(AdvisorWorld&, AdvisorRecord&, std::int32_t steps);
 int find_highest_score_queued_candidate(AdvisorWorld&, const AdvisorRecord&);
 std::int32_t select_advisor_response_variant(AdvisorWorld&, const AdvisorQueueEntry&);
-std::int32_t choose_advisor_response_variant(World&,
-                                             std::int32_t action,
-                                             std::int32_t count,
-                                             AdvisorVariantMode,
-                                             std::int32_t previous);
+std::int32_t choose_advisor_response_variant(World&, std::int32_t action, std::int32_t count, AdvisorVariantMode, std::int32_t previous);
 bool play_queued_advisor_response(AdvisorWorld&, AdvisorQueueEntry&, std::int32_t variant, std::uint32_t& duration);
 void update_advisor_action_queue(AdvisorWorld&, AdvisorRecord&);
 void receive_world_advisor_message(AdvisorWorld&, AdvisorRecord&, const WorldEvent&);

@@ -9,8 +9,9 @@
 
 namespace simcoaster {
 RsseScriptState* create_rsse_program_state_for_owner(ScriptWorld& c, RsseProgram program, ThingId owner) {
-    if (!c.scripts.states.active)
+    if (!c.scripts.states.active) {
         return nullptr;
+    }
     auto instance = std::make_unique<RsseProgramInstance>();
     instance->program = std::move(program);
     const auto& h = instance->program.header;
@@ -24,15 +25,17 @@ RsseScriptState* create_rsse_program_state_for_owner(ScriptWorld& c, RsseProgram
     state.script_source = instance->program.source;
     if (owner) {
         const auto* payload = c.entities.at(owner).payload;
-        if (!payload)
+        if (!payload) {
             throw std::invalid_argument("RSSE owner is missing");
+        }
         state.mesh_instance_handle = reinterpret_cast<const ParkObjectRuntimeView*>(payload)->mesh_instance_id;
         if (state.mesh_instance_handle) {
             std::int32_t node = 1;
             while (c.ports.meshes.find_embedded_node_resource_record(c, state.mesh_instance_handle, 128, node) != -1) {
                 instance->attached_people.push_back(0);
-                if (node == std::numeric_limits<std::int32_t>::max())
+                if (node == std::numeric_limits<std::int32_t>::max()) {
                     throw std::length_error("RSSE attachment count");
+                }
                 ++node;
             }
         }
@@ -50,15 +53,17 @@ RsseScriptState* create_rsse_program_state_for_owner(ScriptWorld& c, RsseProgram
     state.walk_records = instance->walk;
     state.bounce_records = instance->bounce;
     state.limbo_records = instance->limbo;
-    if (instance->program.string_table.empty())
+    if (instance->program.string_table.empty()) {
         state.string_table = {};
+    }
     //Publish only after host allocations succeed. Native unchecked allocation
     //failures are not meaningful states to preserve in a native-x64 owner.
     c.scripts.states.owned_states.push_back(std::move(instance));
     state.id = c.scripts.states.next_state_id++;
     state.next = c.scripts.states.head;
-    if (state.next)
+    if (state.next) {
         state.next->previous = &state;
+    }
     c.scripts.states.head = &state;
     ++c.scripts.states.state_count;
     return &state;

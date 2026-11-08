@@ -8,11 +8,13 @@ namespace simcoaster::application_movie_detail {
 }
 
 inline std::uint32_t little(std::span<const std::byte> bytes, std::size_t offset, std::size_t width = 4) {
-    if (width > 4 || offset > bytes.size() || width > bytes.size() - offset)
+    if (width > 4 || offset > bytes.size() || width > bytes.size() - offset) {
         fail("truncated field", offset);
-    std::uint32_t value{};
-    for (std::size_t i = 0; i < width; ++i)
+    }
+    std::uint32_t value {};
+    for (std::size_t i = 0; i < width; ++i) {
         value |= std::to_integer<std::uint32_t>(bytes[offset + i]) << (8 * i);
+    }
     return value;
 }
 

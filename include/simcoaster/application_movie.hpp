@@ -4,8 +4,8 @@
 
 namespace simcoaster {
 struct ApplicationMovieInfo {
-    std::uint32_t width{}, height{}, frames{}, frames_per_second{}, sample_rate{}, channels{};
-    std::uint64_t audio_frames{};
+    std::uint32_t width {}, height {}, frames {}, frames_per_second {}, sample_rate {}, channels {};
+    std::uint64_t audio_frames {};
 };
 
 //The installed .tgq files contain pIQT (TQI) intra pictures and stereo EA
@@ -34,10 +34,10 @@ enum class ApplicationMovieStop {
 };
 
 struct ApplicationMovieStatus {
-    bool playing{}, audio_available{};
-    ApplicationMovieStop reason{};
-    std::uint32_t displayed_frame{};
-    std::uint64_t played_audio_frames{};
+    bool playing {}, audio_available {};
+    ApplicationMovieStop reason {};
+    std::uint32_t displayed_frame {};
+    std::uint64_t played_audio_frames {};
 };
 
 class ApplicationMoviePlayer {

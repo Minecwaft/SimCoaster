@@ -30,64 +30,55 @@ enum class Flag : std::uint32_t {
 struct Target {
     struct RequestEntry {
         std::shared_ptr<const SoundCatalogAsset> catalog;
-        const SoundDescriptor* descriptor{};
-        std::uint32_t slot{};
+        const SoundDescriptor* descriptor {};
+        std::uint32_t slot {};
     };
 
     std::shared_ptr<const SoundCatalogAsset> catalog;
-    const SoundDescriptor* descriptor{};
-    std::uint32_t catalog_slot{}, id{}, flags{}, scheduled_tick{}, interval{}, priority{}, voice{};
+    const SoundDescriptor* descriptor {};
+    std::uint32_t catalog_slot {}, id {}, flags {}, scheduled_tick {}, interval {}, priority {}, voice {};
     SoundTargetKind kind = SoundTargetKind::single;
     SoundSelectionCursor cursor;
     SoundPlaylistCursor playlist;
-    std::array<float, 3> position{};
-    float parameter{};
-    std::uint16_t level_override{};
-    std::uint8_t fade_parameter{};
-    std::uint8_t channel_mask{};
-    bool paused{};
-    std::uint32_t pause_tick{};
+    std::array<float, 3> position {};
+    float parameter {};
+    std::uint16_t level_override {};
+    std::uint8_t fade_parameter {};
+    std::uint8_t channel_mask {};
+    bool paused {};
+    std::uint32_t pause_tick {};
     SoundSavedPayload payload;
     SoundVoiceParameters controls;
-    Target* parent{};
+    Target* parent {};
     std::list<std::unique_ptr<Target>> children;
     //Native kind5 request-list payload is transient: the save format contains
     //only current graph indices and restores through ordinary kind5 selection.
     std::vector<RequestEntry> request_list;
-    std::size_t next_request{};
+    std::size_t next_request {};
 
     bool has(Flag flag) const {
         return (flags & static_cast<std::uint32_t>(flag)) != 0;
     }
 
     void set(Flag flag, bool value = true) {
-        if (value)
+        if (value) {
             flags |= static_cast<std::uint32_t>(flag);
-        else
+        } else {
             flags &= ~static_cast<std::uint32_t>(flag);
+        }
     }
 
     const SoundSelection* selection() const {
-        return descriptor && cursor.selection && *cursor.selection < descriptor->selections.size()
-                 ? &descriptor->selections[*cursor.selection]
-                 : nullptr;
+        return descriptor && cursor.selection && *cursor.selection < descriptor->selections.size() ? &descriptor->selections[*cursor.selection] : nullptr;
     }
 
     const sound_wire::Sample* sample() const {
         const auto* row = selection();
-        return row
-                    && cursor.sample
-                    && *cursor.sample < row->parameters.sample_count
-                    && *cursor.sample < row->samples.size()
-                 ? &row->samples[*cursor.sample]
-                 : nullptr;
+        return row && cursor.sample && *cursor.sample < row->parameters.sample_count && *cursor.sample < row->samples.size() ? &row->samples[*cursor.sample] : nullptr;
     }
 
     bool sequence() const {
-        return kind == SoundTargetKind::conditional_sequence
-            || kind == SoundTargetKind::sequential
-            || kind == SoundTargetKind::weighted_sequence
-            || kind == SoundTargetKind::playlist;
+        return kind == SoundTargetKind::conditional_sequence || kind == SoundTargetKind::sequential || kind == SoundTargetKind::weighted_sequence || kind == SoundTargetKind::playlist;
     }
 
     bool emitter() const {
@@ -96,21 +87,21 @@ struct Target {
 };
 
 struct Slot {
-    std::uint32_t id{};
+    std::uint32_t id {};
     std::unique_ptr<Target> target;
 };
 
 struct QueuedRequest {
     std::shared_ptr<const SoundCatalogAsset> catalog;
-    const SoundDescriptor* descriptor{};
-    std::uint32_t catalog_slot{};
-    std::array<float, 3> position{};
-    float parameter{};
+    const SoundDescriptor* descriptor {};
+    std::uint32_t catalog_slot {};
+    std::array<float, 3> position {};
+    float parameter {};
 };
 
 struct VoiceOwner {
-    Target* target{};
-    std::uint32_t priority{};
+    Target* target {};
+    std::uint32_t priority {};
 };
 } //namespace simcoaster::sound_runtime_detail
 
@@ -129,13 +120,13 @@ struct SoundRuntime::State {
     std::map<std::uint32_t, sound_runtime_detail::VoiceOwner> voices;
     std::vector<SoundError> errors;
     std::vector<float> wet_buffer;
-    std::array<bool, 4> channel_enabled{ true, true, true, true };
-    std::array<std::uint32_t, 4> channel_level{ 100, 100, 100, 100 };
-    std::uint32_t generation{}, random{}, now{};
-    double fractional_ms{};
+    std::array<bool, 4> channel_enabled { true, true, true, true };
+    std::array<std::uint32_t, 4> channel_level { 100, 100, 100, 100 };
+    std::uint32_t generation {}, random {}, now {};
+    double fractional_ms {};
     std::optional<std::uint32_t> last_update;
-    bool force_update = true, music_muted{};
-    bool occlusion_enabled{};
+    bool force_update = true, music_muted {};
+    bool occlusion_enabled {};
     State(SoundAssetReader reader, std::string global_root, SoundRuntimeSettings config);
     Target* find(std::uint32_t);
     const Target* find(std::uint32_t) const;
@@ -168,7 +159,6 @@ struct SoundRuntime::State {
     void update_channel(std::uint32_t);
     void refresh_environment();
     SoundSavedTarget save_node(const Target&) const;
-    std::expected<std::unique_ptr<Target>, SoundError>
-    restore_node(const SoundSavedTarget&, const std::vector<std::uint32_t>&, Target* parent);
+    std::expected<std::unique_ptr<Target>, SoundError> restore_node(const SoundSavedTarget&, const std::vector<std::uint32_t>&, Target* parent);
 };
 } //namespace simcoaster

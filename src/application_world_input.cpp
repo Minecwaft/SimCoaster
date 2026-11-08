@@ -27,8 +27,9 @@ ApplicationWorldInputCleanup ApplicationWorldInputRuntime::cancel(const Applicat
     result.cancel_coaster_geometry = capture.coaster_geometry;
     result.clear_camera_keys = true;
     result.release_pointer = true;
-    for (std::size_t i = 0; i < capture.world_buttons.size(); ++i)
+    for (std::size_t i = 0; i < capture.world_buttons.size(); ++i) {
         cleanup_release_[i] = cleanup_release_[i] || result.clear_world_buttons[i];
+    }
     cleanup_release_[2] = cleanup_release_[2] || normal_middle_;
     //An interrupted authoring/UI handoff may not have populated generic World
     //button bits. No unmatched release after cancellation may create an action;
@@ -39,18 +40,13 @@ ApplicationWorldInputCleanup ApplicationWorldInputRuntime::cancel(const Applicat
     return result;
 }
 
-ApplicationWorldInputCleanup ApplicationWorldInputRuntime::synchronize(ApplicationWorldInputOwner next,
-                                                                       const ApplicationWorldInputCapture& capture) {
+ApplicationWorldInputCleanup ApplicationWorldInputRuntime::synchronize(ApplicationWorldInputOwner next, const ApplicationWorldInputCapture& capture) {
     if (next == ApplicationWorldInputOwner::blocked) {
-        const bool needs_cleanup = owner_ != next
-                                || normal_right_
-                                || normal_middle_
-                                || special_right_handoff_
-                                || any_button(capture.world_buttons)
-                                || capture.coaster_geometry;
+        const bool needs_cleanup = owner_ != next || normal_right_ || normal_middle_ || special_right_handoff_ || any_button(capture.world_buttons) || capture.coaster_geometry;
         owner_ = next;
-        if (needs_cleanup)
+        if (needs_cleanup) {
             return cancel(capture);
+        }
         ApplicationWorldInputCleanup result;
         result.clear_camera_keys = true;
         return result;
@@ -72,22 +68,16 @@ ApplicationWorldInputCleanup ApplicationWorldInputRuntime::synchronize(Applicati
         normal_right_ = false;
         suppressed_release_[2] = suppressed_release_[2] || normal_middle_;
         cleanup_release_[2] = cleanup_release_[2] || normal_middle_;
-        result.release_pointer = result.release_pointer
-                              || (normal_middle_
-                                  && !special_right_handoff_
-                                  && !any_button(capture.world_buttons)
-                                  && !capture.coaster_geometry);
+        result.release_pointer = result.release_pointer || (normal_middle_ && !special_right_handoff_ && !any_button(capture.world_buttons) && !capture.coaster_geometry);
         normal_middle_ = false;
-    } else if (owner_ == ApplicationWorldInputOwner::special_camera
-               && next == ApplicationWorldInputOwner::normal_camera) {
+    } else if (owner_ == ApplicationWorldInputOwner::special_camera && next == ApplicationWorldInputOwner::normal_camera) {
         //Only the admitted normal-camera handoff belongs to this owner. Genuine
         //special-view/Staff presses retain the existing current-handler route.
         const bool right = special_right_handoff_;
         suppressed_release_[1] = suppressed_release_[1] || right;
         cleanup_release_[1] = cleanup_release_[1] || right;
         result.clear_world_buttons[1] = right;
-        result.release_pointer =
-            result.release_pointer || (right && !capture.world_buttons[0] && !capture.coaster_geometry);
+        result.release_pointer = result.release_pointer || (right && !capture.world_buttons[0] && !capture.coaster_geometry);
         special_right_handoff_ = false;
         normal_camera_.reset();
     }
@@ -95,35 +85,35 @@ ApplicationWorldInputCleanup ApplicationWorldInputRuntime::synchronize(Applicati
     return result;
 }
 
-ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(ApplicationWorldPointerEvent event,
-                                                                      const WorldNormalCameraPointerSample& sample,
-                                                                      const UiPreferences& preferences) {
+ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(ApplicationWorldPointerEvent event, const WorldNormalCameraPointerSample& sample, const UiPreferences& preferences) {
     ApplicationWorldPointerFeedback result;
-    if (event == ApplicationWorldPointerEvent::left_up)
+    if (event == ApplicationWorldPointerEvent::left_up) {
         cleanup_release_[0] = false;
-    else if (event == ApplicationWorldPointerEvent::right_up)
+    } else if (event == ApplicationWorldPointerEvent::right_up) {
         cleanup_release_[1] = false;
-    else if (event == ApplicationWorldPointerEvent::middle_up)
+    } else if (event == ApplicationWorldPointerEvent::middle_up) {
         cleanup_release_[2] = false;
+    }
     //UI-owned input gets first refusal; inherited World releases are cleanup
     //before UI. A blocked World must not fall through
     //to pending-source activation, authoring, Staff inspection or generic menus,
     //including a release inherited from before an automatic Ending notice.
     if (owner_ == ApplicationWorldInputOwner::blocked) {
         result.consumed = true;
-        if (event == ApplicationWorldPointerEvent::left_down)
+        if (event == ApplicationWorldPointerEvent::left_down) {
             suppressed_release_[0] = cleanup_release_[0] = true;
-        else if (event == ApplicationWorldPointerEvent::right_down)
+        } else if (event == ApplicationWorldPointerEvent::right_down) {
             suppressed_release_[1] = cleanup_release_[1] = true;
-        else if (event == ApplicationWorldPointerEvent::middle_down)
+        } else if (event == ApplicationWorldPointerEvent::middle_down) {
             suppressed_release_[2] = cleanup_release_[2] = true;
-        else if (event == ApplicationWorldPointerEvent::left_up)
+        } else if (event == ApplicationWorldPointerEvent::left_up) {
             suppressed_release_[0] = false;
-        else if (event == ApplicationWorldPointerEvent::right_up) {
+        } else if (event == ApplicationWorldPointerEvent::right_up) {
             suppressed_release_[1] = false;
             result.clear_world_buttons[1] = true;
-        } else if (event == ApplicationWorldPointerEvent::middle_up)
+        } else if (event == ApplicationWorldPointerEvent::middle_up) {
             suppressed_release_[2] = false;
+        }
         return result;
     }
     if (event == ApplicationWorldPointerEvent::wheel) {
@@ -132,11 +122,11 @@ ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(Applicatio
         result.consumed = result.wheel = true;
         return result;
     }
-    std::size_t button{};
-    bool down{}, up{};
+    std::size_t button {};
+    bool down {}, up {};
     match (event) {
-        case ApplicationWorldPointerEvent::left_down => down = true;
-        case ApplicationWorldPointerEvent::left_up => up = true;
+        case ApplicationWorldPointerEvent::left_down  => down = true;
+        case ApplicationWorldPointerEvent::left_up    => up = true;
         case ApplicationWorldPointerEvent::right_down => {
             button = 1;
             down = true;
@@ -153,22 +143,26 @@ ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(Applicatio
             button = 2;
             up = true;
         }
-        case ApplicationWorldPointerEvent::move or ApplicationWorldPointerEvent::wheel => {}
-        case _ => {}
+        case ApplicationWorldPointerEvent::move or ApplicationWorldPointerEvent::wheel => {
+        }
+        case _ => {
+        }
     }
     //A new physical press starts a new gesture even if a cancelled old release
     //was consumed by UI or delivered to another window while deactivated.
     if (down) {
         observe_platform_press(event);
         suppressed_release_[button] = false;
-        if (button == 1)
+        if (button == 1) {
             special_right_handoff_ = false;
+        }
     }
     if (up && suppressed_release_[button]) {
         suppressed_release_[button] = false;
         result.consumed = true;
-        if (button < result.clear_world_buttons.size())
+        if (button < result.clear_world_buttons.size()) {
             result.clear_world_buttons[button] = true;
+        }
         return result;
     }
     if (event == ApplicationWorldPointerEvent::right_up && special_right_handoff_) {
@@ -177,46 +171,44 @@ ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(Applicatio
         result.release_pointer = !normal_middle_;
         return result;
     }
-    if (owner_ == ApplicationWorldInputOwner::special_camera)
+    if (owner_ == ApplicationWorldInputOwner::special_camera) {
         return result; //Existing special camera/Staff/coaster routes retain input.
-    if (button == 0 && (down || up))
+    }
+    if (button == 0 && (down || up)) {
         return result; //Construction, Staff and coaster retain their left owner.
+    }
     if (event == ApplicationWorldPointerEvent::middle_down || event == ApplicationWorldPointerEvent::middle_up) {
-        if (up && !normal_middle_)
+        if (up && !normal_middle_) {
             return result;
+        }
         normal_middle_ = down;
-        (void)normal_camera_.pointer(down ? WorldNormalCameraPointerEvent::middle_down
-                                          : WorldNormalCameraPointerEvent::middle_up,
-                                     sample,
-                                     preferences);
+        (void)normal_camera_.pointer(down ? WorldNormalCameraPointerEvent::middle_down : WorldNormalCameraPointerEvent::middle_up, sample, preferences);
         result.consumed = true;
         result.capture_pointer = down;
         result.release_pointer = up && !normal_right_;
         return result;
     }
-    if (event == ApplicationWorldPointerEvent::right_up && !normal_right_)
+    if (event == ApplicationWorldPointerEvent::right_up && !normal_right_) {
         return result;
+    }
     const auto previous_right = normal_right_;
-    const auto native = normal_camera_.pointer(
-        event == ApplicationWorldPointerEvent::right_down ? WorldNormalCameraPointerEvent::right_down
-        : event == ApplicationWorldPointerEvent::right_up ? WorldNormalCameraPointerEvent::right_up
-                                                          : WorldNormalCameraPointerEvent::move,
-        sample,
-        preferences);
-    if (event == ApplicationWorldPointerEvent::right_down)
+    const auto native = normal_camera_.pointer(event == ApplicationWorldPointerEvent::right_down ? WorldNormalCameraPointerEvent::right_down : event == ApplicationWorldPointerEvent::right_up ? WorldNormalCameraPointerEvent::right_up : WorldNormalCameraPointerEvent::move, sample, preferences);
+    if (event == ApplicationWorldPointerEvent::right_down) {
         normal_right_ = true;
-    else if (event == ApplicationWorldPointerEvent::right_up)
+    } else if (event == ApplicationWorldPointerEvent::right_up) {
         normal_right_ = false;
+    }
     result.consumed = down || up || previous_right;
     result.capture_pointer = native.capture_pointer;
     result.release_pointer = native.release_pointer && !normal_middle_;
     result.clear_world_buttons[1] = native.release_pointer;
     result.cancel_interaction = native.cancel_interaction;
     result.context_menu_release = native.context_menu_release;
-    if (native.handler_right_down)
+    if (native.handler_right_down) {
         result.delivery = ApplicationWorldInputDelivery::right_down;
-    else if (native.handler_right_up)
+    } else if (native.handler_right_up) {
         result.delivery = ApplicationWorldInputDelivery::right_release;
+    }
     //The handler's held-time filter does not suppress the preceding menu
     //attempt in5070A0. Both still require this admitted physical gesture.
     return result;
@@ -224,49 +216,50 @@ ApplicationWorldPointerFeedback ApplicationWorldInputRuntime::pointer(Applicatio
 
 void ApplicationWorldInputRuntime::observe_platform_press(ApplicationWorldPointerEvent event) {
     match (event) {
-        case ApplicationWorldPointerEvent::left_down => cleanup_release_[0] = false;
-        case ApplicationWorldPointerEvent::right_down => cleanup_release_[1] = false;
+        case ApplicationWorldPointerEvent::left_down   => cleanup_release_[0] = false;
+        case ApplicationWorldPointerEvent::right_down  => cleanup_release_[1] = false;
         case ApplicationWorldPointerEvent::middle_down => cleanup_release_[2] = false;
-        case _ => {}
+        case _                                         => {
+        }
     }
 }
 
 bool ApplicationWorldInputRuntime::cleanup_only_release(ApplicationWorldPointerEvent event) const {
     match (event) {
-        case ApplicationWorldPointerEvent::left_up => return cleanup_release_[0];
-        case ApplicationWorldPointerEvent::right_up => return cleanup_release_[1];
+        case ApplicationWorldPointerEvent::left_up   => return cleanup_release_[0];
+        case ApplicationWorldPointerEvent::right_up  => return cleanup_release_[1];
         case ApplicationWorldPointerEvent::middle_up => return cleanup_release_[2];
-        case _ => return false;
+        case _                                       => return false;
     }
 }
 
 bool ApplicationWorldInputRuntime::owns_pointer_release(ApplicationWorldPointerEvent event) const {
-    if (cleanup_only_release(event))
+    if (cleanup_only_release(event)) {
         return true;
+    }
     match (event) {
-        case ApplicationWorldPointerEvent::right_up => return normal_right_ || special_right_handoff_;
+        case ApplicationWorldPointerEvent::right_up  => return normal_right_ || special_right_handoff_;
         case ApplicationWorldPointerEvent::middle_up => return normal_middle_;
-        case _ => return false;
+        case _                                       => return false;
     }
 }
 
 bool ApplicationWorldInputRuntime::admits_pointer(ApplicationWorldPointerEvent event) const {
-    if (owner_ == ApplicationWorldInputOwner::blocked)
+    if (owner_ == ApplicationWorldInputOwner::blocked) {
         return false;
+    }
     match (event) {
-        case ApplicationWorldPointerEvent::left_up => return !suppressed_release_[0];
-        case ApplicationWorldPointerEvent::right_up => return !suppressed_release_[1] && !special_right_handoff_;
+        case ApplicationWorldPointerEvent::left_up   => return !suppressed_release_[0];
+        case ApplicationWorldPointerEvent::right_up  => return !suppressed_release_[1] && !special_right_handoff_;
         case ApplicationWorldPointerEvent::middle_up => return !suppressed_release_[2];
-        case _ => return true;
+        case _                                       => return true;
     }
 }
 
-ApplicationWorldCameraFeedback ApplicationWorldInputRuntime::advance_normal_camera(WorldRuntime& context,
-                                                                                   const UiPreferences& preferences,
-                                                                                   WorldNormalCameraInput input,
-                                                                                   std::chrono::milliseconds elapsed) {
-    if (owner_ != ApplicationWorldInputOwner::normal_camera)
+ApplicationWorldCameraFeedback ApplicationWorldInputRuntime::advance_normal_camera(WorldRuntime& context, const UiPreferences& preferences, WorldNormalCameraInput input, std::chrono::milliseconds elapsed) {
+    if (owner_ != ApplicationWorldInputOwner::normal_camera) {
         throw std::logic_error("Normal camera advanced without World input ownership");
+    }
     input.middle_button = normal_middle_;
     ApplicationWorldCameraFeedback result;
     result.camera = normal_camera_.advance(context, preferences, input, elapsed);

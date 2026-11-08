@@ -12,12 +12,7 @@ enum class TrackRideOrientationFlags : std::uint32_t {
 };
 //Placement supplies an already transformed internal origin. Handles encode
 //signed subtype and first free row 0..63, independently of World thing IDs.
-std::uint32_t create_track_ride(WorldRuntime&,
-                                std::int32_t template_tag,
-                                std::int32_t origin_x,
-                                std::int32_t origin_y,
-                                TrackRideOrientationFlags,
-                                std::uint16_t definition_id);
+std::uint32_t create_track_ride(WorldRuntime&, std::int32_t template_tag, std::int32_t origin_x, std::int32_t origin_y, TrackRideOrientationFlags, std::uint16_t definition_id);
 void destroy_track_ride(WorldRuntime&, std::uint32_t handle);
 //Grid edits retain the owner, station/grid nodes and constructor geometry.
 //Rebuild its dynamic path with these operations before reopening vehicles.

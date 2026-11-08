@@ -18,8 +18,9 @@ World& world(EconomyWorld& c) {
 template <class T>
 T& record(EconomyWorld& c, ThingId id) {
     auto* h = c.entities.at(id).payload;
-    if (!h)
+    if (!h) {
         throw std::logic_error("analyser World record");
+    }
     return *reinterpret_cast<T*>(h);
 }
 
@@ -27,8 +28,9 @@ template <class F>
 void active(EconomyWorld& c, F&& visit) {
     for (auto* row = c.entities.active_head; row;) {
         auto* h = row->payload;
-        if (!h)
+        if (!h) {
             throw std::logic_error("analyser active record");
+        }
         visit(*h);
         row = c.entities.at(h->id).active_next;
     }
@@ -48,29 +50,28 @@ double sum_recent(const AnalyserDwordHistory50& h, std::int32_t count) {
     count = std::min(count, h.wrapped ? h.num_entries : fixed::add(h.current_entry, 1));
     double sum = 0;
     for (std::int32_t i = 0; i < count; ++i) {
-        const auto at = i <= h.current_entry ? fixed::subtract(h.current_entry, i)
-                                             : fixed::subtract(fixed::add(h.num_entries, h.current_entry), i);
+        const auto at = i <= h.current_entry ? fixed::subtract(h.current_entry, i) : fixed::subtract(fixed::add(h.num_entries, h.current_entry), i);
         sum += h.data.at(static_cast<std::size_t>(at));
     }
     return sum;
 }
 
 std::uint64_t now(EconomyWorld& c) {
-    FileTime value{};
+    FileTime value {};
     calculate_world_calendar_filetime(c, &world(c).calendar, &value);
-    return std::uint64_t{ value.low } | (std::uint64_t{ value.high } << 32);
+    return std::uint64_t { value.low } | (std::uint64_t { value.high } << 32);
 }
 } //namespace
 
 double average_eligible_person_happiness(EconomyWorld& c, std::int32_t generation) {
-    if (world(c).saved.park_closed)
+    if (world(c).saved.park_closed) {
         return 0;
+    }
     std::int32_t count = 0, total = 0;
     active(c, [&](const ThingHeader& h) {
         if (h.kind == ThingKind::person) {
             const auto& p = *reinterpret_cast<const PersonRuntimeView*>(&h);
-            if ((generation == 4 || static_cast<std::int32_t>(p.generation) == generation)
-                && record_passes_grid_predicates(c, &p.base)) {
+            if ((generation == 4 || static_cast<std::int32_t>(p.generation) == generation) && record_passes_grid_predicates(c, &p.base)) {
                 ++count;
                 total = fixed::add(total, static_cast<std::uint8_t>(fixed::truncate_integer(p.happiness)));
             }
@@ -85,11 +86,10 @@ std::int32_t count_ordinary_park_objects(EconomyWorld& c, ObjectUiCategory categ
         if (h.kind == ThingKind::park_object) {
             const auto& o = *reinterpret_cast<const ParkObjectRuntimeView*>(&h);
             const auto* d = get_park_object_definition(c, &o);
-            if (!d)
+            if (!d) {
                 throw std::logic_error("analyser object definition");
-            count += d->which_ui_type == category
-                  && is_special_ride_group_id_unregistered(c, h.id)
-                  && (category != ObjectUiCategory::rides || o.current_upgrade >= upgrade);
+            }
+            count += d->which_ui_type == category && is_special_ride_group_id_unregistered(c, h.id) && (category != ObjectUiCategory::rides || o.current_upgrade >= upgrade);
         }
     });
     return count;
@@ -98,14 +98,16 @@ std::int32_t count_ordinary_park_objects(EconomyWorld& c, ObjectUiCategory categ
 std::int32_t get_cached_park_ride_object_count(EconomyWorld& c, ParkAnalyserState& a, std::uint32_t age) {
     auto& cache = a.metrics[1];
     const auto tick = world(c).saved.game_tick;
-    if (cache.cache_valid && age >= (tick >> 2) - (cache.last_calculation_tick >> 2))
+    if (cache.cache_valid && age >= (tick >> 2) - (cache.last_calculation_tick >> 2)) {
         return fixed::word(cache.cached_value_bits);
+    }
     std::uint32_t count = 0;
     active(c, [&](const ThingHeader& h) {
         if (h.kind == ThingKind::park_object) {
             const auto* d = get_park_object_definition(c, reinterpret_cast<const ParkObjectRuntimeView*>(&h));
-            if (!d)
+            if (!d) {
                 throw std::logic_error("analyser ride definition");
+            }
             count += d->which_ui_type == ObjectUiCategory::rides;
         }
     });
@@ -125,28 +127,21 @@ std::int32_t calculate_park_path_litter_percentage(EconomyWorld& c) {
 
 std::int32_t calculate_park_object_and_staff_metric(EconomyWorld& c) {
     const auto objects = [&](ObjectUiCategory category, int weight, int cap, int upgrade = 0) {
-        return std::min(cap,
-                        weight
-                            * count_ordinary_park_objects(c, category, upgrade)
-                            / (category == ObjectUiCategory::rides && !upgrade ? 2 : 1));
+        return std::min(cap, weight * count_ordinary_park_objects(c, category, upgrade) / (category == ObjectUiCategory::rides && !upgrade ? 2 : 1));
     };
-    auto score = 20 * std::min(1000, fixed::word(count_eligible_person_records(c, 4))) / 1000
-               + objects(ObjectUiCategory::rides, 3, 20)
-               + objects(ObjectUiCategory::shops, 2, 10)
-               + objects(ObjectUiCategory::sideshows, 2, 10)
-               + objects(ObjectUiCategory::features, 1, 10)
-               + objects(ObjectUiCategory::rides, 1, 10, 2);
-    for (auto role :
-         { ThingKind::handyman, ThingKind::mechanic, ThingKind::entertainer, ThingKind::guard, ThingKind::researcher })
+    auto score = 20 * std::min(1000, fixed::word(count_eligible_person_records(c, 4))) / 1000 + objects(ObjectUiCategory::rides, 3, 20) + objects(ObjectUiCategory::shops, 2, 10) + objects(ObjectUiCategory::sideshows, 2, 10) + objects(ObjectUiCategory::features, 1, 10) + objects(ObjectUiCategory::rides, 1, 10, 2);
+    for (auto role : { ThingKind::handyman, ThingKind::mechanic, ThingKind::entertainer, ThingKind::guard, ThingKind::researcher }) {
         score += std::min(4, count_linked_staff_by_kind(c, std::to_underlying(role)));
+    }
     return score;
 }
 
 void sample_park_analyser_metrics(EconomyWorld& c, ParkAnalyserState& a) {
     auto& h = a.long_histories;
     const auto* price = c.finance.shares_finance.share_price_context.get();
-    if (!price || !c.referenced_world())
+    if (!price || !c.referenced_world()) {
         throw std::logic_error("analyser finance owners");
+    }
     append(h[2], static_cast<std::uint32_t>(price->current_share_price));
     append(h[0], static_cast<std::uint32_t>(record<BankRecord>(c, c.referenced_world()->saved.bank_account).balance));
     for (std::size_t i = 3; i <= 13; ++i) {
@@ -180,21 +175,25 @@ void handle_park_analyser_world_event(EconomyWorld& c, ParkAnalyserState& a, con
         case 17 => {
             const auto id = event.get<ResearchAvailabilityEvent>().definition_id;
             const auto* d = find_object_definition_by_id(&c.resources.object_catalog, id);
-            if (!d)
+            if (!d) {
                 throw std::logic_error("analyser research definition");
+            }
             const auto category = std::to_underlying(d->which_ui_type);
-            if (category < 4)
+            if (category < 4) {
                 append(a.short_histories.at(static_cast<std::size_t>(category)), id);
+            }
             return;
         }
         case 19 => {
-            if (event.get<Tag19Event>().tag == 3)
+            if (event.get<Tag19Event>().tag == 3) {
                 a.park_last_opened = now(c);
+            }
             return;
         }
         case 23 => {
-            if (event.get<StaffStrikeEvent>().code == 2)
+            if (event.get<StaffStrikeEvent>().code == 2) {
                 a.last_strike = now(c);
+            }
             return;
         }
         case _ => return;

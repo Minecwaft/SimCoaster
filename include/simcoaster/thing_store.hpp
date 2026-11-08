@@ -14,14 +14,14 @@ enum class EntityOwnership {
 //may be linked without transferring ownership; owned allocations enter through
 //allocate_payload and are released even when staging or construction throws.
 class ThingStore {
-    std::array<ThingMetadata, thing_slot_count> slots_{};
+    std::array<ThingMetadata, thing_slot_count> slots_ {};
     std::unordered_map<void*, AllocationPort*> owned_;
     EntityOwnership ownership_;
 
 public:
-    ThingMetadata *active_head{}, *free_head{};
-    RemovalQueue removals{};
-    std::uint8_t removal_queue_released{};
+    ThingMetadata *active_head {}, *free_head {};
+    RemovalQueue removals {};
+    std::uint8_t removal_queue_released {};
 
     explicit ThingStore(EntityOwnership ownership = EntityOwnership::allocator) : ownership_(ownership) {}
 

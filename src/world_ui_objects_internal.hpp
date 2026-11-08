@@ -22,13 +22,7 @@ struct ObjectPanelSpec {
 const ObjectPanelSpec& object_panel_spec(ParkObjectUiPanel);
 
 struct WorldParkObjectUiController::State : UiPanelPresentation {
-    static constexpr UiPanelPresentationPolicy panel_presentation{
-        .missing_control = "Original park-object template missing control ",
-        .text_error = "Park-object UI text row ",
-        .caption_font = 6,
-        .caption_horizontal = 0,
-        .list_error = "Park-object list disagrees with original template columns"
-    };
+    static constexpr UiPanelPresentationPolicy panel_presentation { .missing_control = "Original park-object template missing control ", .text_error = "Park-object UI text row ", .caption_font = 6, .caption_horizontal = 0, .list_error = "Park-object list disagrees with original template columns" };
     enum class Page {
         none,
         settings,
@@ -44,54 +38,53 @@ struct WorldParkObjectUiController::State : UiPanelPresentation {
         research_edit
     };
     WorldRuntime& c;
-    UiModalScope message_scope{ c };
+    UiModalScope message_scope { c };
     UiMessageControls message_controls;
     std::filesystem::path game_root;
     UiRuntime& ui;
-    mutable UiPanelBindings bindings{ ui };
-    UiControl* primary{};
+    mutable UiPanelBindings bindings { ui };
+    UiControl* primary {};
     WorldUiPanelHost host;
     WorldParkObjectUiRuntime model;
-    Page page{};
-    UiControl *root{}, *sublist{}, *context{}, *name_editor{}, *message_wrapper{}, *message_root{},
-        *message_previous_focus{};
-    UiControl* context_previous_root{};
-    std::uint64_t context_previous_serial{};
-    bool context_previous_enabled{};
-    ThingId page_target{}, auxiliary_target{};
-    ThingId confirmation_target{};
-    const ThingHeader* auxiliary_identity{};
-    std::uint64_t auxiliary_generation{};
-    CellId context_cell{};
-    std::int32_t context_family{};
-    std::uint32_t context_mesh{};
-    std::uint64_t context_mesh_generation{};
+    Page page {};
+    UiControl *root {}, *sublist {}, *context {}, *name_editor {}, *message_wrapper {}, *message_root {}, *message_previous_focus {};
+    UiControl* context_previous_root {};
+    std::uint64_t context_previous_serial {};
+    bool context_previous_enabled {};
+    ThingId page_target {}, auxiliary_target {};
+    ThingId confirmation_target {};
+    const ThingHeader* auxiliary_identity {};
+    std::uint64_t auxiliary_generation {};
+    CellId context_cell {};
+    std::int32_t context_family {};
+    std::uint32_t context_mesh {};
+    std::uint64_t context_mesh_generation {};
     std::vector<UiControl*> roots;
     std::map<UiControl*, std::unique_ptr<UiObjectPreview>> previews;
     std::unique_ptr<UiFontLibrary> local_fonts;
     std::unique_ptr<UiGraphPresenter> graph_presenter;
-    UiControl* graph_control{};
+    UiControl* graph_control {};
     std::uint32_t pixel_width = 1100, pixel_height = 760;
-    std::chrono::milliseconds next_refresh{};
-    bool closing{}, refreshing{}, confirm_deletions = true, animate_menus = true, context_filtered{};
+    std::chrono::milliseconds next_refresh {};
+    bool closing {}, refreshing {}, confirm_deletions = true, animate_menus = true, context_filtered {};
     std::int32_t advisor_action = -1;
     std::function<void()> message_accepted;
     UiContextMenu context_menu;
-    std::array<std::int32_t, 6> list_saved_selection{};
+    std::array<std::int32_t, 6> list_saved_selection {};
     std::optional<ObjectUiCategory> presented_category;
     std::optional<std::uint64_t> settings_input_revision;
     std::optional<ParkObjectFinanceMode> presented_finance;
-    bool research_return_to_picker{}, research_picker_initialized{};
+    bool research_return_to_picker {}, research_picker_initialized {};
     std::int32_t research_sort_key = 2;
-    std::array<std::int32_t, 2> research_cached_projects{ -1, -1 };
-    std::array<ThingId, 2> research_cached_consultants{};
+    std::array<std::int32_t, 2> research_cached_projects { -1, -1 };
+    std::array<ThingId, 2> research_cached_consultants {};
     std::vector<ThingId> research_available;
     std::map<ThingId, const ThingHeader*> research_identities;
-    ThingId research_retiring{};
-    std::int32_t research_slot{};
+    ThingId research_retiring {};
+    std::int32_t research_slot {};
     std::int32_t research_project = -1;
     std::vector<ThingId> research_workers;
-    ThingId research_consultant{};
+    ThingId research_consultant {};
 
     State(WorldRuntime&, UiRuntime&, UiControl*, const std::filesystem::path&, WorldUiPanelHost);
     ~State();
@@ -100,6 +93,7 @@ struct WorldParkObjectUiController::State : UiPanelPresentation {
     UiControl& parse(std::span<const unsigned char> bytes, std::uint32_t id, Callback callback, bool page_root = true) {
         return parse_ui_panel(ui, primary, bytes, id, std::move(callback), page_root ? &roots : nullptr, { "Original park-object template: ", false, "Original park-object template has no root ", true });
     }
+
     std::u16string money(std::int32_t) const;
     UiFontLibrary& fonts();
     void label(std::uint32_t, std::uint32_t, std::uint32_t font = 6, std::int32_t horizontal = 0);

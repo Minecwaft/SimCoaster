@@ -3,13 +3,8 @@
 #include "world.hpp"
 
 namespace simcoaster {
-CompanyEmailMessage*
-construct_objective_complete_company_email(MissionWorld&, CompanyEmailMessage*, std::int32_t text_row_index);
-bool start_world_animation_playback(MissionWorld&,
-                                    AnimationManagerRecord*,
-                                    ThingId target,
-                                    std::int32_t script_slot0,
-                                    AnimationPlaybackProfile);
+CompanyEmailMessage* construct_objective_complete_company_email(MissionWorld&, CompanyEmailMessage*, std::int32_t text_row_index);
+bool start_world_animation_playback(MissionWorld&, AnimationManagerRecord*, ThingId target, std::int32_t script_slot0, AnimationPlaybackProfile);
 void tick_mission_progress_from_controller_record(MissionWorld&, MissionControllerRecord*);
 void handle_world_cutscene_event(MissionWorld&, MissionControllerRecord*, WorldEvent*);
 bool start_mission_completion_presentation(MissionWorld&, MissionControllerRecord*);

@@ -6,18 +6,10 @@
 #include <stdexcept>
 
 namespace simcoaster {
-WorldVisitorsUiController::State::State(WorldRuntime& context_owner,
-                                        UiRuntime& runtime,
-                                        UiControl* parent,
-                                        const std::filesystem::path& path,
-                                        WorldUiPanelHost panel_host)
-    : c(context_owner),
-      ui(runtime),
-      primary(parent),
-      game_root(path),
-      host(std::move(panel_host)) {
-    if (!ui.owns(primary))
+WorldVisitorsUiController::State::State(WorldRuntime& context_owner, UiRuntime& runtime, UiControl* parent, const std::filesystem::path& path, WorldUiPanelHost panel_host) : c(context_owner), ui(runtime), primary(parent), game_root(path), host(std::move(panel_host)) {
+    if (!ui.owns(primary)) {
         throw std::invalid_argument("Visitors UI requires its persistent primary root");
+    }
 }
 
 WorldVisitorsUiController::State::~State() {
@@ -25,17 +17,14 @@ WorldVisitorsUiController::State::~State() {
 }
 
 std::u16string WorldVisitorsUiController::State::thought(std::uint32_t row) const {
-    auto value =
-        format_bfst_wide_string(c.messages.mail_language.ui_thoughts, c.messages.mail_language.conversion, row, 16383);
-    if (!value)
+    auto value = format_bfst_wide_string(c.messages.mail_language.ui_thoughts, c.messages.mail_language.conversion, row, 16383);
+    if (!value) {
         throw std::runtime_error("Visitors thought: " + value.error().reason);
+    }
     return std::move(*value);
 }
 
-void WorldVisitorsUiController::State::label(std::uint32_t id,
-                                             std::uint32_t row,
-                                             std::uint32_t font,
-                                             std::int32_t horizontal) {
+void WorldVisitorsUiController::State::label(std::uint32_t id, std::uint32_t row, std::uint32_t font, std::int32_t horizontal) {
     caption(required(root, id), text(row), font, horizontal);
 }
 
@@ -48,18 +37,20 @@ void WorldVisitorsUiController::State::scalar(std::uint32_t id, std::int32_t val
 
 void WorldVisitorsUiController::State::meter(std::uint32_t id, std::string_view texture, std::int32_t inset) {
     auto& control = required(root, id);
-    control.meter_presentation = UiMeterPresentation{ std::string(texture), { 0, inset } };
+    control.meter_presentation = UiMeterPresentation { std::string(texture), { 0, inset } };
     ui.set_range(control, 0, 1024);
 }
 
 void WorldVisitorsUiController::State::stage(std::int32_t action) {
     advisor = action;
     auto* world = c.referenced_world();
-    if (!world)
+    if (!world) {
         return;
+    }
     const auto id = world->saved.advisor;
-    if (!id || id >= c.entities.size() || !c.entities[id].payload || c.entities[id].payload->kind != ThingKind::advisor)
+    if (!id || id >= c.entities.size() || !c.entities[id].payload || c.entities[id].payload->kind != ThingKind::advisor) {
         throw std::logic_error("Visitors Advisor is absent");
+    }
     auto& record = *c.entities.payload<AdvisorRecord>(id);
     record.from_ui_panel = 1;
     record.delayed_message = action;
@@ -68,26 +59,30 @@ void WorldVisitorsUiController::State::stage(std::int32_t action) {
 
 void WorldVisitorsUiController::State::help() {
     const auto action = page == Page::profile ? 249 : advisor;
-    if (action >= 0 && c.referenced_world())
+    if (action >= 0 && c.referenced_world()) {
         queue_world_advisor_help_action(c, action);
+    }
 }
 
 void WorldVisitorsUiController::State::begin(Page next) {
     close();
-    if (host.dismiss)
+    if (host.dismiss) {
         host.dismiss();
+    }
     page = next;
     next_refresh = ui.clock();
 }
 
 void WorldVisitorsUiController::State::activate() {
-    if (host.activate)
+    if (host.activate) {
         host.activate(root);
+    }
 }
 
 void WorldVisitorsUiController::State::close() {
-    if (closing)
+    if (closing) {
         return;
+    }
     closing = true;
     close_context();
     auto* old = root;
@@ -97,14 +92,17 @@ void WorldVisitorsUiController::State::close() {
         list_sort = ui.list_sort_key(list);
         list_selected = list.selected_id;
     }
-    if (page == Page::locator)
+    if (page == Page::locator) {
         c.view.flags &= ~4096u;
-    if (preview)
+    }
+    if (preview) {
         preview->clear();
-    if (ui.owns(old))
+    }
+    if (ui.owns(old)) {
         ui.destroy(old);
-    if (advisor >= 0)
-        for (auto* world : { c.simulation.current, c.referenced_world() })
+    }
+    if (advisor >= 0) {
+        for (auto* world : { c.simulation.current, c.referenced_world() }) {
             if (world && world->saved.advisor && world->saved.advisor < c.entities.size()) {
                 auto* header = c.entities[world->saved.advisor].payload;
                 if (header && header->kind == ThingKind::advisor) {
@@ -113,18 +111,22 @@ void WorldVisitorsUiController::State::close() {
                     world_operations::cancel_advisor_action_by_id(c, &record, advisor);
                 }
             }
+        }
+    }
     advisor = -1;
     target = 0;
     target_identity = nullptr;
     list_identities.clear();
     page = Page::none;
-    if (old && host.deactivate)
+    if (old && host.deactivate) {
         host.deactivate(old);
+    }
     ui.set_input_root(nullptr);
-    if (host.synchronize_focus)
+    if (host.synchronize_focus) {
         host.synchronize_focus();
-    else if (ui.owns(primary))
+    } else if (ui.owns(primary)) {
         ui.set_focus(primary);
+    }
     closing = false;
 }
 
@@ -143,16 +145,18 @@ void WorldVisitorsUiController::State::select(ThingId id) {
 void WorldVisitorsUiController::State::retire(ThingId id) {
     const auto previous = retiring;
     retiring = id;
-    if (preview)
+    if (preview) {
         preview->retire(id);
-    if (context_person == id)
+    }
+    if (context_person == id) {
         close_context();
+    }
     list_identities.erase(id);
     if (target == id) {
         select(0);
-        if (page == Page::profile)
+        if (page == Page::profile) {
             close();
-        else if (page == Page::locator) {
+        } else if (page == Page::locator) {
             locator_filter = 0;
             c.view.flags &= ~4096u;
             refresh_locator();
@@ -161,22 +165,25 @@ void WorldVisitorsUiController::State::retire(ThingId id) {
     if (page == Page::list && root) {
         ui.remove_list_row(required(root, 55004), id, false);
         refresh_list_details();
-    } else if (page == Page::statistics)
+    } else if (page == Page::statistics) {
         refresh_statistics();
+    }
     retiring = previous;
 }
 
 void WorldVisitorsUiController::State::refresh() {
-    if (!root || closing || refreshing)
+    if (!root || closing || refreshing) {
         return;
+    }
     refreshing = true;
     try {
         match (page) {
-            case Page::profile => refresh_profile();
-            case Page::list => refresh_list();
+            case Page::profile    => refresh_profile();
+            case Page::list       => refresh_list();
             case Page::statistics => refresh_statistics();
-            case Page::locator => refresh_locator();
-            case _ => {}
+            case Page::locator    => refresh_locator();
+            case _                => {
+            }
         }
     } catch (...) {
         refreshing = false;
@@ -185,12 +192,7 @@ void WorldVisitorsUiController::State::refresh() {
     refreshing = false;
 }
 
-WorldVisitorsUiController::WorldVisitorsUiController(WorldRuntime& c,
-                                                     UiRuntime& ui,
-                                                     UiControl* primary,
-                                                     const std::filesystem::path& path,
-                                                     WorldUiPanelHost host)
-    : state_(std::make_unique<State>(c, ui, primary, path, std::move(host))) {}
+WorldVisitorsUiController::WorldVisitorsUiController(WorldRuntime& c, UiRuntime& ui, UiControl* primary, const std::filesystem::path& path, WorldUiPanelHost host) : state_(std::make_unique<State>(c, ui, primary, path, std::move(host))) {}
 
 WorldVisitorsUiController::~WorldVisitorsUiController() = default;
 
@@ -241,8 +243,9 @@ void WorldVisitorsUiController::open_context(ThingId id, UiPoint p) {
 }
 
 bool WorldVisitorsUiController::dismiss_outside(UiPoint p) {
-    if (!state_->context || state_->context->rect.contains(p))
+    if (!state_->context || state_->context->rect.contains(p)) {
         return false;
+    }
     state_->close_context();
     return true;
 }
@@ -256,27 +259,31 @@ void WorldVisitorsUiController::preferences(const UiPreferences& p) {
 }
 
 void WorldVisitorsUiController::handle_event(const WorldEvent& e) {
-    if (const auto* retirement = std::get_if<RetirementEvent>(&e.value))
+    if (const auto* retirement = std::get_if<RetirementEvent>(&e.value)) {
         state_->retire(retirement->retired_id);
-    else if (std::holds_alternative<PersonCreatedEvent>(e.value) && state_->root) {
-        if (state_->page == State::Page::list)
+    } else if (std::holds_alternative<PersonCreatedEvent>(e.value) && state_->root) {
+        if (state_->page == State::Page::list) {
             state_->refresh_list();
-        else if (state_->page == State::Page::locator)
+        } else if (state_->page == State::Page::locator) {
             state_->refresh_locator();
+        }
     }
 }
 
 void WorldVisitorsUiController::advance() {
     auto& s = *state_;
-    if (s.context)
+    if (s.context) {
         s.refresh_context();
+    }
     if (s.page == State::Page::locator) {
         s.refresh_locator();
-        if ((s.c.view.flags & 4096u) && s.person() && s.host.focus_person)
+        if ((s.c.view.flags & 4096u) && s.person() && s.host.focus_person) {
             s.host.focus_person(s.target, true);
+        }
     }
-    if (s.preview)
+    if (s.preview) {
         (void)s.preview->refresh();
+    }
     if (s.root && s.ui.clock() >= s.next_refresh) {
         s.next_refresh = s.ui.clock() + std::chrono::milliseconds(s.page == State::Page::profile ? 4000 : 2000);
         s.refresh();
@@ -287,11 +294,7 @@ ThingId WorldVisitorsUiController::locator_target() const {
     return state_->page == State::Page::locator && state_->person() ? state_->target : 0;
 }
 
-void WorldVisitorsUiController::append(UiDrawList& draw,
-                                       UiControl& control,
-                                       UiRect clip,
-                                       std::uint32_t width,
-                                       std::uint32_t height) {
+void WorldVisitorsUiController::append(UiDrawList& draw, UiControl& control, UiRect clip, std::uint32_t width, std::uint32_t height) {
     state_->append(draw, control, clip, width, height);
 }
 } //namespace simcoaster

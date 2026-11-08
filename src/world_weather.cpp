@@ -12,10 +12,12 @@
 namespace simcoaster {
 namespace {
 std::int32_t divide(std::int32_t numerator, std::int32_t denominator) {
-    if (!denominator)
+    if (!denominator) {
         throw std::domain_error("weather ratio has a zero divisor");
-    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1)
+    }
+    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1) {
         throw std::overflow_error("weather ratio is not representable");
+    }
     return numerator / denominator;
 }
 
@@ -31,16 +33,19 @@ void mark_weather_messages(WeatherWorld& c, std::int32_t key) {
 
 void set_motion_scale(WeatherWorld& c, float scale) {
     const auto modes = c.weather.wind_effects.precipitation_modes;
-    if (modes & 1)
+    if (modes & 1) {
         c.weather.wind_effects.rain_motion_scale = scale;
-    if (modes & 2)
+    }
+    if (modes & 2) {
         c.weather.wind_effects.snow_motion_scale = scale;
+    }
 }
 
 WorldVector3 normalized_drift(float x, float z) {
     const auto length = std::sqrt(static_cast<double>(x) * x + static_cast<double>(z) * z + 1.0);
-    if (length > 0.0)
+    if (length > 0.0) {
         return { static_cast<float>(x / length), static_cast<float>(-1.0 / length), static_cast<float>(z / length) };
+    }
     return { x, -1.0f, z };
 }
 
@@ -62,8 +67,9 @@ void set_world_precipitation_mode(WeatherWorld& c, WeatherRecord* weather, Weath
     match (mode) {
         case WeatherPrecipitation::rain => {
             c.weather.wind_effects.precipitation_modes = 1;
-            if (!weather->rain_sound_handle)
+            if (!weather->rain_sound_handle) {
                 weather->rain_sound_handle = world_operations::submit_weather_sound(c, WeatherSound::rain, { 0, 0, 0 });
+            }
         }
         case WeatherPrecipitation::snow => {
             c.weather.wind_effects.precipitation_modes = 2;
@@ -89,14 +95,11 @@ void set_world_precipitation_mode(WeatherWorld& c, WeatherRecord* weather, Weath
 void configure_wind_effect_vectors(WeatherWorld& c, float direction_degrees, float magnitude) {
     //Game.exe0x6EA9A0 stores this vector before updating the four sky layers.
     const auto angle = radians(direction_degrees);
-    c.weather.wind_effects.drift_vector = normalized_drift(static_cast<float>(std::cos(angle) * magnitude),
-                                                           static_cast<float>(std::sin(angle) * magnitude));
+    c.weather.wind_effects.drift_vector = normalized_drift(static_cast<float>(std::cos(angle) * magnitude), static_cast<float>(std::sin(angle) * magnitude));
     const float sky_speed = magnitude * 0.0017f;
     const float sky_direction = direction_degrees + 270.0f;
     const auto sky_velocity = [&](double x_offset, double z_offset) -> WorldVector3 {
-        return { static_cast<float>(std::sin(radians(sky_direction + x_offset)) * sky_speed),
-                 -1.0f,
-                 static_cast<float>(std::cos(radians(sky_direction + z_offset)) * sky_speed) };
+        return { static_cast<float>(std::sin(radians(sky_direction + x_offset)) * sky_speed), -1.0f, static_cast<float>(std::cos(radians(sky_direction + z_offset)) * sky_speed) };
     };
     const auto layer0 = sky_velocity(0.0, 0.0);
     world_operations::set_sky_layer_uv_velocity(c, 0, layer0);
@@ -111,8 +114,7 @@ void configure_wind_effect_vectors(WeatherWorld& c, float direction_degrees, flo
     c.weather.wind_effects.drift_vector = normalized_drift(layer3[0] * 0.2f, layer3[2] * 0.2f);
 }
 
-void
-apply_world_weather_configuration(WeatherWorld& c, WeatherRecord* weather, const WeatherScheduleEntry* configuration) {
+void apply_world_weather_configuration(WeatherWorld& c, WeatherRecord* weather, const WeatherScheduleEntry* configuration) {
     const auto month = configuration->month, quality = configuration->quality, length = configuration->length;
     const auto category = configuration->type;
     weather->active.month = month;
@@ -122,21 +124,19 @@ apply_world_weather_configuration(WeatherWorld& c, WeatherRecord* weather, const
     weather->active.type = category;
     weather->quality = configuration->quality;
     weather->type = weather->active.type;
-    const auto precipitation =
-        [&](WeatherPrecipitation mode, std::int32_t key, bool snow, float motion_scale, bool lightning) {
-            mark_weather_messages(c, key);
-            const auto& effects = c.weather.weather_effects_balance;
-            const auto percent = snow ? quality_percentage(weather->quality, effects.snow_low, effects.snow_high)
-                                      : quality_percentage(weather->quality, effects.rain_low, effects.rain_high);
-            set_world_precipitation_mode(c, weather, mode);
-            //Reload after sound dispatch; the quality percentage remains the earlier
-            //snapshot. The signed upper cap deliberately has no lower zero floor.
-            const auto maximum = c.weather.weather_effects_balance.max_raindrops;
-            const auto target = divide(numeric::product(maximum, numeric::subtract(100, percent)), 100);
-            weather->target_drops = std::min(target, maximum);
-            set_motion_scale(c, motion_scale);
-            weather->lightning = lightning;
-        };
+    const auto precipitation = [&](WeatherPrecipitation mode, std::int32_t key, bool snow, float motion_scale, bool lightning) {
+        mark_weather_messages(c, key);
+        const auto& effects = c.weather.weather_effects_balance;
+        const auto percent = snow ? quality_percentage(weather->quality, effects.snow_low, effects.snow_high) : quality_percentage(weather->quality, effects.rain_low, effects.rain_high);
+        set_world_precipitation_mode(c, weather, mode);
+        //Reload after sound dispatch; the quality percentage remains the earlier
+        //snapshot. The signed upper cap deliberately has no lower zero floor.
+        const auto maximum = c.weather.weather_effects_balance.max_raindrops;
+        const auto target = divide(numeric::product(maximum, numeric::subtract(100, percent)), 100);
+        weather->target_drops = std::min(target, maximum);
+        set_motion_scale(c, motion_scale);
+        weather->lightning = lightning;
+    };
     match (category) {
         case WeatherCategory::rain     => precipitation(WeatherPrecipitation::rain, 65, false, 2.5f, false);
         case WeatherCategory::snow     => precipitation(WeatherPrecipitation::snow, 68, true, 0.8f, false);
@@ -157,8 +157,9 @@ apply_world_weather_configuration(WeatherWorld& c, WeatherRecord* weather, const
     const float previous_direction = weather->wind_direction;
     const auto variation = numeric::bits(next_world_prng_value(*c.simulation.reference)) % 90u;
     float direction = static_cast<float>(static_cast<double>(variation) + previous_direction - 45.0);
-    if (direction < 0.0f)
+    if (direction < 0.0f) {
         direction = std::abs(direction);
+    }
     direction = std::fmod(direction, 360.0f);
     weather->wind_direction = direction;
     configure_wind_effect_vectors(c, direction, weather->wind_force);

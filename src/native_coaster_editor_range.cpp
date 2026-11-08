@@ -4,14 +4,9 @@
 namespace simcoaster {
 using namespace native_coaster_detail;
 
-void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
-                                              ParkConstructionRuntime& editor,
-                                              std::uint16_t first,
-                                              std::uint16_t second,
-                                              bool recording) {
+void NativeCoasterEditor::State::delete_range(AttractionWorld& c, ParkConstructionRuntime& editor, std::uint16_t first, std::uint16_t second, bool recording) {
     auto& initial = ride(c);
-    require(first < initial.geometry.size() && second < initial.geometry.size(),
-            "delete endpoints are outside geometry");
+    require(first < initial.geometry.size() && second < initial.geometry.size(), "delete endpoints are outside geometry");
     //487270 first starts a range, then applies its second endpoint. Clicking a
     //fixed station owner twice cancels rather than deleting station controls.
     if (first == second && fixed_owner(world(c), initial, first)) {
@@ -22,19 +17,21 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
     cleanup(c, editor);
     auto low = static_cast<std::size_t>(first), high = static_cast<std::size_t>(second);
     bool remove_tail = low == 0 || high == 0;
-    if (!low)
+    if (!low) {
         low = initial.geometry.size() - 1;
-    else if (!high)
+    } else if (!high) {
         high = initial.geometry.size() - 1;
-    if (low > high)
+    }
+    if (low > high) {
         std::swap(low, high);
-    if (low + 1 == high
-        && (initial.geometry[low].geometry_flags & 0xC0u) == 0xC0u
-        && (initial.geometry[high].geometry_flags & 0x40u)) {
-        if (low)
+    }
+    if (low + 1 == high && (initial.geometry[low].geometry_flags & 0xC0u) == 0xC0u && (initial.geometry[high].geometry_flags & 0x40u)) {
+        if (low) {
             --low;
-        if (high + 1 < initial.geometry.size())
+        }
+        if (high + 1 < initial.geometry.size()) {
             ++high;
+        }
     }
     if (low == high) {
         require(low && high + 1 < initial.geometry.size(), "single-node deletion has no boundary controls");
@@ -52,13 +49,14 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
             ++boundary;
         }
     }
-    if (boundary + 1 == initial.geometry.size())
+    if (boundary + 1 == initial.geometry.size()) {
         remove_tail = true;
+    }
     require(low < boundary, "delete interval is inverted");
     std::set<std::pair<std::int32_t, std::int32_t>> touched;
     std::optional<std::size_t> next_current, next_validation;
     try {
-        coaster_editor_detail::EditTransaction transaction{ c, meshes(c) };
+        coaster_editor_detail::EditTransaction transaction { c, meshes(c) };
         const auto r_index = ride_index(c);
         auto& target = transaction.world.bindings.at(r_index);
         target.train_state.runtime_flags &= ~0x2000u;
@@ -80,8 +78,9 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
             while (!target.geometry.empty()) {
                 const auto index = target.geometry.size() - 1;
                 const auto& owner = transaction.world.placements.at(target.geometry_state[index].placement);
-                if (!(owner.flags & 1u))
+                if (!(owner.flags & 1u)) {
                     break;
+                }
                 touched.emplace(owner.tile_x, owner.tile_y);
                 coaster_editor_detail::erase_node_raw(transaction, r_index, index);
             }
@@ -91,17 +90,16 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
         }
         if (low + 1 == boundary) {
             auto reference = low;
-            while (reference && (target.geometry[reference].geometry_flags & 0x40u))
+            while (reference && (target.geometry[reference].geometry_flags & 0x40u)) {
                 --reference;
+            }
             const auto& owner = transaction.world.placements.at(target.geometry_state[reference].placement);
             if (owner.flags & 1u) {
                 const auto initial_height = target.definition->balance.coaster.fInitialPylonLoftHeight;
                 target.default_attachment_height = initial_height != 0 ? initial_height : 10.0f;
-            } else
-                target.default_attachment_height =
-                    coaster_editor_detail::profile_position(transaction.meshes,
-                                                            transaction.world,
-                                                            target.geometry_state[reference])[1];
+            } else {
+                target.default_attachment_height = coaster_editor_detail::profile_position(transaction.meshes, transaction.world, target.geometry_state[reference])[1];
+            }
         }
         coaster_editor_detail::finish(transaction, r_index);
         transaction.commit();
@@ -114,24 +112,30 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
     //Reconcile only support cells; fixed station footprint cells stay owned by
     //their actual park object. Surviving stacked nodes retain real mesh slots.
     for (const auto [x, y] : touched) {
-        const WorldCellCoordinates tile{ x, y };
-        if (!construction_detail::bounds(tile))
+        const WorldCellCoordinates tile { x, y };
+        if (!construction_detail::bounds(tile)) {
             continue;
+        }
         auto& map_cell = construction_detail::map(c, construction_detail::cell_id(tile));
-        if (map_cell.base.common.type != 21)
+        if (map_cell.base.common.type != 21) {
             continue;
+        }
         std::optional<std::uint32_t> slot;
-        for (const auto& owner : world(c).placements)
-            if (owner.tile_x == x && owner.tile_y == y && !(owner.flags & 1u))
-                for (const auto& ref : owner.links)
+        for (const auto& owner : world(c).placements) {
+            if (owner.tile_x == x && owner.tile_y == y && !(owner.flags & 1u)) {
+                for (const auto& ref : owner.links) {
                     if (ref) {
                         slot = world(c).bindings.at(ref->ride).geometry_state.at(ref->node).mesh_slot;
                         break;
                     }
+                }
+            }
+        }
         auto& track = construction_detail::track(c, map_cell.base.index);
         track.base.common.mesh_instance = slot.value_or(0);
-        if (!slot)
+        if (!slot) {
             remove_map_cell_contents(c, &map_cell.base, 0, 0);
+        }
     }
     range_anchor.reset();
     range_cursor.reset();
@@ -139,7 +143,8 @@ void NativeCoasterEditor::State::delete_range(AttractionWorld& c,
     ride(c).selection_texture_bias = 0;
     mark(ride(c));
     transition_coaster_detail_state(c, meshes(c), ride(c), RideDetailState::inactive);
-    if (recording)
-        record(c, { LayoutActionCode::coaster_delete_range, LayoutWordPair{ first, second } });
+    if (recording) {
+        record(c, { LayoutActionCode::coaster_delete_range, LayoutWordPair { first, second } });
+    }
 }
 } //namespace simcoaster

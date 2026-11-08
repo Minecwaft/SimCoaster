@@ -17,45 +17,54 @@ std::vector<std::string> lines(std::string_view source) {
     for (std::size_t start = 0; start < source.size();) {
         const auto end = source.find('\n', start);
         auto value = source.substr(start, end == source.npos ? source.size() - start : end - start);
-        if (!value.empty() && value.back() == '\r')
+        if (!value.empty() && value.back() == '\r') {
             value.remove_suffix(1);
-        if (const auto zero = value.find('\0'); zero != value.npos)
+        }
+        if (const auto zero = value.find('\0'); zero != value.npos) {
             value = value.substr(0, zero);
+        }
         result.emplace_back(value);
-        if (end == source.npos)
+        if (end == source.npos) {
             break;
+        }
         start = end + 1;
     }
     return result;
 }
 
 std::int32_t integer(std::string_view text) {
-    while (!text.empty() && (text.front() == ' ' || text.front() == '\t'))
+    while (!text.empty() && (text.front() == ' ' || text.front() == '\t')) {
         text.remove_prefix(1);
-    if (!text.empty() && text.front() == '+')
+    }
+    if (!text.empty() && text.front() == '+') {
         text.remove_prefix(1);
-    std::int64_t number{};
+    }
+    std::int64_t number {};
     const auto result = std::from_chars(text.data(), text.data() + text.size(), number);
-    return result.ec == std::errc{} ? fixed::narrow(number) : 0;
+    return result.ec == std::errc {} ? fixed::narrow(number) : 0;
 }
 
 std::expected<std::string, PostcardError> read_text(const std::filesystem::path& path) {
     std::ifstream file(path, std::ios::binary);
-    if (!file)
-        return std::unexpected(PostcardError{ path, "Unable to open original postcard data" });
-    std::string contents{ std::istreambuf_iterator<char>(file), {} };
-    if (file.bad())
-        return std::unexpected(PostcardError{ path, "Unable to read original postcard data" });
+    if (!file) {
+        return std::unexpected(PostcardError { path, "Unable to open original postcard data" });
+    }
+    std::string contents { std::istreambuf_iterator<char>(file), {} };
+    if (file.bad()) {
+        return std::unexpected(PostcardError { path, "Unable to read original postcard data" });
+    }
     return contents;
 }
 
 std::expected<void, PostcardError> write_text(const std::filesystem::path& path, std::string_view text) {
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
-    if (!file || !file.write(text.data(), static_cast<std::streamsize>(text.size())))
-        return std::unexpected(PostcardError{ path, "Unable to write postcard data" });
+    if (!file || !file.write(text.data(), static_cast<std::streamsize>(text.size()))) {
+        return std::unexpected(PostcardError { path, "Unable to write postcard data" });
+    }
     file.close();
-    if (!file)
-        return std::unexpected(PostcardError{ path, "Unable to close postcard data" });
+    if (!file) {
+        return std::unexpected(PostcardError { path, "Unable to close postcard data" });
+    }
     return {};
 }
 
@@ -70,43 +79,48 @@ void unique_ids(std::vector<std::uint32_t>& ids) {
 
 std::expected<void, PostcardError> writable(const std::filesystem::path& path) {
     std::error_code error;
-    if (std::filesystem::exists(path, error))
-        std::filesystem::permissions(path,
-                                     std::filesystem::perms::owner_write,
-                                     std::filesystem::perm_options::add,
-                                     error);
-    if (error)
-        return std::unexpected(PostcardError{ path, error.message() });
+    if (std::filesystem::exists(path, error)) {
+        std::filesystem::permissions(path, std::filesystem::perms::owner_write, std::filesystem::perm_options::add, error);
+    }
+    if (error) {
+        return std::unexpected(PostcardError { path, error.message() });
+    }
     return {};
 }
 } //namespace
 
 bool has_basic_postcard_address_syntax(std::u16string_view address) {
     const auto at = address.find(u'@');
-    if (at == address.npos || !at)
+    if (at == address.npos || !at) {
         return false;
+    }
     const auto dot = address.find(u'.', at);
     return dot != address.npos && dot > at + 1;
 }
 
 std::expected<std::vector<std::u16string>, PostcardError> parse_postcard_recipients(std::u16string_view source) {
-    if (source.empty())
-        return std::unexpected(PostcardError{ {}, "Empty postcard recipients" });
+    if (source.empty()) {
+        return std::unexpected(PostcardError { {}, "Empty postcard recipients" });
+    }
     std::vector<std::u16string> result;
     const auto delimiter = [](char16_t unit) {
         return unit == u';' || unit == u',' || unit == u' ' || unit == u'\n';
     };
     for (std::size_t cursor = 0; cursor < source.size();) {
-        while (cursor < source.size() && delimiter(source[cursor]))
+        while (cursor < source.size() && delimiter(source[cursor])) {
             ++cursor;
+        }
         const auto begin = cursor;
-        while (cursor < source.size() && !delimiter(source[cursor]))
+        while (cursor < source.size() && !delimiter(source[cursor])) {
             ++cursor;
-        if (begin == cursor)
+        }
+        if (begin == cursor) {
             continue;
+        }
         auto token = source.substr(begin, cursor - begin);
-        if (!has_basic_postcard_address_syntax(token))
-            return std::unexpected(PostcardError{ {}, "Invalid original postcard recipient syntax" });
+        if (!has_basic_postcard_address_syntax(token)) {
+            return std::unexpected(PostcardError { {}, "Invalid original postcard recipient syntax" });
+        }
         result.emplace_back(token);
     }
     return result;
@@ -114,12 +128,13 @@ std::expected<std::vector<std::u16string>, PostcardError> parse_postcard_recipie
 
 std::expected<PostcardOutboxIndex, PostcardError> decode_postcard_outbox_index(std::string_view source) {
     PostcardOutboxIndex result;
-    std::array groups{ &result.records, &result.pending_delete, &result.send_queue };
+    std::array groups { &result.records, &result.pending_delete, &result.send_queue };
     std::size_t group = 0;
     for (const auto& line : lines(source)) {
         if (line.empty()) {
-            if (++group >= groups.size())
+            if (++group >= groups.size()) {
                 break;
+            }
             continue;
         }
         groups[group]->push_back(std::bit_cast<std::uint32_t>(integer(line)));
@@ -130,18 +145,21 @@ std::expected<PostcardOutboxIndex, PostcardError> decode_postcard_outbox_index(s
 std::string encode_postcard_outbox_index(const PostcardOutboxIndex& index) {
     std::string result;
     for (const auto* group : { &index.records, &index.pending_delete, &index.send_queue }) {
-        if (group != &index.records)
+        if (group != &index.records) {
             result += '\n';
-        for (const auto id : *group)
+        }
+        for (const auto id : *group) {
             result += std::to_string(std::bit_cast<std::int32_t>(id)) + "\n";
+        }
     }
     return result;
 }
 
 std::expected<PostcardRecord, PostcardError> decode_postcard_record(std::string_view source) {
     const auto data = lines(source);
-    if (data.size() < 5)
-        return std::unexpected(PostcardError{ {}, "Truncated original numbered postcard record" });
+    if (data.size() < 5) {
+        return std::unexpected(PostcardError { {}, "Truncated original numbered postcard record" });
+    }
     PostcardRecord result;
     result.date = { integer(data[0]), integer(data[1]), integer(data[2]) };
     result.from = data[3];
@@ -151,18 +169,10 @@ std::expected<PostcardRecord, PostcardError> decode_postcard_record(std::string_
 }
 
 std::string encode_postcard_record(const PostcardRecord& record) {
-    auto result = std::to_string(record.date.day)
-                + "\n"
-                + std::to_string(record.date.month)
-                + "\n"
-                + std::to_string(record.date.year)
-                + "\n"
-                + record.from
-                + "\n"
-                + record.subject
-                + "\n";
-    for (const auto& recipient : record.recipients)
+    auto result = std::to_string(record.date.day) + "\n" + std::to_string(record.date.month) + "\n" + std::to_string(record.date.year) + "\n" + record.from + "\n" + record.subject + "\n";
+    for (const auto& recipient : record.recipients) {
         result += recipient + "\n";
+    }
     return result;
 }
 
@@ -170,7 +180,7 @@ struct ApplicationPostcards::State {
     std::filesystem::path game_root, profile, outbox;
     std::vector<std::string> addresses;
     PostcardOutboxIndex index;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 
     explicit State(std::filesystem::path path) : game_root(std::move(path)) {}
 };
@@ -180,36 +190,43 @@ ApplicationPostcards::ApplicationPostcards(const std::filesystem::path& path) : 
 ApplicationPostcards::~ApplicationPostcards() = default;
 
 std::expected<void, PostcardError> ApplicationPostcards::select_profile(const std::filesystem::path& path) {
-    if (path.empty())
-        return std::unexpected(PostcardError{ path, "Postcard profile path is empty" });
+    if (path.empty()) {
+        return std::unexpected(PostcardError { path, "Postcard profile path is empty" });
+    }
     State selected(state_->game_root);
     selected.profile = path;
     selected.outbox = path / "outbox";
     std::error_code error;
     std::filesystem::create_directories(selected.outbox, error);
-    if (error)
-        return std::unexpected(PostcardError{ selected.outbox, error.message() });
+    if (error) {
+        return std::unexpected(PostcardError { selected.outbox, error.message() });
+    }
     const auto book_path = path / "addrbook.dat";
     if (std::filesystem::exists(book_path, error)) {
         auto book = read_text(book_path);
-        if (!book)
+        if (!book) {
             return std::unexpected(book.error());
+        }
         selected.addresses = lines(*book); //Native load does not sort or deduplicate.
     }
-    if (error)
-        return std::unexpected(PostcardError{ book_path, error.message() });
+    if (error) {
+        return std::unexpected(PostcardError { book_path, error.message() });
+    }
     const auto index_path = selected.outbox / "outbox.dat";
     if (std::filesystem::exists(index_path, error)) {
         auto bytes = read_text(index_path);
-        if (!bytes)
+        if (!bytes) {
             return std::unexpected(bytes.error());
+        }
         auto index = decode_postcard_outbox_index(*bytes);
-        if (!index)
+        if (!index) {
             return std::unexpected(index.error());
+        }
         selected.index = std::move(*index);
     }
-    if (error)
-        return std::unexpected(PostcardError{ index_path, error.message() });
+    if (error) {
+        return std::unexpected(PostcardError { index_path, error.message() });
+    }
     selected.revision = state_->revision + 1;
     *state_ = std::move(selected);
     return {};
@@ -246,30 +263,36 @@ std::size_t ApplicationPostcards::insert_address(std::string_view value) {
 }
 
 void ApplicationPostcards::erase_address(std::size_t index) {
-    if (index >= state_->addresses.size())
+    if (index >= state_->addresses.size()) {
         throw std::out_of_range("Postcard address identity is stale");
+    }
     state_->addresses.erase(state_->addresses.begin() + static_cast<std::ptrdiff_t>(index));
 }
 
 std::expected<void, PostcardError> ApplicationPostcards::save_profile() {
-    if (state_->profile.empty())
-        return std::unexpected(PostcardError{ {}, "No active postcard profile" });
+    if (state_->profile.empty()) {
+        return std::unexpected(PostcardError { {}, "No active postcard profile" });
+    }
     std::string addresses;
-    for (const auto& value : state_->addresses)
+    for (const auto& value : state_->addresses) {
         addresses += value + "\n";
+    }
     auto book = write_text(state_->profile / "addrbook.dat", addresses);
-    if (!book)
+    if (!book) {
         return book;
+    }
     return write_text(state_->outbox / "outbox.dat", encode_postcard_outbox_index(state_->index));
 }
 
 std::expected<PostcardRecord, PostcardError> ApplicationPostcards::read(std::uint32_t id) const {
-    if (std::ranges::find(state_->index.records, id) == state_->index.records.end())
-        return std::unexpected(PostcardError{ state_->outbox, "Postcard record identity is absent" });
+    if (std::ranges::find(state_->index.records, id) == state_->index.records.end()) {
+        return std::unexpected(PostcardError { state_->outbox, "Postcard record identity is absent" });
+    }
     const auto path = state_->outbox / record_name(id, "dat");
     auto bytes = read_text(path);
-    if (!bytes)
+    if (!bytes) {
         return std::unexpected(bytes.error());
+    }
     auto record = decode_postcard_record(*bytes);
     if (!record) {
         record.error().path = path;
@@ -284,49 +307,55 @@ std::expected<std::vector<PostcardRecord>, PostcardError> ApplicationPostcards::
     std::vector<PostcardRecord> result;
     for (const auto id : state_->index.records) {
         auto record = read(id);
-        if (!record)
+        if (!record) {
             return std::unexpected(record.error());
+        }
         result.push_back(std::move(*record));
     }
     return result;
 }
 
-std::expected<std::uint32_t, PostcardError> ApplicationPostcards::store(PostcardRecord record,
-                                                                        const TextureImage& image) {
-    if (state_->profile.empty())
-        return std::unexpected(PostcardError{ {}, "No active postcard profile" });
+std::expected<std::uint32_t, PostcardError> ApplicationPostcards::store(PostcardRecord record, const TextureImage& image) {
+    if (state_->profile.empty()) {
+        return std::unexpected(PostcardError { {}, "No active postcard profile" });
+    }
     //781080 uses the LAST list node plus1, and0 for an empty outbox.
     record.id = state_->index.records.empty() ? 0u : state_->index.records.back() + 1u;
-    if (std::ranges::find(state_->index.records, record.id) != state_->index.records.end())
-        return std::unexpected(PostcardError{ state_->outbox, "Original postcard ID range exhausted" });
+    if (std::ranges::find(state_->index.records, record.id) != state_->index.records.end()) {
+        return std::unexpected(PostcardError { state_->outbox, "Original postcard ID range exhausted" });
+    }
     const auto data = state_->outbox / record_name(record.id, "dat");
     const auto jpeg = state_->outbox / record_name(record.id, "jpg");
     auto wrote_image = save_postcard_jpeg(jpeg, image);
-    if (!wrote_image)
+    if (!wrote_image) {
         return std::unexpected(wrote_image.error());
+    }
     auto wrote = write_text(data, encode_postcard_record(record));
-    if (!wrote)
+    if (!wrote) {
         return std::unexpected(wrote.error());
+    }
     state_->index.records.push_back(record.id);
     state_->index.send_queue.push_back(record.id);
     unique_ids(state_->index.send_queue);
     auto index = write_text(state_->outbox / "outbox.dat", encode_postcard_outbox_index(state_->index));
-    if (!index)
+    if (!index) {
         return std::unexpected(index.error());
+    }
     return record.id;
 }
 
-std::expected<void, PostcardError>
-ApplicationPostcards::apply(std::span<const std::pair<std::uint32_t, PostcardRowAction>> actions) {
+std::expected<void, PostcardError> ApplicationPostcards::apply(std::span<const std::pair<std::uint32_t, PostcardRowAction>> actions) {
     for (const auto [id, action] : actions) {
-        if (std::ranges::find(state_->index.records, id) == state_->index.records.end())
-            return std::unexpected(PostcardError{ state_->outbox, "Outbox selection refers to a retired record" });
+        if (std::ranges::find(state_->index.records, id) == state_->index.records.end()) {
+            return std::unexpected(PostcardError { state_->outbox, "Outbox selection refers to a retired record" });
+        }
         std::erase(state_->index.send_queue, id);
         std::erase(state_->index.pending_delete, id);
-        if (action == PostcardRowAction::send)
+        if (action == PostcardRowAction::send) {
             state_->index.send_queue.push_back(id);
-        else if (action == PostcardRowAction::erase)
+        } else if (action == PostcardRowAction::erase) {
             state_->index.pending_delete.push_back(id);
+        }
     }
     unique_ids(state_->index.send_queue);
     unique_ids(state_->index.pending_delete);
@@ -338,12 +367,14 @@ std::expected<void, PostcardError> ApplicationPostcards::process_deletions() {
         for (const auto extension : { "dat", "jpg" }) {
             const auto path = state_->outbox / record_name(id, extension);
             auto permission = writable(path);
-            if (!permission)
+            if (!permission) {
                 return permission;
+            }
             std::error_code error;
             std::filesystem::remove(path, error);
-            if (error)
-                return std::unexpected(PostcardError{ path, error.message() });
+            if (error) {
+                return std::unexpected(PostcardError { path, error.message() });
+            }
         }
         std::erase(state_->index.send_queue, id);
         std::erase(state_->index.records, id);
@@ -353,8 +384,9 @@ std::expected<void, PostcardError> ApplicationPostcards::process_deletions() {
 }
 
 std::expected<void, PostcardError> ApplicationPostcards::sent(std::uint32_t id) {
-    if (std::ranges::find(state_->index.records, id) == state_->index.records.end())
-        return std::unexpected(PostcardError{ state_->outbox, "Completed postcard no longer belongs to this profile" });
+    if (std::ranges::find(state_->index.records, id) == state_->index.records.end()) {
+        return std::unexpected(PostcardError { state_->outbox, "Completed postcard no longer belongs to this profile" });
+    }
     std::erase(state_->index.send_queue, id);
     state_->index.pending_delete.push_back(id);
     unique_ids(state_->index.pending_delete);
@@ -365,8 +397,9 @@ std::expected<void, PostcardError> ApplicationPostcards::update_album(const Text
     const auto album = state_->game_root / "My Postcards";
     std::error_code error;
     std::filesystem::create_directories(album, error);
-    if (error)
-        return std::unexpected(PostcardError{ album, error.message() });
+    if (error) {
+        return std::unexpected(PostcardError { album, error.message() });
+    }
     const auto filename = [&](std::int32_t n, std::string_view extension) {
         return album / std::format("postcard{:02}.{}", n, extension);
     };
@@ -374,52 +407,57 @@ std::expected<void, PostcardError> ApplicationPostcards::update_album(const Text
     for (std::int32_t n = 1; n <= 10; ++n) {
         const auto from = filename(n, "jpg");
         const auto exists = std::filesystem::exists(from, error);
-        if (error)
-            return std::unexpected(PostcardError{ from, error.message() });
-        if (!exists)
+        if (error) {
+            return std::unexpected(PostcardError { from, error.message() });
+        }
+        if (!exists) {
             continue;
+        }
         if (n != next) {
             auto permission = writable(from);
-            if (!permission)
+            if (!permission) {
                 return permission;
+            }
             std::filesystem::rename(from, filename(next, "jpg"), error);
-            if (error)
-                return std::unexpected(PostcardError{ from, error.message() });
+            if (error) {
+                return std::unexpected(PostcardError { from, error.message() });
+            }
         }
         ++next;
     }
     for (auto n = next; n <= 10; ++n) {
-        std::filesystem::copy_file(state_->game_root / "Data/postcard/blankpostcard.jpg",
-                                   filename(n, "jpg"),
-                                   std::filesystem::copy_options::skip_existing,
-                                   error);
-        if (error)
-            return std::unexpected(PostcardError{ filename(n, "jpg"), error.message() });
+        std::filesystem::copy_file(state_->game_root / "Data/postcard/blankpostcard.jpg", filename(n, "jpg"), std::filesystem::copy_options::skip_existing, error);
+        if (error) {
+            return std::unexpected(PostcardError { filename(n, "jpg"), error.message() });
+        }
     }
     auto permission = writable(filename(10, "jpg"));
-    if (!permission)
+    if (!permission) {
         return permission;
+    }
     std::filesystem::remove(filename(10, "jpg"), error);
-    if (error)
-        return std::unexpected(PostcardError{ filename(10, "jpg"), error.message() });
+    if (error) {
+        return std::unexpected(PostcardError { filename(10, "jpg"), error.message() });
+    }
     for (std::int32_t n = 9; n >= 1; --n) {
         permission = writable(filename(n, "jpg"));
-        if (!permission)
+        if (!permission) {
             return permission;
+        }
         std::filesystem::rename(filename(n, "jpg"), filename(n + 1, "jpg"), error);
-        if (error)
-            return std::unexpected(PostcardError{ filename(n, "jpg"), error.message() });
+        if (error) {
+            return std::unexpected(PostcardError { filename(n, "jpg"), error.message() });
+        }
     }
     auto saved = save_postcard_jpeg(filename(1, "jpg"), image);
-    if (!saved)
+    if (!saved) {
         return saved;
+    }
     for (std::int32_t n = 1; n <= 10; ++n) {
-        std::filesystem::copy_file(state_->game_root / "Data/postcard" / filename(n, "html").filename(),
-                                   filename(n, "html"),
-                                   std::filesystem::copy_options::skip_existing,
-                                   error);
-        if (error)
-            return std::unexpected(PostcardError{ filename(n, "html"), error.message() });
+        std::filesystem::copy_file(state_->game_root / "Data/postcard" / filename(n, "html").filename(), filename(n, "html"), std::filesystem::copy_options::skip_existing, error);
+        if (error) {
+            return std::unexpected(PostcardError { filename(n, "html"), error.message() });
+        }
     }
     return {};
 }

@@ -4,28 +4,28 @@
 
 namespace simcoaster {
 struct RegionEffectStartupParameters {
-    [[=sam::Field{ "Radius", sam::Kind::nonnegative_integer }]] std::int32_t radius{};
-    [[=sam::Field{ "Happiness", sam::Kind::integer }]] std::int32_t happiness{};
-    [[=sam::Field{ "Illness", sam::Kind::integer }]] std::int32_t illness{};
-    [[=sam::Field{ "Hunger", sam::Kind::integer }]] std::int32_t hunger{};
-    [[=sam::Field{ "Security", sam::Kind::integer }]] std::int32_t security{};
-    [[=sam::Field{ "Attraction", sam::Kind::integer }]] std::int32_t attraction{};
+    [[=sam::Field { "Radius", sam::Kind::nonnegative_integer }]] std::int32_t radius {};
+    [[=sam::Field { "Happiness", sam::Kind::integer }]] std::int32_t happiness {};
+    [[=sam::Field { "Illness", sam::Kind::integer }]] std::int32_t illness {};
+    [[=sam::Field { "Hunger", sam::Kind::integer }]] std::int32_t hunger {};
+    [[=sam::Field { "Security", sam::Kind::integer }]] std::int32_t security {};
+    [[=sam::Field { "Attraction", sam::Kind::integer }]] std::int32_t attraction {};
 };
 
 struct ShareStartupParameters {
-    [[=sam::Field{ "CompanySharesIssued", sam::Kind::integer }]] std::int32_t CompanySharesIssued{};
-    [[=sam::Field{ "InitialSharesOwned", sam::Kind::integer }]] std::int32_t InitialSharesOwned{};
-    [[=sam::Field{ "InitialSharePrice", sam::Kind::integer }]] std::int32_t InitialSharePrice{};
-    [[=sam::Field{ "AnnRptSimilarPercentage", sam::Kind::integer }]] std::int32_t AnnRptSimilarPercentage{};
-    [[=sam::Field{ "AnnRptBigChangePercentage", sam::Kind::integer }]] std::int32_t AnnRptBigChangePercentage{};
+    [[=sam::Field { "CompanySharesIssued", sam::Kind::integer }]] std::int32_t CompanySharesIssued {};
+    [[=sam::Field { "InitialSharesOwned", sam::Kind::integer }]] std::int32_t InitialSharesOwned {};
+    [[=sam::Field { "InitialSharePrice", sam::Kind::integer }]] std::int32_t InitialSharePrice {};
+    [[=sam::Field { "AnnRptSimilarPercentage", sam::Kind::integer }]] std::int32_t AnnRptSimilarPercentage {};
+    [[=sam::Field { "AnnRptBigChangePercentage", sam::Kind::integer }]] std::int32_t AnnRptBigChangePercentage {};
 };
 
 struct WorldStartupBalance {
-    [[=sam::Group{ "ParkAward" }]] ParkAwardBalance awards;
-    [[=sam::Group{ "ShareInfo" }]] ShareStartupParameters shares;
-    [[=sam::Group{ "SpamBalance" }]] SpamBalance spam;
-    [[=sam::Rows{ "RegionFX" }]] std::array<RegionEffectStartupParameters, 15> region_effects{};
-    [[=sam::Extent{ "RegionFX" }]] std::uint32_t region_effect_count{};
+    [[=sam::Group { "ParkAward" }]] ParkAwardBalance awards;
+    [[=sam::Group { "ShareInfo" }]] ShareStartupParameters shares;
+    [[=sam::Group { "SpamBalance" }]] SpamBalance spam;
+    [[=sam::Rows { "RegionFX" }]] std::array<RegionEffectStartupParameters, 15> region_effects {};
+    [[=sam::Extent { "RegionFX" }]] std::uint32_t region_effect_count {};
 };
 
 void initialize_world_map_and_track_storage(World&, const WorldStartupBalance&);

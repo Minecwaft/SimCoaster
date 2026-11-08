@@ -28,14 +28,14 @@ enum class ApplicationWorldPointerEvent {
 //presses and excluding UI-owned buttons.
 //A geometry drag retains its existing NativeCoasterEditor cancellation API.
 struct ApplicationWorldInputCapture {
-    std::array<bool, 2> world_buttons{}; //left, right
-    bool coaster_geometry{}, coaster_geometry_active{};
+    std::array<bool, 2> world_buttons {}; //left, right
+    bool coaster_geometry {}, coaster_geometry_active {};
 };
 
 struct ApplicationWorldInputCleanup {
-    std::array<bool, 2> clear_world_buttons{};
-    bool cancel_authoring_pointer{}, cancel_coaster_geometry{};
-    bool clear_camera_keys{}, release_pointer{};
+    std::array<bool, 2> clear_world_buttons {};
+    bool cancel_authoring_pointer {}, cancel_coaster_geometry {};
+    bool clear_camera_keys {}, release_pointer {};
 };
 //Handler delivery follows 4D2260's held-time filter. WorldRuntime-menu admission
 //follows the earlier 5070A0 path and is carried independently below. Neither
@@ -47,10 +47,10 @@ enum class ApplicationWorldInputDelivery {
 };
 
 struct ApplicationWorldPointerFeedback {
-    bool consumed{}, capture_pointer{}, release_pointer{};
-    std::array<bool, 2> clear_world_buttons{};
-    bool cancel_interaction{}, wheel{}, context_menu_release{};
-    ApplicationWorldInputDelivery delivery{};
+    bool consumed {}, capture_pointer {}, release_pointer {};
+    std::array<bool, 2> clear_world_buttons {};
+    bool cancel_interaction {}, wheel {}, context_menu_release {};
+    ApplicationWorldInputDelivery delivery {};
 };
 
 struct ApplicationWorldCameraFeedback {
@@ -77,12 +77,12 @@ struct ApplicationWorldCameraFeedback {
 class ApplicationWorldInputRuntime {
     WorldNormalCameraInputRuntime normal_camera_;
     ApplicationWorldInputOwner owner_ = ApplicationWorldInputOwner::blocked;
-    bool normal_right_{}, normal_middle_{}, special_right_handoff_{};
+    bool normal_right_ {}, normal_middle_ {}, special_right_handoff_ {};
     //A restored/replaced World cannot inherit the platform press which loaded
     //it. A fresh UI press owns its release; a new admitted World press clears
     //the later fallback suppression for that button.
-    std::array<bool, 3> suppressed_release_{ true, true, true }; //left, right, middle
-    std::array<bool, 3> cleanup_release_{ true, true, true };
+    std::array<bool, 3> suppressed_release_ { true, true, true }; //left, right, middle
+    std::array<bool, 3> cleanup_release_ { true, true, true };
     bool cleanup_only_release(ApplicationWorldPointerEvent) const;
 
 public:
@@ -108,9 +108,7 @@ public:
     //Capture loss, cancellation, source teardown and explicit modal acquisition
     //use cleanup, never synthetic handler button-up/click delivery.
     ApplicationWorldInputCleanup cancel(const ApplicationWorldInputCapture&);
-    ApplicationWorldPointerFeedback
-    pointer(ApplicationWorldPointerEvent, const WorldNormalCameraPointerSample&, const UiPreferences&);
-    ApplicationWorldCameraFeedback
-    advance_normal_camera(WorldRuntime&, const UiPreferences&, WorldNormalCameraInput, std::chrono::milliseconds);
+    ApplicationWorldPointerFeedback pointer(ApplicationWorldPointerEvent, const WorldNormalCameraPointerSample&, const UiPreferences&);
+    ApplicationWorldCameraFeedback advance_normal_camera(WorldRuntime&, const UiPreferences&, WorldNormalCameraInput, std::chrono::milliseconds);
 };
 } //namespace simcoaster

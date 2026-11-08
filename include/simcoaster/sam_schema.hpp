@@ -11,8 +11,8 @@ struct SamFieldContract {
     float lower, upper;
     std::size_t capacity;
     bool indexed;
-    std::uint32_t subtype{};
-    bool unsigned_storage{};
+    std::uint32_t subtype {};
+    bool unsigned_storage {};
 };
 
 struct NamedSamContract {
@@ -24,30 +24,9 @@ template <class T, bool Integer = false>
 consteval auto compiled_sam_contracts() {
     std::vector<SamFieldContract> result;
     if constexpr (Integer) {
-        template for (constexpr auto b : sam::detail::members<T>) result.push_back({ b.field.group,
-                                                                                     b.field.field,
-                                                                                     b.field.bounded       ? 6
-                                                                                     : b.field.nonnegative ? 5
-                                                                                                           : 4,
-                                                                                     b.field.minimum,
-                                                                                     b.field.maximum,
-                                                                                     0,
-                                                                                     0,
-                                                                                     b.capacity,
-                                                                                     b.indexed });
+        template for (constexpr auto b : sam::detail::members<T>) result.push_back({ b.field.group, b.field.field, b.field.bounded ? 6 : b.field.nonnegative ? 5 : 4, b.field.minimum, b.field.maximum, 0, 0, b.capacity, b.indexed });
     } else {
-        template for (constexpr auto b : sam::record_detail::bindings<T>)
-            result.push_back({ b.group,
-                               b.field.name,
-                               static_cast<std::int32_t>(b.field.kind),
-                               b.field.minimum,
-                               b.field.maximum,
-                               b.field.lower,
-                               b.field.upper,
-                               b.capacity,
-                               b.indexed,
-                               b.field.kind == sam::Kind::grid ? static_cast<std::uint32_t>(b.field.symbols) : 0,
-                               std::meta::type_of(b.leaf) == ^^typename std::uint32_t });
+        template for (constexpr auto b : sam::record_detail::bindings<T>) result.push_back({ b.group, b.field.name, static_cast<std::int32_t>(b.field.kind), b.field.minimum, b.field.maximum, b.field.lower, b.field.upper, b.capacity, b.indexed, b.field.kind == sam::Kind::grid ? static_cast<std::uint32_t>(b.field.symbols) : 0, std::meta::type_of(b.leaf) == ^^typename std::uint32_t });
     }
     return result;
 }

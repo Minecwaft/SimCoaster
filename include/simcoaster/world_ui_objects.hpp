@@ -17,11 +17,7 @@ class WorldParkObjectUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldParkObjectUiController(WorldRuntime&,
-                                UiRuntime&,
-                                UiControl* primary_root,
-                                const std::filesystem::path&,
-                                WorldUiPanelHost);
+    WorldParkObjectUiController(WorldRuntime&, UiRuntime&, UiControl* primary_root, const std::filesystem::path&, WorldUiPanelHost);
     ~WorldParkObjectUiController();
     WorldParkObjectUiController(const WorldParkObjectUiController&) = delete;
     WorldParkObjectUiController& operator=(const WorldParkObjectUiController&) = delete;

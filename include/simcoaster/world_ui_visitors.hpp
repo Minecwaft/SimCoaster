@@ -15,11 +15,7 @@ class WorldVisitorsUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldVisitorsUiController(WorldRuntime&,
-                              UiRuntime&,
-                              UiControl* primary_root,
-                              const std::filesystem::path&,
-                              WorldUiPanelHost);
+    WorldVisitorsUiController(WorldRuntime&, UiRuntime&, UiControl* primary_root, const std::filesystem::path&, WorldUiPanelHost);
     ~WorldVisitorsUiController();
     WorldVisitorsUiController(const WorldVisitorsUiController&) = delete;
     WorldVisitorsUiController& operator=(const WorldVisitorsUiController&) = delete;

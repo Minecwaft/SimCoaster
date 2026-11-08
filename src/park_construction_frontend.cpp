@@ -13,11 +13,11 @@ bool raised_preview_cell(int type) {
 }
 
 float cell_height(ConstructionWorld& c, const CellBase& row, float carried) {
-    if (!raised_preview_cell(row.common.type))
+    if (!raised_preview_cell(row.common.type)) {
         return carried;
+    }
     const auto p = coordinate(row.index);
-    return static_cast<float>(fixed::add(fixed::truncate_integer(sample_world_map_cell_surface(c, p.x, p.y)), 9) / 10)
-         * 10;
+    return static_cast<float>(fixed::add(fixed::truncate_integer(sample_world_map_cell_surface(c, p.x, p.y)), 9) / 10) * 10;
 }
 
 float block_height(ConstructionWorld& c, const CellBase& row) {
@@ -26,9 +26,11 @@ float block_height(ConstructionWorld& c, const CellBase& row) {
     auto height = cell_height(c, row, 0);
     auto& base = map(c, row.index).base;
     height = cell_height(c, base, height);
-    for (const auto offset : std::array<CellLocalOffset, 3>{ { { 0, 1 }, { 1, 0 }, { 1, 1 } } })
-        if (const auto* neighbor = resolve_world_cell_by_scaled_local_offset(c, &base, offset, 1))
+    for (const auto offset : std::array<CellLocalOffset, 3> { { { 0, 1 }, { 1, 0 }, { 1, 1 } } }) {
+        if (const auto* neighbor = resolve_world_cell_by_scaled_local_offset(c, &base, offset, 1)) {
             height = cell_height(c, neighbor->base, height);
+        }
+    }
     return height;
 }
 } //namespace
@@ -36,26 +38,28 @@ float block_height(ConstructionWorld& c, const CellBase& row) {
 void ParkConstructionRuntime::validate_placement_parent(ConstructionWorld& c, const ResearchCatalogDefinition& d) {
     const bool dependent = d.balance->AddOn.UpgradeType || d.balance->Info.IsPhotoBooth;
     const bool track_attachment = d.balance->AddOn.UpgradeType == 1;
-    if (!dependent)
+    if (!dependent) {
         return;
+    }
     refresh_origin(c);
     auto* parent = c.construction.park_object;
-    if (!parent)
+    if (!parent) {
         throw std::invalid_argument("attachment placement requires a selected park object");
-    if (!d.balance->AddOn.UpgradesAnyRide
-        && d.balance->AddOn.UpgradesId
-        && d.balance->AddOn.UpgradesId != parent->definition_id)
+    }
+    if (!d.balance->AddOn.UpgradesAnyRide && d.balance->AddOn.UpgradesId && d.balance->AddOn.UpgradesId != parent->definition_id) {
         throw std::invalid_argument("attachment is incompatible with the selected park object");
-    if (track_attachment && !parent->track_ride_handle)
+    }
+    if (track_attachment && !parent->track_ride_handle) {
         throw std::invalid_argument("track attachment has no compatible ride runtime");
+    }
     //Upgrade templates can inherit WhichTrackType1 for water parents. Native
     //compatibility is the explicit UpgradesId plus the resolved track root.
-    if (d.balance->Info.IsPhotoBooth && parent->photo_booth)
+    if (d.balance->Info.IsPhotoBooth && parent->photo_booth) {
         throw std::invalid_argument("selected ride already has a photo booth");
+    }
 }
 
-bool
-ParkConstructionRuntime::preview_track_cell(ConstructionWorld& c, CellBase& cell, std::uint32_t code, int x, int y) {
+bool ParkConstructionRuntime::preview_track_cell(ConstructionWorld& c, CellBase& cell, std::uint32_t code, int x, int y) {
     using namespace construction_detail;
     const auto p = coordinate(cell.index);
     const auto height = block_height(c, cell);
@@ -66,12 +70,14 @@ ParkConstructionRuntime::preview_track_cell(ConstructionWorld& c, CellBase& cell
     }
     const std::uint8_t direction = y == -2 ? 1 : y == 2 ? 16 : x == -2 ? 64 : x == 2 ? 4 : 0;
     auto result = evaluate_track(c, cell, static_cast<int>(code), false, direction);
-    if (code == 139)
+    if (code == 139) {
         result = TrackInteractionResult::track_endpoint;
+    }
     const bool accepted = result != TrackInteractionResult::rejected;
     if (accepted) {
-        if (result != TrackInteractionResult::accept)
+        if (result != TrackInteractionResult::accept) {
             material = std::to_underlying(result);
+        }
     } else {
         (void)evaluate_track(c, cell, static_cast<int>(code), true, direction);
         state.status_latch = true;
@@ -79,47 +85,37 @@ ParkConstructionRuntime::preview_track_cell(ConstructionWorld& c, CellBase& cell
         geometry = 1;
     }
     const auto face = [&](float level, std::uint32_t side, int style, int selector, bool skip) {
-        if (state.faces.size() >= 2054 || (style == 1 && !state.show_red_faces))
+        if (state.faces.size() >= 2054 || (style == 1 && !state.show_red_faces)) {
             return;
-        state.faces.push_back({ { static_cast<float>(p.x) * 10, level + 1.5f, static_cast<float>(p.y) * 10 },
-                                side,
-                                static_cast<std::uint32_t>(style),
-                                20,
-                                10,
-                                selector,
-                                skip });
+        }
+        state.faces.push_back({ { static_cast<float>(p.x) * 10, level + 1.5f, static_cast<float>(p.y) * 10 }, side, static_cast<std::uint32_t>(style), 20, 10, selector, skip });
     };
     //Native680A10 passes extent_selector1, which is a20-unit horizontal
     //square with10-unit vertical wall panels. The top never skips adjustment
     //unless the global slow-frame gate overrides it.
     face(height, 0, material, geometry, state.frame_rate_below_clip);
-    for (const auto side : std::array<std::uint8_t, 4>{ 1, 4, 16, 64 }) {
+    for (const auto side : std::array<std::uint8_t, 4> { 1, 4, 16, 64 }) {
         const auto* neighbor = resolve_track_cell_in_direction(c, &cell, side, 2);
-        if (!neighbor)
+        if (!neighbor) {
             continue;
+        }
         const auto bottom = fixed::truncate_integer(block_height(c, neighbor->base));
         const auto top = fixed::truncate_integer(height);
-        for (int level = bottom; level < top; level = fixed::add(level, 10))
-            face(static_cast<float>(level),
-                 side,
-                 accepted ? 0 : 1,
-                 0,
-                 state.frame_rate_below_clip
-                     || (accepted && result == TrackInteractionResult::skip_coordinate_adjustment));
+        for (int level = bottom; level < top; level = fixed::add(level, 10)) {
+            face(static_cast<float>(level), side, accepted ? 0 : 1, 0, state.frame_rate_below_clip || (accepted && result == TrackInteractionResult::skip_coordinate_adjustment));
+        }
     }
     return true;
 }
 
-bool ParkConstructionRuntime::preview_placement(ConstructionWorld& c,
-                                                std::uint16_t id,
-                                                WorldCellCoordinates p,
-                                                int rotation,
-                                                int cost_override) {
+bool ParkConstructionRuntime::preview_placement(ConstructionWorld& c, std::uint16_t id, WorldCellCoordinates p, int rotation, int cost_override) {
     using namespace construction_detail;
-    if (c.construction.coaster_catalog && c.construction.coaster_catalog->handles(c, id))
+    if (c.construction.coaster_catalog && c.construction.coaster_catalog->handles(c, id)) {
         return c.construction.coaster_catalog->preview(c, id, p, rotation);
-    if (c.construction.selected_object_definition_id != id || c.construction.mode != 4)
+    }
+    if (c.construction.selected_object_definition_id != id || c.construction.mode != 4) {
         begin_placement(c, id, rotation);
+    }
     if (!prepare_placement(c, id, p, rotation, cost_override, false)) {
         state.validation_failed = state.status_latch = true;
         return false;
@@ -133,7 +129,7 @@ bool ParkConstructionRuntime::preview_placement(ConstructionWorld& c,
     const auto cost = state.cost;
     bool valid = false;
     {
-        RestoreValue suppression{ c.construction.cell_costs_suppressed };
+        RestoreValue suppression { c.construction.cell_costs_suppressed };
         c.construction.cell_costs_suppressed = 1;
         valid = process_grid(c, p, rotation, cost_override, false, true).has_value() && !state.validation_failed;
         state.validation_failed = state.stop = state.status_latch = false;
@@ -145,14 +141,15 @@ bool ParkConstructionRuntime::preview_placement(ConstructionWorld& c,
     state.insufficient_funds = !funds;
     state.validation_failed = !valid;
     state.status_latch = !valid;
-    if (!valid)
-        for (auto& face : state.faces)
+    if (!valid) {
+        for (auto& face : state.faces) {
             face.material = funds ? 1u : 15u;
+        }
+    }
     return valid;
 }
 
-bool
-ParkConstructionRuntime::preview_impl(ConstructionWorld& c, WorldCellCoordinates p, WorldInputModifierMask modifiers) {
+bool ParkConstructionRuntime::preview_impl(ConstructionWorld& c, WorldCellCoordinates p, WorldInputModifierMask modifiers) {
     using namespace construction_detail;
     //Native65E170 starts a fresh feedback pass without changing line anchors.
     state.faces.clear();
@@ -167,44 +164,51 @@ ParkConstructionRuntime::preview_impl(ConstructionWorld& c, WorldCellCoordinates
     }
     const auto mode = c.construction.mode;
     if (mode == 21 || mode == 22) {
-        if (!c.construction.editor)
+        if (!c.construction.editor) {
             throw std::logic_error("coaster editor owner is not bound");
+        }
         return c.construction.editor->hover(c, *this, p, modifiers);
     }
-    if (!mode)
+    if (!mode) {
         return true;
-    if (mode == 14 || mode == 19)
+    }
+    if (mode == 14 || mode == 19) {
         return preview_context_track_edit(c, p);
-    if (mode == 26)
+    }
+    if (mode == 26) {
         return preview_context_hoarding_edit(c, p);
-    if (mode == std::to_underlying(WorldInteractionMode::backtrack_preview))
+    }
+    if (mode == std::to_underlying(WorldInteractionMode::backtrack_preview)) {
         return preview_backtrack(c, p);
+    }
     if (mode == std::to_underlying(WorldInteractionMode::demolish_rectangle)) {
         state.cost = -9999; //Native65F206 quote sentinel, not a refund.
-        const WorldCellCoordinates start{ c.construction.path_start_x, c.construction.path_start_y };
-        if (bounds(start))
+        const WorldCellCoordinates start { c.construction.path_start_x, c.construction.path_start_y };
+        if (bounds(start)) {
             preview_rectangle(c, start, p);
-        else
+        } else {
             (void)command_line(c, 314u, p, p);
+        }
         return true; //Native679D90 rectangle feasibility always succeeds.
     }
-    if (mode == 59)
+    if (mode == 59) {
         return preview_object_relocation(c, p);
-    if (mode == 4)
+    }
+    if (mode == 4) {
         return preview_placement(c, c.construction.selected_object_definition_id, p, state.rotation_degrees);
+    }
     if (mode == std::to_underlying(WorldInteractionMode::hoarding_rectangle)) {
         bind_land_boundary_anchors(c);
         p = snap_land_boundary_corner(c, p);
         state.preview_coordinates = p;
-        const WorldCellCoordinates start{ c.construction.path_start_x, c.construction.path_start_y };
+        const WorldCellCoordinates start { c.construction.path_start_x, c.construction.path_start_y };
         if (!bounds(start)) {
             auto end = p;
             (void)track_command_line(c, 256u | 57u, p, end);
         } else {
             state.validation_failed = !validate_land_rectangle(c, start, p);
-            const int left = std::min(start.x, p.x), right = std::max(start.x, p.x), top = std::min(start.y, p.y),
-                      bottom = std::max(start.y, p.y), inset = left == right ? 0 : 2;
-            auto end = WorldCellCoordinates{ right - inset, top };
+            const int left = std::min(start.x, p.x), right = std::max(start.x, p.x), top = std::min(start.y, p.y), bottom = std::max(start.y, p.y), inset = left == right ? 0 : 2;
+            auto end = WorldCellCoordinates { right - inset, top };
             (void)track_command_line(c, 256u | 57u, { left + inset, top }, end);
             end = { right, bottom };
             (void)track_command_line(c, 256u | 57u, { right, top }, end);
@@ -218,27 +222,28 @@ ParkConstructionRuntime::preview_impl(ConstructionWorld& c, WorldCellCoordinates
     if (mode == 11 || mode == 16 || mode == 53) {
         const auto snap = [](int value, int origin) {
             auto delta = value - origin;
-            if (delta < 0 && delta % 2)
+            if (delta < 0 && delta % 2) {
                 --delta;
+            }
             return origin + 2 * (delta / 2);
         };
-        p = { snap(p.x, c.construction.interaction_cursor_anchor[0]),
-              snap(p.y, c.construction.interaction_cursor_anchor[1]) };
+        p = { snap(p.x, c.construction.interaction_cursor_anchor[0]), snap(p.y, c.construction.interaction_cursor_anchor[1]) };
         state.preview_coordinates = p;
         if (!bounds(p)) {
             state.validation_failed = state.status_latch = true;
             return false;
         }
     }
-    const WorldCellCoordinates start{ c.construction.path_start_x, c.construction.path_start_y };
+    const WorldCellCoordinates start { c.construction.path_start_x, c.construction.path_start_y };
     const auto from = bounds(start) ? start : p;
     auto end = p;
     //Native preview first fixes Y on an X-major tie, then rechecks X against
     //the adjusted Y. This differs from the raw axis wrapper's Y-major tie.
-    if (std::abs(end.x - from.x) >= std::abs(end.y - from.y))
+    if (std::abs(end.x - from.x) >= std::abs(end.y - from.y)) {
         end.y = from.y;
-    else
+    } else {
         end.x = from.x;
+    }
     state.preview_coordinates = end;
     if (mode == 1 || mode == 3 || mode == 20) {
         const auto request = mode == 1 ? 1u : 3u;
@@ -255,42 +260,40 @@ ParkConstructionRuntime::preview_impl(ConstructionWorld& c, WorldCellCoordinates
     } else if (mode == 53) {
         //Native15 selects erase material16 on roots belonging to this ride.
         (void)track_command_line(c, 256u | 15u, from, end);
-    } else
+    } else {
         throw std::logic_error("unsupported construction preview mode");
+    }
     state.preview_coordinates = end;
     return !state.validation_failed && !state.status_latch;
 }
 
-void ParkConstructionRuntime::mouse_down(ConstructionWorld& c,
-                                         WorldCellCoordinates p,
-                                         WorldInputModifierMask modifiers,
-                                         bool use_preview_coordinates) {
+void ParkConstructionRuntime::mouse_down(ConstructionWorld& c, WorldCellCoordinates p, WorldInputModifierMask modifiers, bool use_preview_coordinates) {
     using namespace construction_detail;
     if (c.construction.mode == 21 || c.construction.mode == 22) {
-        if (!c.construction.editor)
+        if (!c.construction.editor) {
             throw std::logic_error("coaster editor owner is not bound");
+        }
         c.construction.editor->mouse_down(c, *this, p, modifiers, use_preview_coordinates);
         return;
     }
     state.mouse_down_pending = true;
     if (c.construction.action_recording_disabled) {
         state.validation_failed = false;
-        if (!c.construction.selected_track_type)
+        if (!c.construction.selected_track_type) {
             (void)preview(c, p, modifiers);
+        }
     }
-    if (use_preview_coordinates)
+    if (use_preview_coordinates) {
         p = state.preview_coordinates;
-    if (!bounds(p)
-        || state.status_latch
-        || c.construction.action_recording_disabled
-        || !c.construction.action_record_streams_initialized)
+    }
+    if (!bounds(p) || state.status_latch || c.construction.action_recording_disabled || !c.construction.action_record_streams_initialized) {
         return;
-    if (!c.construction.action_record_stream)
+    }
+    if (!c.construction.action_record_stream) {
         throw std::logic_error("construction recorder stream is not bound");
+    }
     const auto value = std::to_underlying(modifiers);
-    const std::array bytes{ static_cast<std::byte>(value ? 40 : 15),
-                            static_cast<std::byte>(p.x),
-                            static_cast<std::byte>(p.y) };
+    const std::array bytes { static_cast<std::byte>(value ? 40 : 15), static_cast<std::byte>(p.x), static_cast<std::byte>(p.y) };
     (void)c.construction.action_record_stream->write(bytes);
     if (value) {
         const auto word = save::detail::encode(static_cast<std::uint16_t>(value));

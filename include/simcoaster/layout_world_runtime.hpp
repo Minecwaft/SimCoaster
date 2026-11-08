@@ -18,12 +18,10 @@ struct LayoutCoasterActionBackend {
 //as a successful action or approximated by invented node coordinates.
 class LayoutWorldBackend final : public LayoutReplayBackend {
     ParkConstructionRuntime& construction_;
-    LayoutCoasterActionBackend* coaster_{};
+    LayoutCoasterActionBackend* coaster_ {};
 
 public:
-    explicit LayoutWorldBackend(ParkConstructionRuntime& construction, LayoutCoasterActionBackend* coaster = nullptr)
-        : construction_(construction),
-          coaster_(coaster) {}
+    explicit LayoutWorldBackend(ParkConstructionRuntime& construction, LayoutCoasterActionBackend* coaster = nullptr) : construction_(construction), coaster_(coaster) {}
 
     void bind_coaster_editor(LayoutCoasterActionBackend* editor) {
         coaster_ = editor;

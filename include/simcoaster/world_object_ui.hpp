@@ -40,8 +40,8 @@ enum class ParkObjectUiStatus : std::int32_t {
 };
 
 struct ParkObjectUiStatusPresentation {
-    std::uint32_t text_row{};
-    std::array<std::uint8_t, 4> color{};
+    std::uint32_t text_row {};
+    std::array<std::uint8_t, 4> color {};
 };
 
 //5022A0: all modes share the ordered fault/service predicates. Final fallback
@@ -58,15 +58,12 @@ std::array<std::u16string, 2> park_object_ui_name_components(const ParkObjectRun
 void set_park_object_name_component(WorldRuntime&, ParkObjectRuntimeView&, std::u16string_view, bool first);
 
 struct ParkObjectUiNameCommitResult {
-    bool accepted{};
+    bool accepted {};
     std::optional<std::uint32_t> warning_row;
     //Duplicate warning key29 uses literal inputA+' '+inputB, independently of
     //the hyphen-aware composed display name.
     std::u16string warning_name;
 };
 
-ParkObjectUiNameCommitResult commit_park_object_ui_name(WorldRuntime&,
-                                                        ParkObjectRuntimeView&,
-                                                        std::u16string_view first,
-                                                        std::u16string_view second);
+ParkObjectUiNameCommitResult commit_park_object_ui_name(WorldRuntime&, ParkObjectRuntimeView&, std::u16string_view first, std::u16string_view second);
 } //namespace simcoaster

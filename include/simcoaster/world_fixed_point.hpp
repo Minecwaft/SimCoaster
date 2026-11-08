@@ -11,7 +11,7 @@ using numeric::negate;
 using numeric::absolute;
 
 constexpr std::int32_t multiply(std::int32_t a, std::int32_t b) {
-    return narrow((std::int64_t{ a } * b) >> 16);
+    return narrow((std::int64_t { a } * b) >> 16);
 }
 
 constexpr FixedPointVector2 add(FixedPointVector2 a, FixedPointVector2 b) {
@@ -32,8 +32,5 @@ std::int32_t approximate_length(FixedPointVector2);
 std::int32_t magnitude(FixedPointVector2);
 FixedPointVector2 normalize(FixedPointVector2);
 FixedPointVector2 clamp(FixedPointVector2, std::int32_t maximum);
-std::int32_t ray_circle_intersection(FixedPointVector2 origin,
-                                     FixedPointVector2 direction,
-                                     FixedPointVector2 center,
-                                     std::int32_t radius);
+std::int32_t ray_circle_intersection(FixedPointVector2 origin, FixedPointVector2 direction, FixedPointVector2 center, std::int32_t radius);
 } //namespace simcoaster::fixed

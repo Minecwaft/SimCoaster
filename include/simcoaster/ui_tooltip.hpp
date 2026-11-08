@@ -15,11 +15,7 @@ class UiTooltipController {
     std::unique_ptr<State> state_;
 
 public:
-    UiTooltipController(UiRuntime&,
-                        UiControl* event_root,
-                        UiFontLibrary&,
-                        WorldRuntime&,
-                        const std::filesystem::path& game_root);
+    UiTooltipController(UiRuntime&, UiControl* event_root, UiFontLibrary&, WorldRuntime&, const std::filesystem::path& game_root);
     ~UiTooltipController();
     UiTooltipController(const UiTooltipController&) = delete;
     UiTooltipController& operator=(const UiTooltipController&) = delete;

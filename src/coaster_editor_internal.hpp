@@ -14,13 +14,10 @@
 namespace simcoaster::coaster_editor_detail {
 inline void require(bool value, std::size_t index = 0, std::source_location where = std::source_location::current()) {
     if (!value) {
-        const std::string_view source{ where.file_name() };
+        const std::string_view source { where.file_name() };
         const auto separator = source.find_last_of("/\\");
         const auto filename = separator == std::string_view::npos ? source : source.substr(separator + 1);
-        throw MeshError{ MeshFailure::configuration,
-                         index,
-                         "Coaster editor " + std::string{ filename } + ":" + std::to_string(where.line()),
-                         {} };
+        throw MeshError { MeshFailure::configuration, index, "Coaster editor " + std::string { filename } + ":" + std::to_string(where.line()), {} };
     }
 }
 
@@ -49,34 +46,29 @@ inline const CoasterPylonRuntime& pylon(const CoasterPlacement& owner) {
     return owner.definition->pylons.at(owner.pylon);
 }
 
-inline void
-set_explicit_owner_position(AttractionWorld& c, CoasterPlacement& owner, const std::array<float, 3>& point) {
-    const auto* terrain =
-        c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
+inline void set_explicit_owner_position(AttractionWorld& c, CoasterPlacement& owner, const std::array<float, 3>& point) {
+    const auto* terrain = c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
     require(terrain && terrain->width_cells && terrain->height_cells);
     //Allocator47174C copies the explicit point and derives/clamps the tile;
     //the tile arguments supplied by475090/476E10 are ignored on this branch.
     owner.position = point;
-    owner.tile_x = std::clamp(static_cast<std::int32_t>(static_cast<double>(point[0]) * static_cast<double>(0.1f)),
-                              0,
-                              static_cast<std::int32_t>(terrain->width_cells) - 1);
-    owner.tile_y = std::clamp(static_cast<std::int32_t>(static_cast<double>(point[2]) * static_cast<double>(0.1f)),
-                              0,
-                              static_cast<std::int32_t>(terrain->height_cells) - 1);
+    owner.tile_x = std::clamp(static_cast<std::int32_t>(static_cast<double>(point[0]) * static_cast<double>(0.1f)), 0, static_cast<std::int32_t>(terrain->width_cells) - 1);
+    owner.tile_y = std::clamp(static_cast<std::int32_t>(static_cast<double>(point[2]) * static_cast<double>(0.1f)), 0, static_cast<std::int32_t>(terrain->height_cells) - 1);
 }
 
-inline std::array<float, 3>
-profile_position(WorldMeshRuntime& meshes, const WorldCoasterRuntime& world, const CoasterNodeState& local) {
+inline std::array<float, 3> profile_position(WorldMeshRuntime& meshes, const WorldCoasterRuntime& world, const CoasterNodeState& local) {
     const auto& data = pylon(world.placements.at(local.placement));
     require(data.profile_resource.has_value());
     const auto* live = meshes.instance(local.mesh_slot);
     require(live != nullptr, local.mesh_slot);
     const auto poses = evaluate_mesh_pose(live->playback.model);
-    if (!poses)
+    if (!poses) {
         throw poses.error();
+    }
     const auto transform = mesh_attachment_transform(live->playback.model, *poses, *data.profile_resource);
-    if (!transform)
+    if (!transform) {
         throw transform.error();
+    }
     return { (*transform)[12], (*transform)[13], (*transform)[14] };
 }
 
@@ -90,13 +82,8 @@ inline std::array<std::int32_t, 2> tile(const CoasterPlacement& owner) {
 }
 
 inline void validate_top_level_terrain(const AttractionQuery& c, std::int32_t x, std::int32_t y) {
-    const auto* terrain =
-        c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
-    require(terrain
-            && x >= 0
-            && y >= 0
-            && static_cast<std::uint32_t>(x) < terrain->width_cells
-            && static_cast<std::uint32_t>(y) < terrain->height_cells);
+    const auto* terrain = c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
+    require(terrain && x >= 0 && y >= 0 && static_cast<std::uint32_t>(x) < terrain->width_cells && static_cast<std::uint32_t>(y) < terrain->height_cells);
     const auto cell = static_cast<std::size_t>(y) * terrain->width_cells + static_cast<std::uint32_t>(x);
     require(cell < c.construction.original_terrain_cells.size(), cell);
     //473E62 reads the original terrain snapshot only on its top-level path.
@@ -105,9 +92,11 @@ inline void validate_top_level_terrain(const AttractionQuery& c, std::int32_t x,
 }
 
 inline std::size_t level(const CoasterPlacement& owner, CoasterNodeReference ref) {
-    for (std::size_t i = 0; i < owner.links.size(); ++i)
-        if (owner.links[i] && owner.links[i]->ride == ref.ride && owner.links[i]->node == ref.node)
+    for (std::size_t i = 0; i < owner.links.size(); ++i) {
+        if (owner.links[i] && owner.links[i]->ride == ref.ride && owner.links[i]->node == ref.node) {
             return i;
+        }
+    }
     require(false, ref.node);
     return 0;
 }
@@ -115,37 +104,32 @@ inline std::size_t level(const CoasterPlacement& owner, CoasterNodeReference ref
 inline double cumulative(WorldCoasterRuntime& world, const CoasterPlacement& owner, std::size_t end) {
     const auto& data = pylon(owner);
     double height = 0;
-    for (std::size_t i = 0; i <= end; ++i)
-        if (const auto ref = owner.links.at(i))
-            height += (static_cast<double>(data.height_maximum) - data.height_minimum) * state(world, *ref).controls[0]
-                    + data.height_minimum
-                    + (i < end ? data.height_offset : 0);
+    for (std::size_t i = 0; i <= end; ++i) {
+        if (const auto ref = owner.links.at(i)) {
+            height += (static_cast<double>(data.height_maximum) - data.height_minimum) * state(world, *ref).controls[0] + data.height_minimum + (i < end ? data.height_offset : 0);
+        }
+    }
     return height;
 }
 
-inline void set_height(WorldCoasterRuntime& world,
-                       CoasterPlacement& owner,
-                       std::size_t index,
-                       double requested,
-                       bool bypass = false) {
+inline void set_height(WorldCoasterRuntime& world, CoasterPlacement& owner, std::size_t index, double requested, bool bypass = false) {
     const auto& data = pylon(owner);
-    if (index)
+    if (index) {
         requested -= cumulative(world, owner, index - 1) + data.height_offset;
+    }
     if (!bypass) {
         const auto limits = rules(owner);
-        requested = std::clamp(requested,
-                               static_cast<double>(limits.minimum_height),
-                               static_cast<double>(limits.maximum_height));
+        requested = std::clamp(requested, static_cast<double>(limits.minimum_height), static_cast<double>(limits.maximum_height));
     }
     require(data.height_maximum != data.height_minimum);
-    state(world, *owner.links.at(index)).controls[0] = static_cast<float>(
-        std::clamp((requested - data.height_minimum) / (data.height_maximum - data.height_minimum), 0.0, 1.0));
+    state(world, *owner.links.at(index)).controls[0] = static_cast<float>(std::clamp((requested - data.height_minimum) / (data.height_maximum - data.height_minimum), 0.0, 1.0));
 }
 
 inline void mark(WorldCoasterBinding& binding, std::size_t index) {
     binding.geometry.at(index).geometry_flags |= 0x200000u;
-    if (index)
+    if (index) {
         binding.geometry[index - 1].geometry_flags |= 0x200000u;
+    }
     binding.geometry_dirty = true;
     binding.train_state.runtime_flags |= 0x1001u;
 }
@@ -153,32 +137,31 @@ inline void mark(WorldCoasterBinding& binding, std::size_t index) {
 inline void mark_owner(WorldCoasterRuntime& world, const CoasterPlacement& owner) {
     //471A50 refreshes every linked mesh on this support, marking each node and
     //its predecessor. Raising a lower link also moves the upper links' bounds.
-    for (const auto& ref : owner.links)
-        if (ref)
+    for (const auto& ref : owner.links) {
+        if (ref) {
             mark(world.bindings.at(ref->ride), ref->node);
+        }
+    }
 }
 
-inline const CoasterPlacement*
-previous_placement_owner(const WorldCoasterRuntime& world, std::size_t ride, std::size_t placement) {
-    for (std::size_t i = placement; i > 0; --i)
+inline const CoasterPlacement* previous_placement_owner(const WorldCoasterRuntime& world, std::size_t ride, std::size_t placement) {
+    for (std::size_t i = placement; i > 0; --i) {
         if (std::ranges::any_of(world.placements[i - 1].links, [&](const auto& ref) {
                 return ref && ref->ride == ride;
-            }))
+            })) {
             return &world.placements[i - 1];
+        }
+    }
     return nullptr;
 }
 
-inline double piece_cost(const WorldCoasterRuntime& world,
-                         std::size_t r,
-                         std::size_t index,
-                         bool include_unit = true,
-                         bool use_owner_center = true,
-                         std::optional<std::array<float, 2>> previous_override = {}) {
+inline double piece_cost(const WorldCoasterRuntime& world, std::size_t r, std::size_t index, bool include_unit = true, bool use_owner_center = true, std::optional<std::array<float, 2>> previous_override = {}) {
     const auto& binding = world.bindings.at(r);
     const auto& local = binding.geometry_state.at(index);
     const auto& owner = world.placements.at(local.placement);
-    if (!owner.definition)
+    if (!owner.definition) {
         return 0;
+    }
     const auto& data = pylon(owner);
     const auto original = rules(owner);
     auto coefficients = original;
@@ -189,8 +172,9 @@ inline double piece_cost(const WorldCoasterRuntime& world,
             coefficients = coaster_placement_rules(binding.definition->balance.pylons[0], false);
             selected_flags = binding.definition->pylons[0].flags;
         }
-        if ((selected_flags & 0x4000u) && (!index || !(binding.geometry[index - 1].geometry_flags & 0x80u)))
+        if ((selected_flags & 0x4000u) && (!index || !(binding.geometry[index - 1].geometry_flags & 0x80u))) {
             coefficients = coaster_placement_rules(binding.definition->balance.pylons[0], false);
+        }
     }
     const auto& previous = binding.geometry.at(index ? index - 1 : 0).inline_position;
     const auto& position = binding.geometry[index].inline_position;
@@ -198,21 +182,15 @@ inline double piece_cost(const WorldCoasterRuntime& world,
     //Placement/export supply the tile center, ordinary edit quotes supply no
     //endpoint override, and moving a closed piece supplies its new center as
     //the following piece's predecessor override.
-    const auto x = use_owner_center ? owner.position[0] + 5 : position[0],
-               z = use_owner_center ? owner.position[2] + 5 : position[2];
+    const auto x = use_owner_center ? owner.position[0] + 5 : position[0], z = use_owner_center ? owner.position[2] + 5 : position[2];
     const auto dx = static_cast<double>(x) - (previous_override ? (*previous_override)[0] : previous[0]);
     const auto dz = static_cast<double>(z) - (previous_override ? (*previous_override)[1] : previous[2]);
-    const auto height =
-        (static_cast<double>(data.height_maximum) - data.height_minimum) * local.controls[0] + data.height_minimum;
-    return std::sqrt(dx * dx + dz * dz) * static_cast<double>(0.1f) * coefficients.cost_per_length
-         + (include_unit ? original.cost_per_unit : 0)
-         + height * static_cast<double>(0.1f) * coefficients.cost_per_height;
+    const auto height = (static_cast<double>(data.height_maximum) - data.height_minimum) * local.controls[0] + data.height_minimum;
+    return std::sqrt(dx * dx + dz * dz) * static_cast<double>(0.1f) * coefficients.cost_per_length + (include_unit ? original.cost_per_unit : 0) + height * static_cast<double>(0.1f) * coefficients.cost_per_height;
 }
 
 inline std::int32_t truncated_cost(double value) {
-    require(std::isfinite(value)
-            && value >= static_cast<double>(std::numeric_limits<std::int64_t>::min())
-            && value < static_cast<double>(std::numeric_limits<std::int64_t>::max()));
+    require(std::isfinite(value) && value >= static_cast<double>(std::numeric_limits<std::int64_t>::min()) && value < static_cast<double>(std::numeric_limits<std::int64_t>::max()));
     return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::int64_t>(value)));
 }
 
@@ -223,14 +201,15 @@ inline std::int32_t sum_costs(std::int32_t a, std::int32_t b) {
 inline std::int32_t rounded_cost(float value) {
     //480CB0 truncates the floating argument, then adds one for any nonzero
     //fractional part. Preserve its negative-input behavior as well as positives.
-    double integral{};
+    double integral {};
     const auto fraction = std::modf(static_cast<double>(value), &integral);
     return sum_costs(truncated_cost(integral), fraction != 0 ? 1 : 0);
 }
 
 inline BankRecord* editing_bank(AttractionWorld& c) {
-    if (c.construction.action_recording_disabled)
+    if (c.construction.action_recording_disabled) {
         return nullptr;
+    }
     require(c.simulation.current != nullptr);
     auto* payload = c.entities.at(c.simulation.current->saved.bank_account).payload;
     require(payload && payload->kind == ThingKind::bank_account);
@@ -238,8 +217,9 @@ inline BankRecord* editing_bank(AttractionWorld& c) {
 }
 
 inline void settle_cost(AttractionWorld& c, BankRecord* bank, std::int32_t refund, std::int32_t expense) {
-    if (!bank)
+    if (!bank) {
         return;
+    }
     (void)apply_bank_balance_and_profit_delta(c, bank, refund);
     (void)charge_world_bank_account_expense(c, bank, expense);
 }
@@ -256,18 +236,18 @@ struct EditTransaction {
     std::vector<CoasterPlacement> placements;
 
     struct PylonSnapshot {
-        std::uint32_t slot{};
+        std::uint32_t slot {};
         MeshPlaybackInstance playback;
         SavedMeshInstance metadata;
         std::optional<WorldMeshCellBounds> bounds;
-        float reference_height{};
+        float reference_height {};
         std::optional<MeshHoardingRuntime> hoarding;
     };
 
     std::vector<PylonSnapshot> poses;
     std::vector<std::uint32_t> created, retired;
-    EditTransaction* parent{};
-    bool defer_lifecycle{};
+    EditTransaction* parent {};
+    bool defer_lifecycle {};
 
     struct LifecycleChange {
         std::uint32_t map;
@@ -283,45 +263,39 @@ struct EditTransaction {
     };
 
     std::vector<std::variant<LifecycleChange, AdvisorCancellation>> effects;
-    bool committed{};
+    bool committed {};
 
-    EditTransaction(AttractionWorld& c, WorldMeshRuntime& m, bool defer = false)
-        : context(c),
-          meshes(m),
-          world(runtime(m)),
-          creation(m.capture_creation_checkpoint(c)),
-          bindings(world.bindings),
-          placements(world.placements),
-          parent(world.active_edit_transaction),
-          defer_lifecycle(defer) {
+    EditTransaction(AttractionWorld& c, WorldMeshRuntime& m, bool defer = false) : context(c), meshes(m), world(runtime(m)), creation(m.capture_creation_checkpoint(c)), bindings(world.bindings), placements(world.placements), parent(world.active_edit_transaction), defer_lifecycle(defer) {
         const auto capture = [&](std::uint32_t slot) {
             if (!slot || std::ranges::any_of(poses, [&](const auto& p) {
                     return p.slot == slot;
-                }))
+                })) {
                 return;
-            if (const auto* mesh = meshes.instance(slot))
-                poses.push_back({ slot,
-                                  mesh->playback,
-                                  mesh->metadata,
-                                  mesh->cell_bounds,
-                                  mesh->placement_reference_height,
-                                  mesh->hoarding });
+            }
+            if (const auto* mesh = meshes.instance(slot)) {
+                poses.push_back({ slot, mesh->playback, mesh->metadata, mesh->cell_bounds, mesh->placement_reference_height, mesh->hoarding });
+            }
         };
         for (const auto& ride : world.bindings) {
-            for (const auto& local : ride.geometry_state)
+            for (const auto& local : ride.geometry_state) {
                 capture(local.mesh_slot);
-            if (defer)
-                for (const auto& train : ride.train_state.trains)
-                    for (const auto& car : train.cars)
+            }
+            if (defer) {
+                for (const auto& train : ride.train_state.trains) {
+                    for (const auto& car : train.cars) {
                         capture(car.mesh_slot);
+                    }
+                }
+            }
         }
         world.active_edit_transaction = this;
     }
 
     EditTransaction& root() {
         auto* p = this;
-        while (p->parent)
+        while (p->parent) {
             p = p->parent;
+        }
         return *p;
     }
 
@@ -331,11 +305,12 @@ struct EditTransaction {
 
     ~EditTransaction() {
         world.active_edit_transaction = parent;
-        if (committed)
+        if (committed) {
             return;
+        }
         world.bindings = std::move(bindings);
         world.placements = std::move(placements);
-        for (auto& pose : poses)
+        for (auto& pose : poses) {
             if (auto* mesh = meshes.instance(pose.slot)) {
                 mesh->playback = std::move(pose.playback);
                 mesh->metadata = pose.metadata;
@@ -343,9 +318,12 @@ struct EditTransaction {
                 mesh->placement_reference_height = pose.reference_height;
                 mesh->hoarding = std::move(pose.hoarding);
             }
-        for (const auto slot : created)
-            if (meshes.instance(slot))
+        }
+        for (const auto slot : created) {
+            if (meshes.instance(slot)) {
                 meshes.erase(context, slot);
+            }
+        }
         meshes.rollback_failed_creation(context, creation);
     }
 
@@ -375,15 +353,15 @@ struct EditTransaction {
                 case { const AdvisorCancellation& change } => {
                     auto* advisor = context.entities.at(change.advisor).payload;
                     require(advisor && advisor->kind == ThingKind::advisor);
-                    world_operations::cancel_advisor_action_by_id(context,
-                                                                  reinterpret_cast<AdvisorRecord*>(advisor),
-                                                                  change.action);
+                    world_operations::cancel_advisor_action_by_id(context, reinterpret_cast<AdvisorRecord*>(advisor), change.action);
                 }
             }
         }
-        for (const auto slot : retired)
-            if (meshes.instance(slot))
+        for (const auto slot : retired) {
+            if (meshes.instance(slot)) {
                 meshes.erase(context, slot);
+            }
+        }
         committed = true;
     }
 };
@@ -396,14 +374,9 @@ enum class PlacementValidation {
 //48E270 reconstructs a midpoint through474B60 after its own candidate scan;
 //it does not invoke473D60's interactive recursive angle validation. Both
 //paths retain one atomic geometry transaction and the same native debit.
-std::expected<std::size_t, MeshError> place_node_transaction(AttractionWorld&,
-                                                             WorldMeshRuntime&,
-                                                             std::uint32_t map,
-                                                             const CoasterNodePlacement&,
-                                                             PlacementValidation);
+std::expected<std::size_t, MeshError> place_node_transaction(AttractionWorld&, WorldMeshRuntime&, std::uint32_t map, const CoasterNodePlacement&, PlacementValidation);
 void detach_node_from_stack(WorldCoasterRuntime&, std::size_t ride, std::size_t index);
 void erase_node_raw(EditTransaction&, std::size_t ride, std::size_t index);
 void finish(EditTransaction&, std::size_t ride);
-void
-move_node_raw(EditTransaction&, std::size_t ride, std::size_t index, std::int32_t x, std::int32_t y, bool validate);
+void move_node_raw(EditTransaction&, std::size_t ride, std::size_t index, std::int32_t x, std::int32_t y, bool validate);
 } //namespace simcoaster::coaster_editor_detail

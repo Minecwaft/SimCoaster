@@ -3,11 +3,7 @@
 #include "company_email_internal.hpp"
 
 namespace simcoaster::staff_mail_detail {
-inline void initialize(StaffWorld& c,
-                       CompanyEmailMessage& email,
-                       StaffRuntimeRecord& staff,
-                       CompanyEmailMessageKind kind,
-                       std::uint32_t argument) {
+inline void initialize(StaffWorld& c, CompanyEmailMessage& email, StaffRuntimeRecord& staff, CompanyEmailMessageKind kind, std::uint32_t argument) {
     email.concrete_class = CompanyEmailClass::staff;
     email.reason = kind;
     email.staff_record = &staff;
@@ -17,7 +13,8 @@ inline void initialize(StaffWorld& c,
     email.append_signature = 1;
     email.tag_id = 151;
     email.selected_variant = find_tag_system_message_variant_by_id(c, 5);
-    if (!email.selected_variant)
+    if (!email.selected_variant) {
         throw std::logic_error("staff sender variant5 is missing");
+    }
 }
 } //namespace simcoaster::staff_mail_detail

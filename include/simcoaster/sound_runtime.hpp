@@ -13,21 +13,21 @@ struct SoundRuntimeSettings {
 };
 
 struct SoundOcclusionVolume {
-    std::array<float, 3> position{};
-    float radius{}, height{};
+    std::array<float, 3> position {};
+    float radius {}, height {};
 };
 
 struct SoundRuntimeStatistics {
-    std::size_t targets{}, children{}, voices{}, pool_slots{}, failed_requests{};
+    std::size_t targets {}, children {}, voices {}, pool_slots {}, failed_requests {};
 };
 
 struct SoundRequestSelection {
-    std::uint32_t catalog{}, key{};
+    std::uint32_t catalog {}, key {};
 };
 
 //Native89D1D0 memory/request order; the save stream writes max_z first.
 struct SoundTargetXZBounds {
-    std::int32_t min_x{}, max_z{}, max_x{}, min_z{};
+    std::int32_t min_x {}, max_z {}, max_x {}, min_z {};
 };
 
 //Single World-owned native runtime. Request calls stage target changes; the
@@ -44,18 +44,11 @@ public:
     SoundRuntime& operator=(const SoundRuntime&) = delete;
     SoundCatalogLibrary& catalogs();
     const SoundCatalogLibrary& catalogs() const;
-    std::uint32_t submit(std::uint32_t previous,
-                         std::uint32_t catalog,
-                         std::uint32_t key,
-                         const std::array<float, 3>& position,
-                         float parameter = 0.f);
+    std::uint32_t submit(std::uint32_t previous, std::uint32_t catalog, std::uint32_t key, const std::array<float, 3>& position, float parameter = 0.f);
     //Native requestkind1 owns a finite list of catalog/key pairs. Its target
     //reports kind5 but advances the request list instead of repeating one
     //descriptor. Each referenced catalog remains owned for the whole request.
-    std::uint32_t submit_sequence(std::uint32_t previous,
-                                  std::span<const SoundRequestSelection>,
-                                  const std::array<float, 3>& position,
-                                  float parameter = 0.f);
+    std::uint32_t submit_sequence(std::uint32_t previous, std::span<const SoundRequestSelection>, const std::array<float, 3>& position, float parameter = 0.f);
     std::uint32_t operation(std::uint32_t target, std::int32_t operation, std::int32_t value);
     std::uint32_t set_position(std::uint32_t target, const std::array<float, 3>&);
     //Stage the listener-clamped emitter rectangle; range evaluation moves the

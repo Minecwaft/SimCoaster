@@ -20,8 +20,8 @@ enum class ParkAwardClaim : std::int32_t {
 };
 
 struct ParkAwardCandidate {
-    ThingId thing{};
-    std::int32_t score{};
+    ThingId thing {};
+    std::int32_t score {};
 };
 
 ParkAwardClaim claim_or_replace_global_park_award(ThemeGlobalInfoManager&, ParkAwardType, std::int32_t score);

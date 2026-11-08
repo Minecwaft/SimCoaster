@@ -6,7 +6,7 @@
 
 namespace simcoaster::file_platform {
 struct DirectoryIdentity {
-    std::uint32_t volume{}, index_high{}, index_low{};
+    std::uint32_t volume {}, index_high {}, index_low {};
     bool operator==(const DirectoryIdentity&) const = default;
 };
 

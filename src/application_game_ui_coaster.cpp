@@ -10,27 +10,27 @@
 
 namespace simcoaster {
 namespace {
-constexpr unsigned char coaster_words[]{
+constexpr unsigned char coaster_words[] {
 #embed "ui_templates/app_coaster_save.bin"
 };
 } //namespace
 
 ParkObjectRuntimeView* ApplicationGameUiController::State::first_ride() const {
     //4FA090 filter128 delegates to the same base-ride predicate as the roster.
-    std::size_t visited{};
+    std::size_t visited {};
     for (auto* node = c.entities.active_head; node; node = node->active_next) {
-        if (++visited > c.entities.size())
+        if (++visited > c.entities.size()) {
             throw std::logic_error("Cyclic live object list");
+        }
         auto* header = node->payload;
-        if (!header || header->kind != ThingKind::park_object || header->retirement_pending)
+        if (!header || header->kind != ThingKind::park_object || header->retirement_pending) {
             continue;
+        }
         auto& object = *reinterpret_cast<ParkObjectRuntimeView*>(header);
         const auto* definition = get_park_object_definition(c, &object);
-        if (definition
-            && definition->which_ui_type == ObjectUiCategory::rides
-            && !static_cast<std::uint16_t>(definition->add_on.upgrades_id)
-            && (definition->is_special != 1 || is_special_ride_group_id_unregistered(c, header->id)))
+        if (definition && definition->which_ui_type == ObjectUiCategory::rides && !static_cast<std::uint16_t>(definition->add_on.upgrades_id) && (definition->is_special != 1 || is_special_ride_group_id_unregistered(c, header->id))) {
             return &object;
+        }
     }
     return nullptr;
 }
@@ -84,8 +84,9 @@ void ApplicationGameUiController::State::open_coaster_save() {
 }
 
 void ApplicationGameUiController::State::save_coaster(bool overwrite) {
-    if (!coaster_alive() || page != Page::coaster_name)
+    if (!coaster_alive() || page != Page::coaster_name) {
         return;
+    }
     ApplicationSaveCoasterRequest request;
     request.naming.emplace();
     request.coaster = coaster;
@@ -96,8 +97,9 @@ void ApplicationGameUiController::State::save_coaster(bool overwrite) {
     name = request.naming->components[0];
     //531260 reads one WORD before an empty native prefix. Modern owned text
     //makes that undefined case deterministic: an empty prefix uses B alone.
-    if (!name.empty() && name.back() != u' ')
+    if (!name.empty() && name.back() != u' ') {
         name += u' ';
+    }
     name += request.naming->components[1];
     auto files = host.list_files(ApplicationFileKind::coaster);
     if (!files) {
@@ -105,8 +107,9 @@ void ApplicationGameUiController::State::save_coaster(bool overwrite) {
         return;
     }
     const auto existing = std::ranges::find(*files, name, &ApplicationFileEntry::name);
-    if (existing != files->end())
+    if (existing != files->end()) {
         request.file_identity = existing->identity;
+    }
     request.overwrite = overwrite;
     request.naming->refresh_sign = !overwrite;
     const bool conflict = existing != files->end();
@@ -117,22 +120,25 @@ void ApplicationGameUiController::State::save_coaster(bool overwrite) {
     coaster_generation = request.coaster_generation;
     if (conflict && !overwrite) {
         message(text(8), text(9), {}, [this, request = std::move(request)]() mutable {
-            if (!coaster_alive())
+            if (!coaster_alive()) {
                 return;
+            }
             request.overwrite = true;
             request.naming->refresh_sign = false;
             enqueue({ .payload = std::move(request) }, true);
         });
-    } else
+    } else {
         enqueue({ .payload = std::move(request) }, true);
+    }
 }
 
 std::intptr_t ApplicationGameUiController::State::coaster_event(UiControl& sender, const UiEvent& e) {
     if (e.type == 2050) {
-        if (e.id == 900002)
+        if (e.id == 900002) {
             ui.set_focus(&required(root, 900003));
-        else
+        } else {
             ui.post(root, 256, 4294967295u);
+        }
         return 0;
     }
     if (e.type == 2051) {

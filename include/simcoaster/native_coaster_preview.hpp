@@ -8,17 +8,17 @@ namespace simcoaster {
 //The temporary graph, models and allocator changes are rolled back before
 //these values leave the editor. They cannot enter save projections or picking.
 struct NativeCoasterPreviewModel {
-    std::uint32_t source_slot{}, template_id{};
-    bool registered{};
+    std::uint32_t source_slot {}, template_id {};
+    bool registered {};
     MeshModel model;
     std::optional<MeshModel> hoarding;
     std::vector<MeshBaseTilePlacement> terrain_texture_cells;
 };
 
 struct NativeCoasterPreview {
-    std::uint32_t map_id{};
-    bool valid{};
-    std::int32_t piece_cost{}, interaction_cost{};
+    std::uint32_t map_id {};
+    bool valid {};
+    std::int32_t piece_cost {}, interaction_cost {};
     std::optional<CoasterTrackMesh> track;
     std::vector<NativeCoasterPreviewModel> models;
 };

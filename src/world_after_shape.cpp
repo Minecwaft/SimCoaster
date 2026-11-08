@@ -16,10 +16,12 @@ DefinitionGrid& require_grid(DefinitionGrid* grid) {
 }
 
 MapCell& primary_map_cell(WorldRuntime& c, CellId id) {
-    if (!c.simulation.reference)
+    if (!c.simulation.reference) {
         throw std::invalid_argument("null AfterShape primary World");
-    if (!id)
+    }
+    if (!id) {
         throw std::out_of_range("zero AfterShape cell ID");
+    }
     //Native address arithmetic is biased by one record. The natural array begins at
     //logical cell1, matching the existing used-thing placement/link helpers.
     return c.simulation.reference->map_cells.at(static_cast<std::size_t>(id) - 1);
@@ -28,12 +30,13 @@ MapCell& primary_map_cell(WorldRuntime& c, CellId id) {
 void create_replacement(WorldRuntime& c, ResearchCatalogDefinition& definition) {
     const auto x = definition.shape_offset_x, y = definition.shape_offset_y;
     const auto* descriptor = record_descriptor(ThingKind::park_object);
-    if (!descriptor)
+    if (!descriptor) {
         throw std::logic_error("missing park object allocation descriptor");
-    auto* raw =
-        static_cast<ParkObjectRuntimeView*>(c.entities.allocate_payload(c.ports.memory, descriptor->allocation_size));
-    if (!raw)
+    }
+    auto* raw = static_cast<ParkObjectRuntimeView*>(c.entities.allocate_payload(c.ports.memory, descriptor->allocation_size));
+    if (!raw) {
         return; //Native nullable allocation still retires the old object.
+    }
     try {
         auto* object = std::construct_at(raw);
         const auto cell = static_cast<CellId>((y << 7) + x + 1u);
@@ -48,8 +51,9 @@ void create_replacement(WorldRuntime& c, ResearchCatalogDefinition& definition) 
 } //namespace
 
 void apply_object_definition_after_shape_grid(WorldRuntime& c, ThingHeader* record) {
-    if (!record)
+    if (!record) {
         throw std::invalid_argument("null AfterShape object");
+    }
     auto* object = reinterpret_cast<ParkObjectRuntimeView*>(record);
     //The original performs both catalog lookups and discards the first result.
     (void)find_object_definition_by_id(&c.resources.object_catalog, object->definition_id);
@@ -78,11 +82,9 @@ void apply_object_definition_after_shape_grid(WorldRuntime& c, ThingHeader* reco
                     set_world_cell_parent_id_unchecked(&cell.base, 0);
                     const auto absolute_x = x + static_cast<std::uint32_t>(column);
                     const auto absolute_y = y + static_cast<std::uint32_t>(row);
-                    if (!absolute_x
-                        || !absolute_y
-                        || absolute_x == c.weather.map_heightfield_width
-                        || absolute_y == c.weather.map_heightfield_height)
+                    if (!absolute_x || !absolute_y || absolute_x == c.weather.map_heightfield_width || absolute_y == c.weather.map_heightfield_height) {
                         (void)apply_definition_grid_cell_type(c, &cell.base, 5);
+                    }
                 }
                 //Keep the captured cell through all callbacks. Only the next visit
                 //resolves the current primary World and the current grid pointer.
@@ -94,10 +96,11 @@ void apply_object_definition_after_shape_grid(WorldRuntime& c, ThingHeader* reco
         }
     }
     const auto replacement_id = static_cast<std::uint16_t>(definition.replace_with_id);
-    if (replacement_id)
+    if (replacement_id) {
         create_replacement(c, require_definition(c, replacement_id));
-    else if (definition.delete_after_use != 1)
+    } else if (definition.delete_after_use != 1) {
         return;
+    }
     c.ports.meshes.rebuild_terrain_cell_shading(c);
     world_operations::refresh_active_park_object_meshes(c);
     retire_world_used_thing(c, record);

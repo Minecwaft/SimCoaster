@@ -25,8 +25,9 @@ template <class F>
 void active(EconomyWorld& c, F&& visit) {
     for (auto* node = c.entities.active_head; node;) {
         auto* h = node->payload;
-        if (!h)
+        if (!h) {
             throw std::logic_error("park award active record");
+        }
         visit(*h);
         node = c.entities.at(h->id).active_next;
     }
@@ -35,18 +36,15 @@ void active(EconomyWorld& c, F&& visit) {
 template <class F>
 void objects(EconomyWorld& c, F&& visit) {
     active(c, [&](ThingHeader& h) {
-        if (h.kind == ThingKind::park_object)
+        if (h.kind == ThingKind::park_object) {
             visit(*reinterpret_cast<ParkObjectRuntimeView*>(&h));
+        }
     });
 }
 
 bool covered(EconomyWorld& c, const MapCell& cell) {
     const auto type = cell.base.common.type;
-    return type == 9
-        || type == 10
-        || type == 4
-        || world_track_reference_matches_type_set(c, cell.base.index)
-        || type == 21;
+    return type == 9 || type == 10 || type == 4 || world_track_reference_matches_type_set(c, cell.base.index) || type == 21;
 }
 
 std::int32_t quotient(std::int32_t a, std::int32_t b) {
@@ -55,8 +53,9 @@ std::int32_t quotient(std::int32_t a, std::int32_t b) {
 
 std::size_t index(ParkAwardType type) {
     const auto value = std::to_underlying(type);
-    if (value < 0 || value >= 8)
+    if (value < 0 || value >= 8) {
         throw std::out_of_range("park award type");
+    }
     return static_cast<std::size_t>(value);
 }
 } //namespace
@@ -64,13 +63,15 @@ std::size_t index(ParkAwardType type) {
 ParkAwardClaim claim_or_replace_global_park_award(ThemeGlobalInfoManager& m, ParkAwardType type, std::int32_t score) {
     const auto i = index(type);
     auto* selected = m.selected_theme_info;
-    if (!selected)
+    if (!selected) {
         throw std::logic_error("park award selected theme");
+    }
     if (m.global_park_award_flags[i]) {
         //A winning park does not improve its stored score. Only another park can
         //take the record; equal scores keep the incumbent.
-        if (selected->award_winner_flags[i])
+        if (selected->award_winner_flags[i]) {
             return ParkAwardClaim::unchanged;
+        }
         for (auto& [source, theme] : m.theme_info_records) {
             (void)source;
             if (theme.award_winner_flags[i] && score > theme.award_scores[i]) {
@@ -88,20 +89,19 @@ ParkAwardClaim claim_or_replace_global_park_award(ThemeGlobalInfoManager& m, Par
 }
 
 ParkAwardCandidate select_coaster_park_award_candidate(EconomyWorld& c, bool speed, ThingId filter) {
-    ParkAwardCandidate best{};
+    ParkAwardCandidate best {};
     bool found = false;
     objects(c, [&](const ParkObjectRuntimeView& o) {
-        if (get_park_object_balance(c, o).Bumper.WhichTrackType != 3
-            || (filter && o.definition_id != filter)
-            || !o.can_load
-            || !o.prebuilt_track_edited
-            || !o.been_around_at_least_a_month)
+        if (get_park_object_balance(c, o).Bumper.WhichTrackType != 3 || (filter && o.definition_id != filter) || !o.can_load || !o.prebuilt_track_edited || !o.been_around_at_least_a_month) {
             return;
-        if (!c.resources.meshes || !c.resources.meshes->coasters())
+        }
+        if (!c.resources.meshes || !c.resources.meshes->coasters()) {
             throw std::logic_error("park award coaster metrics owner");
+        }
         const auto* binding = c.resources.meshes->coasters()->find(o.mesh_instance_id);
-        if (!binding)
+        if (!binding) {
             throw std::logic_error("park award coaster mesh binding");
+        }
         const auto value = speed ? binding->metrics.maximum_speed : binding->metrics.maximum_y;
         //Native compares the unsigned DWORD retained from the previous truncated
         //metric to the next float. This is numeric state, never a host pointer.
@@ -114,16 +114,16 @@ ParkAwardCandidate select_coaster_park_award_candidate(EconomyWorld& c, bool spe
 }
 
 ParkAwardCandidate select_track_park_award_candidate(EconomyWorld& c, std::int32_t track_type) {
-    ParkAwardCandidate best{};
+    ParkAwardCandidate best {};
     bool found = false;
     objects(c, [&](const ParkObjectRuntimeView& o) {
-        if (!o.can_load)
+        if (!o.can_load) {
             return;
+        }
         const auto* d = get_park_object_definition(c, &o);
-        if (!d
-            || d->which_ui_type != ObjectUiCategory::rides
-            || get_park_object_balance(c, o).Bumper.WhichTrackType != track_type)
+        if (!d || d->which_ui_type != ObjectUiCategory::rides || get_park_object_balance(c, o).Bumper.WhichTrackType != track_type) {
             return;
+        }
         const auto metrics = c.ports.entities.collect_track_ride_layout_metrics(c, o.track_ride_handle);
         //Standard.sam explicitly calls GokartSpeed the longest straight section.
         const auto value = track_type == 1 ? metrics.longest_supported_run : metrics.visited_entry_count;
@@ -137,8 +137,9 @@ ParkAwardCandidate select_track_park_award_candidate(EconomyWorld& c, std::int32
 
 std::int32_t count_park_object_covered_cells(EconomyWorld& c) {
     std::int32_t count = 0;
-    for (const auto& cell : world(c).map_cells)
+    for (const auto& cell : world(c).map_cells) {
         count += covered(c, cell);
+    }
     return count;
 }
 
@@ -147,13 +148,16 @@ std::int32_t calculate_park_decoration_percentage(EconomyWorld& c) {
     std::int32_t decorated = 0;
     objects(c, [&](const ParkObjectRuntimeView& o) {
         const auto* d = get_park_object_definition(c, &o);
-        if (!d)
+        if (!d) {
             throw std::logic_error("decoration object definition");
-        if (d->which_ui_type != ObjectUiCategory::features)
+        }
+        if (d->which_ui_type != ObjectUiCategory::features) {
             return;
+        }
         const auto* shape = get_park_object_balance(c, o).Info.Shape.get();
-        if (!shape)
+        if (!shape) {
             throw std::logic_error("decoration shape");
+        }
         decorated = fixed::add(decorated, numeric::product(shape->width, shape->height));
     });
     //The original tests the numerator, not the denominator. Report invalid
@@ -186,19 +190,15 @@ std::int32_t calculate_staff_training_percentage(EconomyWorld& c) {
 }
 
 void notify_park_award(EconomyWorld& c, ParkAwardType type, ParkAwardClaim status) {
-    constexpr std::array won{ 191, 314, 315, 316, 317, 318, 192, 193 };
-    constexpr std::array transferred{ 195, 322, 323, 324, 325, 326, 196, 197 };
+    constexpr std::array won { 191, 314, 315, 316, 317, 318, 192, 193 };
+    constexpr std::array transferred { 195, 322, 323, 324, 325, 326, 196, 197 };
     const auto i = index(type);
     if (status == ParkAwardClaim::new_award || status == ParkAwardClaim::transferred) {
         const auto action = (status == ParkAwardClaim::new_award ? won : transferred)[i];
-        AdvisorQueueEntry candidate{};
+        AdvisorQueueEntry candidate {};
         init_advisor_action_candidate(c, candidate, action, 0, 0, static_cast<std::uint32_t>(-1), 0, -1);
-        WorldEvent event{ AdvisorActionEvent{ candidate } };
-        dispatch_world_event_to_subscribers(c,
-                                            get_world_event_subscription_registry(c),
-                                            &event,
-                                            deliver_world_record_event,
-                                            nullptr);
+        WorldEvent event { AdvisorActionEvent { candidate } };
+        dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &event, deliver_world_record_event, nullptr);
     }
     auto& panel = c.ui.panels.park_awards;
     panel.highlighted_type = std::to_underlying(type);
@@ -211,8 +211,9 @@ void notify_park_award(EconomyWorld& c, ParkAwardType type, ParkAwardClaim statu
 
 bool notify_new_park_award(EconomyWorld& c, ParkAwardType type, std::int32_t score) {
     const auto claim = claim_or_replace_global_park_award(get_or_create_theme_global_info_manager(c), type, score);
-    if (claim == ParkAwardClaim::unchanged)
+    if (claim == ParkAwardClaim::unchanged) {
         return false;
+    }
     notify_park_award(c, type, claim);
     return true;
 }
@@ -222,31 +223,34 @@ void evaluate_world_park_awards(EconomyWorld& c) {
     const auto award = [&](ParkAwardType type, std::int32_t score, std::int32_t threshold) {
         return score >= threshold && notify_new_park_award(c, type, score);
     };
-    if (award(ParkAwardType::coaster_height, select_coaster_park_award_candidate(c, false).score, p.CoasterHeight))
+    if (award(ParkAwardType::coaster_height, select_coaster_park_award_candidate(c, false).score, p.CoasterHeight)) {
         return;
-    if (award(ParkAwardType::coaster_speed, select_coaster_park_award_candidate(c, true).score, p.CoasterSpeed))
+    }
+    if (award(ParkAwardType::coaster_speed, select_coaster_park_award_candidate(c, true).score, p.CoasterSpeed)) {
         return;
+    }
     const auto hygiene = fixed::subtract(100, calculate_park_path_litter_percentage(c));
-    if (hygiene >= p.Hygiene
-        && count_park_object_covered_cells(c) >= p.HygieneMinParkSize
-        && notify_new_park_award(c, ParkAwardType::hygiene, hygiene))
+    if (hygiene >= p.Hygiene && count_park_object_covered_cells(c) >= p.HygieneMinParkSize && notify_new_park_award(c, ParkAwardType::hygiene, hygiene)) {
         return;
-    if (award(ParkAwardType::decoration, calculate_park_decoration_percentage(c), p.Decoration))
+    }
+    if (award(ParkAwardType::decoration, calculate_park_decoration_percentage(c), p.Decoration)) {
         return;
+    }
     const auto patrol = calculate_world_staff_patrol_coverage(c, ThingKind::guard, StaffCoverageCellFilter::land);
-    if (award(ParkAwardType::security, fixed::add(patrol, calculate_secured_park_cell_percentage(c)), p.Security))
+    if (award(ParkAwardType::security, fixed::add(patrol, calculate_secured_park_cell_percentage(c)), p.Security)) {
         return;
+    }
     const auto training = calculate_staff_training_percentage(c);
     std::int32_t staff = 0;
     active(c, [&](const ThingHeader& h) {
         staff += is_staff_record_kind(h.kind);
     });
-    if (training >= p.Training
-        && staff >= p.TrainingMinStaff
-        && notify_new_park_award(c, ParkAwardType::training, training))
+    if (training >= p.Training && staff >= p.TrainingMinStaff && notify_new_park_award(c, ParkAwardType::training, training)) {
         return;
-    if (award(ParkAwardType::gokart_speed, select_track_park_award_candidate(c, 1).score, p.GokartSpeed))
+    }
+    if (award(ParkAwardType::gokart_speed, select_track_park_award_candidate(c, 1).score, p.GokartSpeed)) {
         return;
+    }
     (void)award(ParkAwardType::water_length, select_track_park_award_candidate(c, 2).score, p.WaterLength);
 }
 
@@ -255,10 +259,9 @@ void world_operations::builtin::evaluate_awards(WorldRuntime& c, void*) {
 }
 
 std::uint32_t ClockPort::get_ui_clock_time_ms(WorldRuntime& c) {
-    if (c.resources.meshes)
+    if (c.resources.meshes) {
         return static_cast<std::uint32_t>(c.resources.meshes->clocks.unscaled.count());
-    return static_cast<std::uint32_t>(
-        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch())
-            .count());
+    }
+    return static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count());
 }
 } //namespace simcoaster

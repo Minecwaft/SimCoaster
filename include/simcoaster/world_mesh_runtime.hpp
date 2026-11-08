@@ -46,46 +46,46 @@ enum class MeshTemplateLoadFlag : std::uint32_t {
 //Template handles and catalog keys are distinct namespaces. New registrations
 //append even when a key repeats; restore finds the most recent registration.
 struct WorldMeshTemplate {
-    std::uint32_t definition_key{}, control_count{ 1 }, runtime_flags{};
-    std::int32_t footprint_width{}, footprint_height{};
+    std::uint32_t definition_key {}, control_count { 1 }, runtime_flags {};
+    std::int32_t footprint_width {}, footprint_height {};
     std::shared_ptr<const MeshPlaybackAssets> assets, alternate;
-    std::shared_ptr<const MeshHoardingTemplate> hoarding{};
-    std::shared_ptr<const MeshProceduralBase> terrain_base{};
-    std::shared_ptr<const MeshProceduralBase> alternate_terrain_base{};
-    std::shared_ptr<const MeshHeightMap> height_map{};
-    std::string source_directory{}, resource_name{};
-    std::optional<std::u16string> sign_text_override{}, sign_source_override{};
-    std::uint32_t load_options{};
-    std::shared_ptr<const WorldCoasterDefinition> coaster{};
-    std::shared_ptr<const MeshBaseTilePlan> terrain_texture_plan{};
+    std::shared_ptr<const MeshHoardingTemplate> hoarding {};
+    std::shared_ptr<const MeshProceduralBase> terrain_base {};
+    std::shared_ptr<const MeshProceduralBase> alternate_terrain_base {};
+    std::shared_ptr<const MeshHeightMap> height_map {};
+    std::string source_directory {}, resource_name {};
+    std::optional<std::u16string> sign_text_override {}, sign_source_override {};
+    std::uint32_t load_options {};
+    std::shared_ptr<const WorldCoasterDefinition> coaster {};
+    std::shared_ptr<const MeshBaseTilePlan> terrain_texture_plan {};
 };
 
 struct WorldMeshCellBounds {
-    std::array<std::int64_t, 2> minimum{}, maximum{};
+    std::array<std::int64_t, 2> minimum {}, maximum {};
 };
 
 struct MeshPassengerResourceLease {
-    std::uint32_t handle{};
-    std::uint64_t generation{};
+    std::uint32_t handle {};
+    std::uint64_t generation {};
 };
 
 struct WorldMeshInstance {
     //Process-only allocation identity. Slot reuse and restored records receive
     //new identities; editor rollback never rewinds the owning counter.
-    std::uint64_t generation{};
-    std::optional<std::u16string> sign_text_override{}, sign_source_override{};
-    MeshRuntimeOpeningView opening_view{};
-    std::uint32_t template_id{};
+    std::uint64_t generation {};
+    std::optional<std::u16string> sign_text_override {}, sign_source_override {};
+    MeshRuntimeOpeningView opening_view {};
+    std::uint32_t template_id {};
     MeshPlaybackInstance playback;
     std::optional<MeshHoardingRuntime> hoarding;
     std::shared_ptr<const MeshProceduralBase> terrain_base;
-    float placement_reference_height{};
+    float placement_reference_height {};
     std::shared_ptr<const DefinitionGrid> placement_geometry;
     SavedMeshInstance metadata;
     std::optional<WorldMeshCellBounds> cell_bounds;
     std::vector<MeshEmbeddedState> embedded;
     std::vector<MeshPassengerResourceLease> passenger_resources;
-    std::uint32_t embedded_flags{}, active_embedded_count{};
+    std::uint32_t embedded_flags {}, active_embedded_count {};
     //Save projections are temporary native-width staging, never runtime owners.
     mutable std::vector<std::uint32_t> wire_node_flags;
     mutable std::vector<MeshAnimationControl> wire_controls;
@@ -102,14 +102,14 @@ class WorldMeshCreationCheckpoint {
     friend class WorldMeshRuntime;
 
     struct SlotIdentity {
-        std::uint32_t slot{};
-        const WorldMeshInstance* instance{};
+        std::uint32_t slot {};
+        const WorldMeshInstance* instance {};
     };
 
-    const WorldMeshRuntime* owner_{};
-    MeshSlotAllocatorState allocator_{};
-    std::size_t slot_limit_{}, event_count_{}, retiring_count_{};
-    std::uint32_t selected_slot_{};
+    const WorldMeshRuntime* owner_ {};
+    MeshSlotAllocatorState allocator_ {};
+    std::size_t slot_limit_ {}, event_count_ {}, retiring_count_ {};
+    std::uint32_t selected_slot_ {};
     std::vector<SlotIdentity> original_live_;
     WorldMeshCreationCheckpoint() = default;
 
@@ -125,7 +125,7 @@ enum class WorldMeshUpdate {
 };
 
 struct WorldMeshEvent {
-    std::uint32_t slot{}, events{};
+    std::uint32_t slot {}, events {};
 };
 enum class WorldMeshHoardingEvent : std::uint32_t {
     registered = 8,
@@ -139,16 +139,16 @@ enum class WorldMeshHoardingEvent : std::uint32_t {
 //and coaster runtime metrics remain separate renderer/simulation dependencies.
 class WorldMeshRuntime final : public GameRestoreBackends, public GameSaveBackends {
     std::vector<WorldMeshTemplate> templates_;
-    std::vector<std::unique_ptr<WorldMeshInstance>> slots_{ 1 };
-    MeshSlotAllocatorState allocator_{};
+    std::vector<std::unique_ptr<WorldMeshInstance>> slots_ { 1 };
+    MeshSlotAllocatorState allocator_ {};
     std::vector<WorldMeshEvent> events_;
     std::unique_ptr<DefinitionGrid> fallback_storage_;
     std::unique_ptr<WorldCoasterRuntime> coasters_;
     std::vector<std::uint32_t> retiring_slots_;
-    bool restoring_{};
+    bool restoring_ {};
     std::unique_ptr<WorldSignRuntime> signs_;
-    MeshTextureEnvironment* terrain_textures_{}; //Bound production renderer, owned by ParkRuntime.
-    std::uint64_t next_instance_generation_{};
+    MeshTextureEnvironment* terrain_textures_ {}; //Bound production renderer, owned by ParkRuntime.
+    std::uint64_t next_instance_generation_ {};
     void prepare_terrain_textures(WorldMeshInstance&, const WorldMeshTemplate&);
     void erase_coaster(AttractionWorld&, std::uint32_t);
     void deliver(WorldRuntime&, std::uint32_t, const MeshPlaybackResult&);
@@ -158,16 +158,16 @@ class WorldMeshRuntime final : public GameRestoreBackends, public GameSaveBacken
 
 public:
     MeshPlaybackClocks clocks;
-    std::chrono::duration<float> simulation_delta{};
+    std::chrono::duration<float> simulation_delta {};
     std::optional<MeshError> last_error; //Details when the native 0/false boundary fails.
-    std::uint32_t selected_slot{};
+    std::uint32_t selected_slot {};
     //Transient503FD0/4CDDC0 hover override; generation rejects reused slots.
-    std::uint32_t hovered_slot{};
-    std::uint64_t hovered_generation{};
+    std::uint32_t hovered_slot {};
+    std::uint64_t hovered_generation {};
     //Native graphics bit4000. The production scene owns procedural pixels and
     //texture libraries; isolated geometry fixtures can leave this disabled.
-    bool terrain_texture_blending{};
-    bool sign_texture_generation{};
+    bool terrain_texture_blending {};
+    bool sign_texture_generation {};
     WorldMeshRuntime();
     ~WorldMeshRuntime() override;
     WorldMeshRuntime(const WorldMeshRuntime&) = delete;
@@ -176,26 +176,13 @@ public:
     void configure_terrain_textures(MeshTextureEnvironment&);
     MeshTextureSet texture_set() const;
     bool animated_textures() const;
-    std::expected<bool, MeshError> render_model_signs(MeshModel&,
-                                                      std::string_view directory,
-                                                      std::string_view basename,
-                                                      std::u16string_view first,
-                                                      std::optional<std::u16string_view> second = {});
-    bool set_object_sign_caption(WorldRuntime&,
-                                 ParkObjectRuntimeView&,
-                                 std::u16string_view first,
-                                 std::u16string_view second);
+    std::expected<bool, MeshError> render_model_signs(MeshModel&, std::string_view directory, std::string_view basename, std::u16string_view first, std::optional<std::u16string_view> second = {});
+    bool set_object_sign_caption(WorldRuntime&, ParkObjectRuntimeView&, std::u16string_view first, std::u16string_view second);
     void rebuild_world_sign_textures(WorldRuntime&);
     std::expected<std::uint32_t, MeshError> register_template(WorldMeshTemplate);
     std::expected<std::uint32_t, MeshError> load_template(WorldRuntime&, const MeshDefinitionTemplateLoad&);
-    std::expected<void, MeshError>
-    prepare_terrain(WorldRuntime&, std::uint32_t, const DefinitionGrid* shape, bool allow_skirts = true);
-    std::expected<void, MeshError> prepare_hoarding(WorldRuntime&,
-                                                    std::uint32_t,
-                                                    const DefinitionGrid* shape,
-                                                    const DefinitionGrid& layout,
-                                                    std::string_view theme,
-                                                    bool allow_skirts = true);
+    std::expected<void, MeshError> prepare_terrain(WorldRuntime&, std::uint32_t, const DefinitionGrid* shape, bool allow_skirts = true);
+    std::expected<void, MeshError> prepare_hoarding(WorldRuntime&, std::uint32_t, const DefinitionGrid* shape, const DefinitionGrid& layout, std::string_view theme, bool allow_skirts = true);
     const WorldMeshTemplate* definition(std::uint32_t) const;
     void configure_coaster_template(std::uint32_t, WorldCoasterDefinition);
     WorldMeshInstance* instance(std::uint32_t);
@@ -232,13 +219,11 @@ public:
     void set_registered(WorldRuntime&, std::uint32_t slot, bool);
     void force_animation_active(std::uint32_t slot);
     void release_embedded_person(WorldRuntime&, std::uint32_t slot, std::size_t resource_index);
-    std::uint32_t
-    bind_embedded_person(WorldRuntime&, std::uint32_t slot, std::size_t resource_index, std::uint32_t person);
+    std::uint32_t bind_embedded_person(WorldRuntime&, std::uint32_t slot, std::size_t resource_index, std::uint32_t person);
     //Native49B140 projection after animation and final camera resolution.
     //Idempotent preparation for both drawing and picking; never ticks scripts.
     std::expected<void, MeshError> prepare_passenger_sprites(WorldRuntime&, const MeshMatrix& camera_to_world);
-    std::expected<MeshPlaybackResult, MeshError>
-    request(WorldRuntime&, std::uint32_t, std::size_t, const MeshPlaybackRequest&);
+    std::expected<MeshPlaybackResult, MeshError> request(WorldRuntime&, std::uint32_t, std::size_t, const MeshPlaybackRequest&);
     std::expected<void, MeshError> update(WorldRuntime&, WorldMeshUpdate);
     std::expected<void, MeshError> activate(WorldRuntime&, std::uint32_t);
     //Model callback wrapper 0x4C3660; marks a slot already handled this frame.
@@ -256,8 +241,7 @@ public:
     const DefinitionGrid* fallback_mesh_geometry(WorldRuntime&, std::int32_t, std::int32_t) override;
     MeshRestoreInstance& mesh_restore_instance(WorldRuntime&, std::uint32_t, const SavedMeshInstance&) override;
     void rebuild_mesh_deformation_after_restore(WorldRuntime&, std::uint32_t) override;
-    std::optional<MeshAnimationTiming>
-    mesh_animation_timing(WorldRuntime&, std::uint32_t, std::uint32_t, std::uint32_t) override;
+    std::optional<MeshAnimationTiming> mesh_animation_timing(WorldRuntime&, std::uint32_t, std::uint32_t, std::uint32_t) override;
     void invalidate_mesh_renderer_cache(WorldRuntime&) override;
     bool finish_mesh_restore_instance(WorldRuntime&, std::uint32_t, MeshRestoreInstance&) override;
     bool finish_mesh_restore(WorldRuntime&) override;

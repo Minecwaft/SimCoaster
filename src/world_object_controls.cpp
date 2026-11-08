@@ -6,8 +6,9 @@
 namespace simcoaster {
 namespace {
 ObjectControlRecord* lookup(ObjectControlTable& table, std::uint16_t id, bool update_cache) {
-    if (id == table.cached_definition_id)
+    if (id == table.cached_definition_id) {
         return table.cached_record;
+    }
     const auto count = std::bit_cast<std::int32_t>(table.count);
     for (std::int32_t i = 0; i < count; ++i) {
         auto& row = table.rows.at(static_cast<std::size_t>(i));
@@ -32,16 +33,17 @@ ObjectControlRecord* find_world_object_control(ObjectControlTable& table, std::u
 }
 
 ObjectControlRecord* world_operations::builtin::find_object_control(WorldRuntime& c, std::uint16_t id) {
-    if (!c.simulation.current)
+    if (!c.simulation.current) {
         throw std::invalid_argument("null object-control BASE World");
+    }
     return find_and_cache_world_object_control(c.simulation.current->object_controls, id);
 }
 
 int populate_missing_world_object_controls(AttractionWorld& c, ObjectControlTable& table) {
-    for (auto* definition = first_object_catalog_entry(&c.resources.object_catalog); definition;
-         definition = next_object_catalog_entry(&c.resources.object_catalog)) {
-        if (find_and_cache_world_object_control(table, definition->id))
+    for (auto* definition = first_object_catalog_entry(&c.resources.object_catalog); definition; definition = next_object_catalog_entry(&c.resources.object_catalog)) {
+        if (find_and_cache_world_object_control(table, definition->id)) {
             continue;
+        }
         const auto index = table.count++; //Native publishes count before row stores.
         auto& row = table.rows.at(index);
         row.definition_id = definition->id;

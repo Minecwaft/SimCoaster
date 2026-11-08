@@ -6,7 +6,7 @@ namespace simcoaster {
 struct ParkConstructionState;
 
 struct WorldSceneStatistics {
-    std::size_t live_slots{}, main_meshes{}, hoardings{}, coaster_tracks{};
+    std::size_t live_slots {}, main_meshes {}, hoardings {}, coaster_tracks {};
 };
 
 //Conservative eight-corner clip test of each live drawable's current bounds.
@@ -30,15 +30,8 @@ class WorldMeshScene final : public MeshTextureEnvironment {
         coaster_track
     };
     MeshTextureLibrary& textures(const std::filesystem::path&, TextureUse = TextureUse::model);
-    void
-    report_lighting(const MeshScene&, std::size_t first, std::string_view asset, const WorldMeshInstance* = nullptr);
-    void append_model(MeshScene&,
-                      const MeshModel&,
-                      MeshTextureLibrary&,
-                      const MeshLighting&,
-                      std::string_view asset,
-                      const WorldMeshInstance* = nullptr,
-                      bool whiten = false);
+    void report_lighting(const MeshScene&, std::size_t first, std::string_view asset, const WorldMeshInstance* = nullptr);
+    void append_model(MeshScene&, const MeshModel&, MeshTextureLibrary&, const MeshLighting&, std::string_view asset, const WorldMeshInstance* = nullptr, bool whiten = false);
 
 public:
     WorldMeshScene(std::filesystem::path game_root, std::string theme);
@@ -69,11 +62,7 @@ public:
     void configure_procedural_terrain(bool enabled, std::uint32_t dimension);
     void configure_procedural_bounds(TerrainTileBounds);
     bool procedural_terrain_enabled() const;
-    void update_cell_texture(std::int32_t x,
-                             std::int32_t y,
-                             std::uint32_t group,
-                             std::uint32_t member,
-                             std::uint32_t rotation);
+    void update_cell_texture(std::int32_t x, std::int32_t y, std::uint32_t group, std::uint32_t member, std::uint32_t rotation);
     const TerrainTextureAtlas* procedural_textures() const;
     //467030/4B0100 temporarily use original terrain textures/UV transforms in
     //special camera views. The original metadata snapshot remains scene-owned.
@@ -93,17 +82,7 @@ public:
         return terrain_ ? &*terrain_ : nullptr;
     }
 
-    WorldSceneStatistics build(WorldRuntime&,
-                               WorldMeshRuntime&,
-                               MeshScene&,
-                               const MeshLighting&,
-                               const MeshMatrix* view_projection = nullptr);
-    void append_construction_preview(WorldRuntime&,
-                                     const ParkConstructionState&,
-                                     MeshScene&,
-                                     const MeshLighting&,
-                                     float animation_phase,
-                                     float camera_heading,
-                                     std::array<float, 2> coordinate_offset);
+    WorldSceneStatistics build(WorldRuntime&, WorldMeshRuntime&, MeshScene&, const MeshLighting&, const MeshMatrix* view_projection = nullptr);
+    void append_construction_preview(WorldRuntime&, const ParkConstructionState&, MeshScene&, const MeshLighting&, float animation_phase, float camera_heading, std::array<float, 2> coordinate_offset);
 };
 } //namespace simcoaster

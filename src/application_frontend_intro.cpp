@@ -7,11 +7,11 @@
 
 namespace simcoaster {
 namespace {
-constexpr unsigned char intro_template[]{
+constexpr unsigned char intro_template[] {
 #embed "ui_templates/application_intro.bin"
 };
 static_assert(sizeof(intro_template) == 196);
-constexpr std::array<std::int32_t, 3> speeches{ 565, 566, 567 }; //Native9BA2CC.
+constexpr std::array<std::int32_t, 3> speeches { 565, 566, 567 }; //Native9BA2CC.
 } //namespace
 
 void ApplicationFrontendController::State::open_intro(bool suppress) {
@@ -28,14 +28,17 @@ void ApplicationFrontendController::State::open_intro(bool suppress) {
     intro_pulse_button = suppress ? 0u : 111004u;
     const auto camera = find_first_park_object_record_id_by_definition_id(c, 4798);
     auto* header = camera ? c.entities.at(camera).payload : nullptr;
-    if (!header || header->kind != ThingKind::park_object)
+    if (!header || header->kind != ThingKind::park_object) {
         throw std::runtime_error("Original Intro requires the real4798 Camera Path owner");
+    }
     intro_script_id = reinterpret_cast<ParkObjectRuntimeView*>(header)->script_id;
     auto* script = find_rsse_script_state_by_id(c, intro_script_id);
-    if (!script)
+    if (!script) {
         throw std::runtime_error("Original Intro Camera Path has no RSSE program");
-    if (!restoring)
+    }
+    if (!restoring) {
         set_rsse_script_state_slot(c, script, 3, 0);
+    }
     intro = parse(intro_template, 111000);
     phase = ApplicationFrontendPhase::intro;
     ui.set_visible(required(intro, 111002), false);
@@ -56,11 +59,13 @@ void ApplicationFrontendController::State::open_intro(bool suppress) {
 }
 
 void ApplicationFrontendController::State::skip_intro() {
-    if (skip_requested || !intro)
+    if (skip_requested || !intro) {
         return;
+    }
     auto& skip = required(intro, 111004);
-    if (!skip.visible())
+    if (!skip.visible()) {
         return;
+    }
     skip_requested = true;
     ui.set_visible(skip, false);
     ui.set_visible(required(intro, 111001), true);
@@ -68,12 +73,15 @@ void ApplicationFrontendController::State::skip_intro() {
 }
 
 void ApplicationFrontendController::State::play_intro() {
-    if (!intro)
+    if (!intro) {
         return;
-    if (mode < 5)
+    }
+    if (mode < 5) {
         mode = 5;
-    for (const auto action : speeches)
+    }
+    for (const auto action : speeches) {
         cancel_advisor(action);
+    }
     ui.set_visible(required(intro, 111002), false);
     remove(intro);
     suppress_buttons = false;
@@ -91,11 +99,14 @@ void ApplicationFrontendController::State::finish_intro(bool force) {
         host.resume_ui_transition();
     }
     if (skip_requested || force) {
-        if (mode < 5)
+        if (mode < 5) {
             mode = 5;
-        if (!force)
-            for (const auto action : speeches)
+        }
+        if (!force) {
+            for (const auto action : speeches) {
                 cancel_advisor(action);
+            }
+        }
         remove(intro);
         open_profiles();
         return;
@@ -105,8 +116,9 @@ void ApplicationFrontendController::State::finish_intro(bool force) {
         ui.set_visible(required(intro, 111001), true);
     }
     //Native state10 enters state19/20 only once source-view-active is set.
-    if (!lobby_bound)
+    if (!lobby_bound) {
         bind_lobby(true);
+    }
     //The native tree keeps this frontend above the re-hidden HUD. Restore
     //the modern confined input route after animation teardown restored HUD
     //focus; the still-visible Intro controls retain pointer/key ownership.
@@ -117,8 +129,9 @@ void ApplicationFrontendController::State::finish_intro(bool force) {
 }
 
 void ApplicationFrontendController::State::update_intro() {
-    if (!intro)
+    if (!intro) {
         return;
+    }
     if (!skip_requested) {
         auto* script = intro_script_id ? find_rsse_script_state_by_id(c, intro_script_id) : nullptr;
         if (script && get_rsse_script_state_slot(c, script, 3) != speech_status && !c.advisor.speech.response_active) {
@@ -133,8 +146,9 @@ void ApplicationFrontendController::State::update_intro() {
             }
             ++speech_status;
             ++speech_index;
-            if (speech_index < 0 || speech_index >= static_cast<int>(speeches.size()))
+            if (speech_index < 0 || speech_index >= static_cast<int>(speeches.size())) {
                 throw std::runtime_error("Intro RSSE speech phase exceeds original three actions");
+            }
             queue_advisor(speeches[static_cast<std::size_t>(speech_index)]);
         }
         if (speech_index == 2) {

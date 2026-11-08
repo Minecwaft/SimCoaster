@@ -40,13 +40,7 @@ std::uint8_t get_world_cell_neighbor_mask(const WorldRuntime&, const CellBase*);
 void clear_world_cell_neighbor_mask_bits(const WorldRuntime&, CellBase*, std::uint8_t);
 std::uint8_t or_world_cell_neighbor_mask_bits(const WorldRuntime&, CellBase*, std::uint8_t);
 void update_cell_connections(WorldRuntime&, CellBase*, std::int32_t, std::int32_t, std::int32_t, bool, bool);
-std::uint32_t submit_positioned_template_request(WorldRuntime&,
-                                                 std::uint32_t,
-                                                 std::uint32_t,
-                                                 std::uint32_t,
-                                                 std::int32_t,
-                                                 std::int32_t,
-                                                 std::int32_t);
+std::uint32_t submit_positioned_template_request(WorldRuntime&, std::uint32_t, std::uint32_t, std::uint32_t, std::int32_t, std::int32_t, std::int32_t);
 std::int32_t count_world_cell_neighbor_bits(const WorldRuntime&, const CellBase*);
 std::int32_t count_world_cell_cardinal_neighbor_bits(const WorldRuntime&, const CellBase*);
 std::uint8_t get_world_cell_corner_neighbor_mask(const WorldRuntime&, const CellBase*);
@@ -67,21 +61,11 @@ bool try_change_world_cell_type(WorldRuntime&, CellBase*, std::int32_t);
 bool try_assign_world_cell_type(WorldRuntime&, CellBase*, std::int32_t);
 std::int32_t get_park_object_scrap_value_percent(AttractionWorld&, ParkObjectRuntimeView*);
 std::int32_t apply_world_re_cell_effect_profile(WorldRegionEffectsView, bool, RegionEffectProfileId, CellId);
-std::int32_t apply_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView,
-                                                            bool,
-                                                            RegionEffectProfileId,
-                                                            CellId,
-                                                            std::uint16_t radius);
+std::int32_t apply_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView, bool, RegionEffectProfileId, CellId, std::uint16_t radius);
 std::int32_t add_world_re_cell_effect_profile(WorldRegionEffectsView, RegionEffectProfileId, CellId);
 std::int32_t remove_world_re_cell_effect_profile(WorldRegionEffectsView, RegionEffectProfileId, CellId);
-std::int32_t add_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView,
-                                                          RegionEffectProfileId,
-                                                          CellId,
-                                                          std::uint16_t radius);
-std::int32_t remove_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView,
-                                                             RegionEffectProfileId,
-                                                             CellId,
-                                                             std::uint16_t radius);
+std::int32_t add_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView, RegionEffectProfileId, CellId, std::uint16_t radius);
+std::int32_t remove_world_re_cell_effect_profile_with_radius(WorldRegionEffectsView, RegionEffectProfileId, CellId, std::uint16_t radius);
 std::int32_t sum_recent_park_thing_history_values(const AnalyserDwordHistory144&, double&, std::int32_t);
 //Ordinary dispatch branch used by decoded definition-grid symbols. Full
 //interactive preview/control dispatch is a separate, unported operation.
@@ -104,11 +88,9 @@ void destroy_mesh_slots_using_water_ride_template_indices(WorldRuntime&);
 void destroy_mesh_slots_using_hoarding_template_indices(WorldRuntime&);
 void destroy_mesh_slots_using_world_template_indices(WorldRuntime&);
 void update_world_cell_mesh(WorldRuntime&, CellBase*);
-std::uint32_t
-create_or_refresh_gokart_track_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
+std::uint32_t create_or_refresh_gokart_track_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
 std::uint32_t create_or_refresh_queue_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
-std::uint32_t
-create_or_refresh_water_ride_track_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
+std::uint32_t create_or_refresh_water_ride_track_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
 std::uint32_t create_or_refresh_hoarding_mesh_instance(WorldRuntime&, std::int32_t, std::int32_t, CellRenderData, bool);
 void remove_map_cell_contents(WorldRuntime&, CellBase*, std::uint32_t, std::int32_t);
 void remove_track_cell_contents(WorldRuntime&, CellBase*, std::int32_t, std::int32_t, std::int32_t);

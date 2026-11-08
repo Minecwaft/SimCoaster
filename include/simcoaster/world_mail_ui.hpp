@@ -10,8 +10,8 @@ struct WorldRuntime;
 struct MailMessage;
 
 struct WorldMailIdentity {
-    std::int32_t tag{};
-    std::uint32_t sequence{};
+    std::int32_t tag {};
+    std::uint32_t sequence {};
     auto operator<=>(const WorldMailIdentity&) const = default;
 };
 enum class WorldMailUiActionKind {
@@ -33,23 +33,23 @@ enum class WorldMailUiActionKind {
 };
 
 struct WorldMailUiAction {
-    WorldMailUiActionKind kind{};
-    ThingId target{};
-    std::int32_t argument{};
-    ObjectUiCategory category{};
-    StaffType staff_type{};
-    std::int32_t x_offset{}, y_offset{};
+    WorldMailUiActionKind kind {};
+    ThingId target {};
+    std::int32_t argument {};
+    ObjectUiCategory category {};
+    StaffType staff_type {};
+    std::int32_t x_offset {}, y_offset {};
     //Snapshot for queued host navigation. Retirement invalidates the action
     //before an allocator may recycle either the pointer or numeric ThingId.
-    const ThingHeader* identity{};
+    const ThingHeader* identity {};
 };
 
 struct WorldMailUiRow {
     WorldMailIdentity key;
     std::u16string subject, date;
-    std::uint32_t packed_date{};
-    bool consumed{};
-    std::uint16_t counter_slot{};
+    std::uint32_t packed_date {};
+    bool consumed {};
+    std::uint16_t counter_slot {};
 };
 
 MailMessage* find_ui_mail(WorldRuntime&, WorldMailIdentity);

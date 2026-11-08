@@ -18,70 +18,70 @@ enum class UiListSortDirection : std::int16_t {
 
 template <class Row>
 struct WorldUiList {
-    bool open{};
+    bool open {};
     std::vector<Row> rows;
-    std::int16_t sort_column{};
-    UiListSortDirection sort_direction{};
-    std::uint64_t revision{};
+    std::int16_t sort_column {};
+    UiListSortDirection sort_direction {};
+    std::uint64_t revision {};
 };
 
 struct StaffRoomRosterRow {
-    const ThingHeader* record{};
-    ThingId staff{};
+    const ThingHeader* record {};
+    ThingId staff {};
     std::u16string name, role;
-    std::int32_t energy_meter{};
+    std::int32_t energy_meter {};
 };
 
 struct VisitorListRow {
-    const ThingHeader* record{};
-    ThingId person{};
-    std::uint32_t arrival_index{};
+    const ThingHeader* record {};
+    ThingId person {};
+    std::uint32_t arrival_index {};
     std::optional<std::u16string> generation_caption;
-    std::int32_t happiness_meter{}, thought_index{};
+    std::int32_t happiness_meter {}, thought_index {};
 };
 
 struct TrainingRoomDisplayRow {
-    bool visible{};
-    std::uint8_t pending_index{};
+    bool visible {};
+    std::uint8_t pending_index {};
     std::u16string name, role, ability;
     //Native UITEXT933 denotes inactive;934 formats an integer percentage.
     std::uint32_t progress_text_row = 933;
-    std::int32_t progress_percent{};
+    std::int32_t progress_percent {};
 };
 
 struct TrainingRoomUiState {
-    bool open{}, empty_notice_visible{}, add_staff_enabled{};
-    std::int32_t active_row_count{};
+    bool open {}, empty_notice_visible {}, add_staff_enabled {};
+    std::int32_t active_row_count {};
     std::array<TrainingRoomDisplayRow, 3> rows;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct VisitorProfileUiState {
-    bool open{};
+    bool open {};
     //Corresponds to the concrete controller's close-panel virtual operation.
     //An open binding must supply its event4 dispatcher; it is not a no-op leaf.
     std::function<void(WorldRuntime&)> close_panel;
 };
 
 struct VisitorLocatorUiState {
-    bool open{};
-    const ThingHeader* selected_person{};
+    bool open {};
+    const ThingHeader* selected_person {};
     std::int32_t selected_filter = -1;
-    std::array<bool, 6> filter_enabled{};
-    std::uint64_t revision{};
+    std::array<bool, 6> filter_enabled {};
+    std::uint64_t revision {};
 };
 
 struct RideSettingsUiState {
-    bool open{};
+    bool open {};
     //Native concrete vtable slot1C; receives only its owning controller.
     std::function<void(WorldRuntime&)> refresh_statistics_and_status;
 };
 
 struct CalendarHeaderUiState {
-    bool present{}, debug_counts{}, centered{}, vertically_centered{};
+    bool present {}, debug_counts {}, centered {}, vertically_centered {};
     std::u16string text;
-    std::array<std::uint8_t, 4> color{};
-    std::uint64_t revision{};
+    std::array<std::uint8_t, 4> color {};
+    std::uint64_t revision {};
 };
 enum class StatisticsGraphRange : std::int32_t {
     one_year = 0,
@@ -90,23 +90,23 @@ enum class StatisticsGraphRange : std::int32_t {
 };
 
 struct StatisticsGraphSeries {
-    std::uint32_t history_index{};
+    std::uint32_t history_index {};
     std::vector<std::int32_t> samples; //Resampled oldest-to-newest, including fallback endpoint.
 };
 
 struct StatisticsGraphUiState {
-    bool open{};
-    std::uint32_t selected_series_mask{};
-    StatisticsGraphRange range{};
-    std::int32_t lower{}, upper{}, divisions = 10;
+    bool open {};
+    std::uint32_t selected_series_mask {};
+    StatisticsGraphRange range {};
+    std::int32_t lower {}, upper {}, divisions = 10;
     std::vector<StatisticsGraphSeries> series;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct FinancialStatisticsUiState {
     StatisticsGraphUiState graph;
-    std::int32_t income{}, expenditure{}, balance{};
-    std::array<std::uint8_t, 4> balance_color{};
+    std::int32_t income {}, expenditure {}, balance {};
+    std::array<std::uint8_t, 4> balance_color {};
 };
 enum class LoanView : std::int32_t {
     offers = 0,
@@ -114,27 +114,27 @@ enum class LoanView : std::int32_t {
 };
 
 struct LoanManagementRow {
-    std::int32_t key{};
+    std::int32_t key {};
     std::u16string lender;
-    std::int32_t amount{}, months{}, annual_rate{}, monthly_payment{}, total_repayment{};
+    std::int32_t amount {}, months {}, annual_rate {}, monthly_payment {}, total_repayment {};
 };
 
 struct LoanManagementUiState {
-    bool open{};
-    LoanView view{};
+    bool open {};
+    LoanView view {};
     std::vector<LoanManagementRow> rows;
-    std::uint64_t revision{};
+    std::uint64_t revision {};
 };
 
 struct ParkAwardsUiState {
-    bool open{}, highlight_visible{};
+    bool open {}, highlight_visible {};
     std::int32_t highlighted_type = -1;
-    std::uint32_t highlight_started_ms{};
-    std::uint64_t revision{};
+    std::uint32_t highlight_started_ms {};
+    std::uint64_t revision {};
 };
 
 struct WorldUiState {
-    const ThingHeader* selected_record{}; //Native shared A5960C selection.
+    const ThingHeader* selected_record {}; //Native shared A5960C selection.
     //The connected Staff controller releases its identities while the retiring
     //payload is still alive, before the World can recycle its ThingId.
     std::function<void(WorldRuntime&, const ThingHeader&)> staff_retiring;
@@ -146,7 +146,7 @@ struct WorldUiState {
     TrainingRoomUiState training_room;
     WorldUiList<VisitorListRow> visitor_list;
     //Native removal bookkeeping wraps as a full DWORD; insertion does not add1.
-    std::uint32_t visitor_list_removal_balance{};
+    std::uint32_t visitor_list_removal_balance {};
     VisitorProfileUiState visitor_profile;
     VisitorLocatorUiState visitor_locator;
     RideSettingsUiState ride_settings;
@@ -155,7 +155,7 @@ struct WorldUiState {
     FinancialStatisticsUiState financial_statistics;
     LoanManagementUiState loans;
     ParkAwardsUiState park_awards;
-    bool mode_selector_initialized{}, objectives_refresh_pending{};
+    bool mode_selector_initialized {}, objectives_refresh_pending {};
 };
 
 void append_matching_staff_room_roster_member(WorldRuntime&, StaffRuntimeRecord&);

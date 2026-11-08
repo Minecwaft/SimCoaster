@@ -7,8 +7,7 @@ namespace simcoaster::world_operation_detail {
 consteval std::meta::token_sequence definitions(bool probes) {
     std::meta::token_sequence result;
     for (auto function : functions) {
-        const auto declaration =
-            std::meta::set_name(std::meta::declaration_of(function), std::meta::identifier_of(function));
+        const auto declaration = std::meta::set_name(std::meta::declaration_of(function), std::meta::identifier_of(function));
         const auto arguments = std::meta::argument_list_for(declaration, { .forward = true });
         std::meta::token_sequence probe;
         if (probes) {

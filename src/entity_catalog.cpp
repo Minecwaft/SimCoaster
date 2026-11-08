@@ -28,97 +28,123 @@ template <class T>
 bool prefix(T& payload, SaveArchive archive) {
     const bool base_ok = transfer_map_object_base_state(&payload.base, archive);
     //These helpers intentionally continue after a failed common-base transfer.
-    constexpr bool ignores_base = std::same_as<T, MissionControllerRecord>
-                               || std::same_as<T, AnimationManagerRecord>
-                               || std::same_as<T, ChallengeManagerRecord>;
+    constexpr bool ignores_base = std::same_as<T, MissionControllerRecord> || std::same_as<T, AnimationManagerRecord> || std::same_as<T, ChallengeManagerRecord>;
     return base_ok || ignores_base;
 }
 } //namespace
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] ResearchLabRecord& payload, SaveArchive archive) {
     auto& lab = payload;
-    for (auto& entry : lab.projects)
-        if (archive.record(entry))
+    for (auto& entry : lab.projects) {
+        if (archive.record(entry)) {
             return 1;
-    for (auto& entry : lab.groups)
-        if (archive.record(entry))
+        }
+    }
+    for (auto& entry : lab.groups) {
+        if (archive.record(entry)) {
             return 1;
-    if (!archive.fields(lab))
+        }
+    }
+    if (!archive.fields(lab)) {
         return 1;
-    for (unsigned i = 0; i < 20; ++i)
-        if (!archive.field(lab.primary_staff[i], "pristaf") || !archive.field(lab.secondary_staff[i], "secstaf"))
+    }
+    for (unsigned i = 0; i < 20; ++i) {
+        if (!archive.field(lab.primary_staff[i], "pristaf") || !archive.field(lab.secondary_staff[i], "secstaf")) {
             return 1;
-    return !archive.field(lab.consultants[0], "mConsultants[0]")
-        || !archive.field(lab.consultants[1], "mConsultants[1]");
+        }
+    }
+    return !archive.field(lab.consultants[0], "mConsultants[0]") || !archive.field(lab.consultants[1], "mConsultants[1]");
 }
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] AdvisorRecord& payload, SaveArchive archive) {
     auto& advisor = payload;
-    if (!archive.fields<0, 2>(advisor))
+    if (!archive.fields<0, 2>(advisor)) {
         return 1;
-    for (auto& entry : advisor.queue)
-        if (archive.record(entry))
+    }
+    for (auto& entry : advisor.queue) {
+        if (archive.record(entry)) {
             return 1;
-    if (!archive.fields<2, 5>(advisor) || archive.record(advisor.special_candidate) || !archive.fields<5>(advisor))
+        }
+    }
+    if (!archive.fields<2, 5>(advisor) || archive.record(advisor.special_candidate) || !archive.fields<5>(advisor)) {
         return 1;
+    }
     return 0;
 }
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] ChallengeManagerRecord& payload, SaveArchive archive) {
     auto& manager = payload;
     //No second status check: native code proceeds after each failed child.
-    for (auto& entry : manager.records)
+    for (auto& entry : manager.records) {
         (void)archive.record(entry);
-    if (!archive.field(manager.next_challenge_delay_time, "mNextChallengeDelayTime")
-        || !archive.field(manager.system_switched_on, "mSystemSwitchedOn"))
+    }
+    if (!archive.field(manager.next_challenge_delay_time, "mNextChallengeDelayTime") || !archive.field(manager.system_switched_on, "mSystemSwitchedOn")) {
         return 1;
-    for (auto& thing : manager.actual_thing)
-        if (!archive.field(thing, "mActualThing[i]"))
+    }
+    for (auto& thing : manager.actual_thing) {
+        if (!archive.field(thing, "mActualThing[i]")) {
             return 1;
+        }
+    }
     return 0;
 }
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] StaffHqRecord& payload, SaveArchive archive) {
     auto& hq = payload;
-    if (!archive.field(hq.force_strike, "mForceStrike")
-        || !archive.field(hq.staff_member_picked_up, "mStaffMemberPickedUp"))
+    if (!archive.field(hq.force_strike, "mForceStrike") || !archive.field(hq.staff_member_picked_up, "mStaffMemberPickedUp")) {
         return 1;
-    for (auto& strike : hq.strikes)
-        if (!archive.field(strike, "mStrikeLevel[i]"))
+    }
+    for (auto& strike : hq.strikes) {
+        if (!archive.field(strike, "mStrikeLevel[i]")) {
             return 1;
-    for (auto& budget : hq.training.budget)
-        if (!archive.field(budget, "mBudget[i]"))
+        }
+    }
+    for (auto& budget : hq.training.budget) {
+        if (!archive.field(budget, "mBudget[i]")) {
             return 1;
-    if (!archive.field(hq.training.have_ever_trained, "mHaveEverTrained"))
+        }
+    }
+    if (!archive.field(hq.training.have_ever_trained, "mHaveEverTrained")) {
         return 1;
+    }
     //The native format includes the entire ability row, including its two
     //padding bytes, but omits the training and picked-up-ID padding.
-    for (auto& slot : hq.staff_slots)
-        if (!archive.field(slot, "mStaffSlots[i]"))
+    for (auto& slot : hq.staff_slots) {
+        if (!archive.field(slot, "mStaffSlots[i]")) {
             return 1;
-    for (auto& trained : hq.trained_staff)
-        if (!archive.field(trained, "mTrainedStaff[i]"))
+        }
+    }
+    for (auto& trained : hq.trained_staff) {
+        if (!archive.field(trained, "mTrainedStaff[i]")) {
             return 1;
+        }
+    }
     return 0;
 }
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] BankRecord& payload, SaveArchive archive) {
     auto& bank = payload;
-    if (!archive.fields(bank))
+    if (!archive.fields(bank)) {
         return 1;
-    for (auto& loan : bank.loans)
-        if (!archive.fields(loan))
+    }
+    for (auto& loan : bank.loans) {
+        if (!archive.fields(loan)) {
             return 1;
+        }
+    }
     return 0;
 }
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] WeatherRecord& payload, SaveArchive archive) {
     auto& weather = payload;
-    for (auto* entry : { &weather.pending, &weather.active })
-        if (!archive.fields(*entry))
+    for (auto* entry : { &weather.pending, &weather.active }) {
+        if (!archive.fields(*entry)) {
             return 1;
-    if (!archive.fields(weather))
+        }
+    }
+    if (!archive.fields(weather)) {
         return 1;
+    }
     return 0;
 }
 
@@ -128,9 +154,9 @@ int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] MechanicHqRecord& pa
 
 int body([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] MissionControllerRecord& payload, SaveArchive archive) {
     auto& mission = payload;
-    if (!archive.field(mission.cutscene_object, "mCutsceneObject")
-        || !archive.field(mission.cutscene_state, "mCutsceneState"))
+    if (!archive.field(mission.cutscene_object, "mCutsceneObject") || !archive.field(mission.cutscene_state, "mCutsceneState")) {
         return 1;
+    }
     if (!archive.writing) {
         mission.mission_advisor_action_pending = 0;
         mission.research_project_add_attempt_pending = 1;
@@ -161,18 +187,23 @@ int transfer([[maybe_unused]] WorldRuntime& c, [[maybe_unused]] TagSystemRecord&
 template <class Payload>
 int transfer_staff_record(WorldRuntime& c, Payload& payload, SaveArchive archive) {
     auto& staff = [&]() -> StaffRuntimeRecord& {
-        if constexpr (requires { payload.staff; })
+        if constexpr (requires { payload.staff; }) {
             return payload.staff;
-        else
+        } else {
             return payload;
+        }
     }();
-    if (transfer_world_staff_base_state(c, staff, archive))
+    if (transfer_world_staff_base_state(c, staff, archive)) {
         return 1;
-    if (archive.schema > 1)
+    }
+    if (archive.schema > 1) {
         return 0;
-    if constexpr (requires { payload.staff; })
-        if (!archive.fields(payload))
+    }
+    if constexpr (requires { payload.staff; }) {
+        if (!archive.fields(payload)) {
             return 1;
+        }
+    }
     return !archive.field(staff.next_staff, "mNext");
 }
 
@@ -185,13 +216,15 @@ int transfer(WorldRuntime& c, StaffRuntimeRecord& payload, SaveArchive archive) 
 //the explicit overloads above.
 template <class Payload>
 int transfer(WorldRuntime& c, Payload& payload, SaveArchive archive) {
-    if (!prefix(payload, archive))
+    if (!prefix(payload, archive)) {
         return 1;
-    if (archive.schema > 1)
+    }
+    if (archive.schema > 1) {
         return 0;
-    if constexpr (requires { body(c, payload, archive); })
+    }
+    if constexpr (requires { body(c, payload, archive); }) {
         return body(c, payload, archive);
-    else {
+    } else {
         static_assert(std::same_as<Payload, UiMessageReceiverRecord> || std::same_as<Payload, Type23Record>);
         return 0; //Exactly the common-base payload.
     }
@@ -218,14 +251,16 @@ void prepare([[maybe_unused]] WorldRuntime& c, ParkObjectRuntimeView& payload) {
 }
 
 void prepare([[maybe_unused]] WorldRuntime& c, ResearchLabRecord& payload) {
-    for (auto& group : payload.groups)
+    for (auto& group : payload.groups) {
         initialize_world_research_group_entry(&group);
+    }
 }
 
 void prepare([[maybe_unused]] WorldRuntime& c, AdvisorRecord& payload) {
     payload.time_signature = 0;
-    for (auto& entry : payload.queue)
+    for (auto& entry : payload.queue) {
         entry.valid = 0;
+    }
     payload.special_candidate.valid = 0;
 }
 
@@ -243,8 +278,9 @@ void prepare([[maybe_unused]] WorldRuntime& c, ChallengeManagerRecord& payload) 
 }
 
 void prepare([[maybe_unused]] WorldRuntime& c, WeatherRecord& payload) {
-    for (auto* entry : { &payload.pending, &payload.active })
+    for (auto* entry : { &payload.pending, &payload.active }) {
         initialize_world_weather_schedule_entry(entry);
+    }
 }
 
 void prepare([[maybe_unused]] WorldRuntime& c, StaffHqRecord& payload) {
@@ -264,19 +300,21 @@ void prepare([[maybe_unused]] WorldRuntime& c, AnimationManagerRecord& payload) 
 template <class T>
 void prepare_record(WorldRuntime& c, ThingHeader* header) {
     auto& payload = *reinterpret_cast<T*>(header);
-    if constexpr (requires { payload.staff; })
+    if constexpr (requires { payload.staff; }) {
         prepare(c, payload.staff);
-    else if constexpr (requires { prepare(c, payload); })
+    } else if constexpr (requires { prepare(c, payload); }) {
         prepare(c, payload);
+    }
 }
 
 template <class T>
 int transfer_record(WorldRuntime& c, ThingHeader* header, SaveArchive archive) {
     auto& payload = *reinterpret_cast<T*>(header);
-    if constexpr (requires { payload.staff; })
+    if constexpr (requires { payload.staff; }) {
         return transfer_staff_record(c, payload, archive);
-    else
+    } else {
         return transfer(c, payload, archive);
+    }
 }
 } //namespace entity_codec
 
@@ -423,55 +461,13 @@ void query_retired_record_kind_for_helper_event(WorldRuntime& c, Type23Record*, 
 //Each entry carries typed hooks, explicit persisted IDs and mode gates.
 constexpr auto bindings = [] consteval {
     constexpr std::array catalog {
-        EntityEntry { ThingKind::person,
-                      ^^PersonRuntimeView,
-                      752,
-                      1346720339,
-                      { UpdateStep { RecordUpdate::person_tick, ^^update_world_person_record }, UpdateStep { RecordUpdate::person_state, ^^update_person_state_machine } },
-                      { RecordCleanup::person, ^^cleanup_world_person_record },
-                      { ^^handle_person_park_object_event } },
-        EntityEntry { ThingKind::park_object,
-                      ^^ParkObjectRuntimeView,
-                      328,
-                      1329744453,
-                      { UpdateStep { RecordUpdate::park_object_tick, ^^tick_world_park_object }, UpdateStep { RecordUpdate::park_object_state, ^^update_world_park_object_state } },
-                      { RecordCleanup::park_object, ^^cleanup_world_park_object_instance },
-                      { ^^handle_park_object_event } },
-        EntityEntry { ThingKind::mechanic,
-                      ^^MechanicRuntimeRecord,
-                      1504,
-                      1296384840,
-                      { UpdateStep { RecordUpdate::staff_tick, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::mechanic_state, ^^update_world_mechanic_state } },
-                      { RecordCleanup::mechanic, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
-        EntityEntry { ThingKind::handyman,
-                      ^^HandymanRuntimeRecord,
-                      1504,
-                      1212239428,
-                      { UpdateStep { RecordUpdate::handyman_idle, ^^update_world_handyman_idle_state }, UpdateStep { RecordUpdate::handyman_state, ^^update_world_handyman_state } },
-                      { RecordCleanup::handyman, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
-        EntityEntry { ThingKind::entertainer,
-                      ^^EntertainerRuntimeRecord,
-                      1496,
-                      1162761298,
-                      { UpdateStep { RecordUpdate::entertainer_tick, ^^tick_world_entertainer_record }, UpdateStep { RecordUpdate::entertainer_state, ^^update_world_entertainer_state } },
-                      { RecordCleanup::entertainer, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
-        EntityEntry { ThingKind::guard,
-                      ^^GuardRuntimeRecord,
-                      1504,
-                      1196769618,
-                      { UpdateStep { RecordUpdate::guard_tick, ^^relocate_world_guard_record }, UpdateStep { RecordUpdate::guard_state, ^^update_world_guard_state } },
-                      { RecordCleanup::guard, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
-        EntityEntry { ThingKind::researcher,
-                      ^^ResearcherRuntimeRecord,
-                      1496,
-                      1380275013,
-                      { UpdateStep { RecordUpdate::staff_tick, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::researcher_state, ^^update_world_researcher_state } },
-                      { RecordCleanup::researcher, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::person, ^^PersonRuntimeView, 752, 1346720339, { UpdateStep { RecordUpdate::person_tick, ^^update_world_person_record }, UpdateStep { RecordUpdate::person_state, ^^update_person_state_machine } }, { RecordCleanup::person, ^^cleanup_world_person_record }, { ^^handle_person_park_object_event } },
+        EntityEntry { ThingKind::park_object, ^^ParkObjectRuntimeView, 328, 1329744453, { UpdateStep { RecordUpdate::park_object_tick, ^^tick_world_park_object }, UpdateStep { RecordUpdate::park_object_state, ^^update_world_park_object_state } }, { RecordCleanup::park_object, ^^cleanup_world_park_object_instance }, { ^^handle_park_object_event } },
+        EntityEntry { ThingKind::mechanic, ^^MechanicRuntimeRecord, 1504, 1296384840, { UpdateStep { RecordUpdate::staff_tick, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::mechanic_state, ^^update_world_mechanic_state } }, { RecordCleanup::mechanic, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::handyman, ^^HandymanRuntimeRecord, 1504, 1212239428, { UpdateStep { RecordUpdate::handyman_idle, ^^update_world_handyman_idle_state }, UpdateStep { RecordUpdate::handyman_state, ^^update_world_handyman_state } }, { RecordCleanup::handyman, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::entertainer, ^^EntertainerRuntimeRecord, 1496, 1162761298, { UpdateStep { RecordUpdate::entertainer_tick, ^^tick_world_entertainer_record }, UpdateStep { RecordUpdate::entertainer_state, ^^update_world_entertainer_state } }, { RecordCleanup::entertainer, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::guard, ^^GuardRuntimeRecord, 1504, 1196769618, { UpdateStep { RecordUpdate::guard_tick, ^^relocate_world_guard_record }, UpdateStep { RecordUpdate::guard_state, ^^update_world_guard_state } }, { RecordCleanup::guard, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::researcher, ^^ResearcherRuntimeRecord, 1496, 1380275013, { UpdateStep { RecordUpdate::staff_tick, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::researcher_state, ^^update_world_researcher_state } }, { RecordCleanup::researcher, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
         EntityEntry { ThingKind::staff_hq, ^^StaffHqRecord, 428, 1398030662, {}, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^handle_world_staff_control_state_event }, UpdateMode::initialize_only },
         EntityEntry { ThingKind::mechanic_hq, ^^MechanicHqRecord, 24, 1296386129, {}, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^handle_mechanic_hq_event } },
         EntityEntry { ThingKind::advisor, ^^AdvisorRecord, 280, 1094997577, { UpdateStep { RecordUpdate::advisor, ^^update_advisor_action_queue } }, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^receive_world_advisor_message }, UpdateMode::offline },
@@ -481,22 +477,9 @@ constexpr auto bindings = [] consteval {
         EntityEntry { ThingKind::weather, ^^WeatherRecord, 128, 1464156500, { UpdateStep { ^^update_world_weather_state } }, { ^^destroy_world_weather_state }, { ^^handle_world_weather_schedule_event, false } },
         EntityEntry { ThingKind::bank_account, ^^BankRecord, 304, 1111576139, {}, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^handle_world_bank_account_event, false } },
         EntityEntry { ThingKind::ui_receiver, ^^UiMessageReceiverRecord, 20, 1430867283, {}, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^handle_world_ui_message } },
-        EntityEntry { ThingKind::chat_presence,
-                      ^^ChallengeManagerRecord,
-                      1496,
-                      1128810577,
-                      { UpdateStep { RecordUpdate::online_effect, std::meta::info {} }, UpdateStep { RecordUpdate::online_navigation, std::meta::info {} } },
-                      { RecordCleanup::online_base, std::meta::info {} },
-                      {},
-                      UpdateMode::online },
+        EntityEntry { ThingKind::chat_presence, ^^ChallengeManagerRecord, 1496, 1128810577, { UpdateStep { RecordUpdate::online_effect, std::meta::info {} }, UpdateStep { RecordUpdate::online_navigation, std::meta::info {} } }, { RecordCleanup::online_base, std::meta::info {} }, {}, UpdateMode::online },
         EntityEntry { ThingKind::challenge_manager, ^^ChallengeManagerRecord, 1496, 1128810577, { UpdateStep { RecordUpdate::challenge, ^^update_challenge_manager } }, {}, { ^^handle_world_challenge_event, false }, UpdateMode::offline },
-        EntityEntry { ThingKind::gardener,
-                      ^^GardenerRuntimeRecord,
-                      1504,
-                      1195463236,
-                      { UpdateStep { RecordUpdate::gardener_idle, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::gardener_state, ^^update_world_gardener_state } },
-                      { RecordCleanup::gardener, ^^cleanup_world_staff_record },
-                      { ^^handle_world_staff_event } },
+        EntityEntry { ThingKind::gardener, ^^GardenerRuntimeRecord, 1504, 1195463236, { UpdateStep { RecordUpdate::gardener_idle, ^^update_world_staff_tick }, UpdateStep { RecordUpdate::gardener_state, ^^update_world_gardener_state } }, { RecordCleanup::gardener, ^^cleanup_world_staff_record }, { ^^handle_world_staff_event } },
         EntityEntry { ThingKind::mission_controller, ^^MissionControllerRecord, 28, 1329744456, { UpdateStep { ^^tick_mission_progress_from_controller_record } }, {}, { ^^handle_world_cutscene_event, false }, UpdateMode::offline },
         EntityEntry { ThingKind::animation_manager, ^^AnimationManagerRecord, 48, 1129665619, { UpdateStep { ^^update_world_animation_state } }, {}, {}, UpdateMode::offline },
         EntityEntry { ThingKind::helper_23, ^^Type23Record, 24, 1414680146, {}, { ^^unlink_world_used_thing_map_and_event_lists }, { ^^query_retired_record_kind_for_helper_event, false } },

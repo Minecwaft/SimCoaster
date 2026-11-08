@@ -74,8 +74,8 @@ enum class ApplicationDebugCommand : std::uint8_t {
 
 //Original process globals, independent of park/profile serialization.
 struct ApplicationDebugState {
-    std::int32_t annual_report_year = 2000, objective_mail_index{}, music_level = 5, sort_key = 1;
-    bool force_special{}, always_win{};
+    std::int32_t annual_report_year = 2000, objective_mail_index {}, music_level = 5, sort_key = 1;
+    bool force_special {}, always_win {};
 };
 
 void bind_application_debug_state(WorldRuntime&, const ApplicationDebugState&);
@@ -85,8 +85,8 @@ bool execute_application_debug_command(WorldRuntime&, ApplicationDebugState&, Ap
 
 struct ApplicationDebugSelectorHost {
     WorldUiPanelHost panels;
-    ApplicationDebugState* persistent{};
-    UiControl* inspection_parent{}; //Native persistent primary root.
+    ApplicationDebugState* persistent {};
+    UiControl* inspection_parent {}; //Native persistent primary root.
     std::function<std::expected<void, std::string>(ApplicationDebugCommand)> execute;
     std::function<void(std::string_view)> report_error;
     std::function<bool(const UiEvent&)> key;

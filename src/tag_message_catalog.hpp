@@ -20,7 +20,7 @@ struct Row {
     std::uint16_t counter_slot;
 };
 
-inline constexpr std::array<Row, 130> rows{ {
+inline constexpr std::array<Row, 130> rows { {
     { 0, 0, 0, 0, 0, Format::literal, 192, 197, 0 },
     { 1, 1, 1, 0, 0, Format::literal, 192, 198, 0 },
     { 2, 2, 2, 0, 0, Format::literal, 192, 199, 0 },
@@ -153,13 +153,11 @@ inline constexpr std::array<Row, 130> rows{ {
     { 133, 151, 103, 0, 0, Format::literal, 184, 193, 0 },
 } };
 inline constexpr auto by_id = [] consteval {
-    std::array<const Row*, 150> result{};
+    std::array<const Row*, 150> result {};
     for (const auto& row : rows) {
-        if (row.tag < 0
-            || static_cast<std::size_t>(row.tag) >= result.size()
-            || row.counter_slot >= 4
-            || result[static_cast<std::size_t>(row.tag)])
+        if (row.tag < 0 || static_cast<std::size_t>(row.tag) >= result.size() || row.counter_slot >= 4 || result[static_cast<std::size_t>(row.tag)]) {
             throw "Invalid recovered tag catalog";
+        }
         result[static_cast<std::size_t>(row.tag)] = &row;
     }
     return result;

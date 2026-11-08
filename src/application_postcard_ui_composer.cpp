@@ -11,22 +11,24 @@
 
 namespace simcoaster {
 namespace {
-constexpr unsigned char composer_words[]{
+constexpr unsigned char composer_words[] {
 #embed "ui_templates/app_postcard_composer.bin"
 };
 static_assert(sizeof(composer_words) == 436);
 
 void tag(WorldRuntime& c, std::int32_t code) {
-    if (!c.simulation.event_registry)
+    if (!c.simulation.event_registry) {
         return;
-    WorldEvent event{ TagMailEvent{ code, 0, 0, -1 } };
+    }
+    WorldEvent event { TagMailEvent { code, 0, 0, -1 } };
     dispatch_world_event_to_subscribers(c, c.simulation.event_registry, &event, deliver_world_record_event, nullptr);
 }
 } //namespace
 
 void ApplicationPostcardUiController::State::open_composer() {
-    if (root || composition_polls)
+    if (root || composition_polls) {
         return;
+    }
     close();
     (void)submit_positioned_template_request(c, 0, c.resources.ui_catalog_slot, 149, 0, 0, 0);
     page = Page::composer;
@@ -45,19 +47,22 @@ void ApplicationPostcardUiController::State::open_composer() {
 }
 
 void ApplicationPostcardUiController::State::release_composition_transition() {
-    if (std::exchange(composition_hidden, false))
+    if (std::exchange(composition_hidden, false)) {
         host.composition_transition(false);
+    }
 }
 
 void ApplicationPostcardUiController::State::poll_composition() {
-    if (!composition_polls || *composition_polls <= 0)
+    if (!composition_polls || *composition_polls <= 0) {
         return;
+    }
     if (profile_revision != store.profile_revision()) {
         close();
         return;
     }
-    if (--*composition_polls)
+    if (--*composition_polls) {
         return;
+    }
     try {
         begin_composer();
         composition_polls.reset();
@@ -84,8 +89,9 @@ void ApplicationPostcardUiController::State::begin_composer() {
         host.status_message(73);
         return;
     }
-    if (host.panels.dismiss)
+    if (host.panels.dismiss) {
         host.panels.dismiss();
+    }
     try {
         preview = std::make_unique<PostcardImageComposer>(game_root, host.language, fonts, *scene, false);
         hires = std::make_unique<PostcardImageComposer>(game_root, host.language, fonts, *scene, true);
@@ -107,34 +113,30 @@ void ApplicationPostcardUiController::State::begin_composer() {
         ui.set_primary_callback(surface, [this](UiControl& sender, const UiEvent& event) -> std::intptr_t {
             if (event.type == 65541) {
                 dragging = true;
-                drag_previous = { static_cast<std::int32_t>(static_cast<std::uint32_t>(event.value) >> 16),
-                                  static_cast<std::int32_t>(static_cast<std::uint32_t>(event.value) & 65535u) };
+                drag_previous = { static_cast<std::int32_t>(static_cast<std::uint32_t>(event.value) >> 16), static_cast<std::int32_t>(static_cast<std::uint32_t>(event.value) & 65535u) };
                 ui.set_capture(&sender);
             } else if (event.type == 65539 && dragging && ui.capture() == &sender) {
-                const UiPoint point{ static_cast<std::int32_t>(event.id >> 16),
-                                     static_cast<std::int32_t>(event.id & 65535u) };
-                drag_offset.x = std::max(
-                    0,
-                    drag_offset.x + static_cast<std::int32_t>(pixel_width) * (drag_previous.x - point.x) / 2048);
-                drag_offset.y = std::max(
-                    0,
-                    drag_offset.y + static_cast<std::int32_t>(pixel_height) * (drag_previous.y - point.y) / 1536);
+                const UiPoint point { static_cast<std::int32_t>(event.id >> 16), static_cast<std::int32_t>(event.id & 65535u) };
+                drag_offset.x = std::max(0, drag_offset.x + static_cast<std::int32_t>(pixel_width) * (drag_previous.x - point.x) / 2048);
+                drag_offset.y = std::max(0, drag_offset.y + static_cast<std::int32_t>(pixel_height) * (drag_previous.y - point.y) / 1536);
                 drag_previous = point;
                 //Native5706C0's offset globals have no rendering readers. Preserve
                 //input/capture state; moving the captured photo would invent a
                 //crop.
             } else if (event.type == 65540) {
                 dragging = false;
-                if (ui.capture() == &sender)
+                if (ui.capture() == &sender) {
                     ui.set_capture(nullptr);
+                }
             }
             return ui.secondary(sender, event);
         });
         preview_image = std::make_shared<TextureImage>(preview->image());
         c.ports.ui.disable_command_families_and_set_disabled_flag(c);
         commands_disabled = true;
-        if (host.panels.activate)
+        if (host.panels.activate) {
             host.panels.activate(root);
+        }
         ui.set_focus(root);
         ui.set_input_root(root);
     } catch (...) {
@@ -144,19 +146,23 @@ void ApplicationPostcardUiController::State::begin_composer() {
 }
 
 void ApplicationPostcardUiController::State::refresh_preview(bool draw_text) {
-    if (!preview || !root)
+    if (!preview || !root) {
         return;
+    }
     preview->compose(control(37002).text, draw_text);
     preview_image = std::make_shared<TextureImage>(preview->image());
 }
 
 void ApplicationPostcardUiController::State::submit() {
-    if (!root || page != Page::composer || send_serial)
+    if (!root || page != Page::composer || send_serial) {
         return;
-    if (!body_edited)
+    }
+    if (!body_edited) {
         ui.set_text(control(37002), text(755));
-    if (!subject_edited)
+    }
+    if (!subject_edited) {
         ui.set_text(control(37003), text(754));
+    }
     refresh_preview();
     auto recipients = parse_postcard_recipients(control(37004).text);
     if (!recipients) {
@@ -173,12 +179,14 @@ void ApplicationPostcardUiController::State::submit() {
     postcard.subject = postcard_to_ansi(control(37003).text);
     const auto status = host.online_status();
     postcard.from = status.session_active ? status.from : "nobody@nowhere.net";
-    for (const auto& recipient : *recipients)
+    for (const auto& recipient : *recipients) {
         postcard.recipients.push_back(postcard_to_ansi(recipient));
+    }
     const auto now = std::time(nullptr);
-    std::tm local{};
-    if (localtime_s(&local, &now) != 0)
+    std::tm local {};
+    if (localtime_s(&local, &now) != 0) {
         throw std::runtime_error("Cannot read postcard local date");
+    }
     postcard.date = { local.tm_mday, local.tm_mon + 1, local.tm_year + 1900 };
     if (temporary_directory.empty()) {
         const auto token = std::chrono::steady_clock::now().time_since_epoch().count();
@@ -200,9 +208,9 @@ void ApplicationPostcardUiController::State::submit() {
     pending_postcard = std::move(postcard);
     pending_image = std::make_shared<TextureImage>(preview->image());
     close_panel();
-    if (status.session_active)
+    if (status.session_active) {
         start_send();
-    else
+    } else {
         message(
             text(749),
             text(750),
@@ -212,11 +220,13 @@ void ApplicationPostcardUiController::State::submit() {
             [this] {
                 host.go_online();
             });
+    }
 }
 
 void ApplicationPostcardUiController::State::store_offline() {
-    if (!pending_postcard || !pending_image || profile_revision != store.profile_revision())
+    if (!pending_postcard || !pending_image || profile_revision != store.profile_revision()) {
         return;
+    }
     auto stored = store.store(*pending_postcard, *pending_image);
     if (!stored) {
         error(stored.error());
@@ -228,8 +238,9 @@ void ApplicationPostcardUiController::State::store_offline() {
 }
 
 void ApplicationPostcardUiController::State::start_send() {
-    if (send_serial)
+    if (send_serial) {
         return;
+    }
     const auto status = host.online_status();
     if (status.session_active && !status.permission) {
         host.status_message(73);
@@ -237,9 +248,9 @@ void ApplicationPostcardUiController::State::start_send() {
     }
     pending_send.clear();
     sending_from_outbox = !pending_postcard;
-    if (pending_postcard)
+    if (pending_postcard) {
         pending_send.push_back(*pending_postcard);
-    else
+    } else {
         for (const auto id : store.index().send_queue) {
             auto record = store.read(id);
             if (!record) {
@@ -249,8 +260,10 @@ void ApplicationPostcardUiController::State::start_send() {
             }
             pending_send.push_back(std::move(*record));
         }
-    if (pending_send.empty())
+    }
+    if (pending_send.empty()) {
         return;
+    }
     //Actual Mail::Connect rejects a zero-recipient sender as detail8. Do not
     //misreport the delimiter-only UI quirk as successful delivery.
     if (std::ranges::any_of(pending_send, [](const auto& record) {
@@ -268,12 +281,13 @@ void ApplicationPostcardUiController::State::start_send() {
 }
 
 void ApplicationPostcardUiController::State::complete_send(std::uint64_t serial, bool success, std::int32_t detail) {
-    if (!serial || serial != send_serial || send_profile_revision != store.profile_revision())
+    if (!serial || serial != send_serial || send_profile_revision != store.profile_revision()) {
         return;
+    }
     send_serial = 0;
     close_message();
     if (success) {
-        if (sending_from_outbox)
+        if (sending_from_outbox) {
             for (const auto& record : pending_send) {
                 auto erased = store.sent(record.id);
                 if (!erased) {
@@ -281,17 +295,19 @@ void ApplicationPostcardUiController::State::complete_send(std::uint64_t serial,
                     break;
                 }
             }
+        }
         tag(c, 29);
     } else {
         std::optional<std::uint32_t> row;
-        if (detail == 0)
+        if (detail == 0) {
             row = 51;
-        else if (detail == 1)
+        } else if (detail == 1) {
             row = 56;
-        else if (detail == 2)
+        } else if (detail == 2) {
             row = 57;
-        else if (detail == 3 || detail == 4)
+        } else if (detail == 3 || detail == 4) {
             row = 58;
+        }
         if (row) {
             host.status_message(*row);
             tag(c, 31);
@@ -316,9 +332,9 @@ std::intptr_t ApplicationPostcardUiController::State::composer_event(UiControl& 
         if (event.id == 37002) {
             body_edited = true;
             preview_deadline = fixed::word(static_cast<std::uint32_t>(ui.clock().count()));
-        } else if (event.id == 37003)
+        } else if (event.id == 37003) {
             subject_edited = true;
-        else if (event.id == 37004) {
+        } else if (event.id == 37004) {
             recipients_edited = true;
             ui.set_enabled(control(37006), parse_postcard_recipients(control(37004).text).has_value());
         }

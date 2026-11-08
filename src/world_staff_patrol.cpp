@@ -6,10 +6,7 @@ using namespace staff_detail;
 
 namespace {
 std::array<CellId, 2> endpoints(const StaffAreaBounds& b) {
-    return {
-        static_cast<CellId>(static_cast<std::uint32_t>(b.start_x) + static_cast<std::uint32_t>(b.start_y) * 128u + 1u),
-        static_cast<CellId>(static_cast<std::uint32_t>(b.end_x) + static_cast<std::uint32_t>(b.end_y) * 128u + 1u)
-    };
+    return { static_cast<CellId>(static_cast<std::uint32_t>(b.start_x) + static_cast<std::uint32_t>(b.start_y) * 128u + 1u), static_cast<CellId>(static_cast<std::uint32_t>(b.end_x) + static_cast<std::uint32_t>(b.end_y) * 128u + 1u) };
 }
 
 bool custom_bounds(const StaffRuntimeRecord& s) {
@@ -19,67 +16,79 @@ bool custom_bounds(const StaffRuntimeRecord& s) {
 
 void emit_area(StaffWorld& c, const StaffAreaMembership& area, std::uint8_t material) {
     const auto& b = area.bounds;
-    const auto x0 = std::min(b.start_x, b.end_x), x1 = std::max(b.start_x, b.end_x), y0 = std::min(b.start_y, b.end_y),
-               y1 = std::max(b.start_y, b.end_y);
+    const auto x0 = std::min(b.start_x, b.end_x), x1 = std::max(b.start_x, b.end_x), y0 = std::min(b.start_y, b.end_y), y1 = std::max(b.start_y, b.end_y);
     const auto emit = [&](int x, int y) {
-        if (x >= 0 && x < 128 && y >= 0 && y < 128)
+        if (x >= 0 && x < 128 && y >= 0 && y < 128) {
             c.staff.interaction.overlays.push_back({ static_cast<CellId>(x + y * 128 + 1), material });
+        }
     };
-    for (int x = x0; x <= x1; ++x)
+    for (int x = x0; x <= x1; ++x) {
         emit(x, y0);
-    if (y0 < y1)
-        for (int x = x0; x <= x1; ++x)
-            emit(x, y1);
-    if (y1 - y0 > 1) {
-        for (int y = y0 + 1; y < y1; ++y)
-            emit(x0, y);
-        if (x0 < x1)
-            for (int y = y0 + 1; y < y1; ++y)
-                emit(x1, y);
     }
-    if (area.begin)
-        for (auto* cell_id = area.begin; cell_id != area.end; ++cell_id)
+    if (y0 < y1) {
+        for (int x = x0; x <= x1; ++x) {
+            emit(x, y1);
+        }
+    }
+    if (y1 - y0 > 1) {
+        for (int y = y0 + 1; y < y1; ++y) {
+            emit(x0, y);
+        }
+        if (x0 < x1) {
+            for (int y = y0 + 1; y < y1; ++y) {
+                emit(x1, y);
+            }
+        }
+    }
+    if (area.begin) {
+        for (auto* cell_id = area.begin; cell_id != area.end; ++cell_id) {
             c.staff.interaction.overlays.push_back({ *cell_id, material });
+        }
+    }
 }
 } //namespace
 
-StaffAreaResizeHandle
-classify_staff_area_selection_resize_handle(const StaffAreaSelectionInteraction& e, std::int32_t x, std::int32_t y) {
-    if (!e.selection_active)
+StaffAreaResizeHandle classify_staff_area_selection_resize_handle(const StaffAreaSelectionInteraction& e, std::int32_t x, std::int32_t y) {
+    if (!e.selection_active) {
         return StaffAreaResizeHandle::none;
+    }
     const auto& b = e.selection;
     if (x == b.start_x) {
-        if (y == b.start_y)
+        if (y == b.start_y) {
             return StaffAreaResizeHandle::left_top;
-        if (y == b.end_y)
+        }
+        if (y == b.end_y) {
             return StaffAreaResizeHandle::left_bottom;
+        }
         return y > b.start_y && y < b.end_y ? StaffAreaResizeHandle::left : StaffAreaResizeHandle::none;
     }
     if (x == b.end_x) {
-        if (y == b.start_y)
+        if (y == b.start_y) {
             return StaffAreaResizeHandle::right_top;
-        if (y == b.end_y)
+        }
+        if (y == b.end_y) {
             return StaffAreaResizeHandle::right_bottom;
+        }
         return y > b.start_y && y < b.end_y ? StaffAreaResizeHandle::right : StaffAreaResizeHandle::none;
     }
-    if (y == b.start_y && x > b.start_x && x < b.end_x)
+    if (y == b.start_y && x > b.start_x && x < b.end_x) {
         return StaffAreaResizeHandle::top;
-    if (y == b.end_y && x > b.start_x && x < b.end_x)
+    }
+    if (y == b.end_y && x > b.start_x && x < b.end_x) {
         return StaffAreaResizeHandle::bottom;
-    return x > b.start_x && x < b.end_x && y > b.start_y && y < b.end_y ? StaffAreaResizeHandle::interior
-                                                                        : StaffAreaResizeHandle::none;
+    }
+    return x > b.start_x && x < b.end_x && y > b.start_y && y < b.end_y ? StaffAreaResizeHandle::interior : StaffAreaResizeHandle::none;
 }
 
 std::uint32_t staff_area_resize_cursor(bool active, StaffAreaResizeHandle handle, float heading) {
-    if (!active)
+    if (!active) {
         return 0;
+    }
     double angle = heading;
-    if (angle > 0)
-        angle -= std::bit_cast<float>(std::uint32_t{ 1086918619 });
-    const auto quarter =
-        static_cast<std::size_t>(integer(std::fabs((angle - std::bit_cast<float>(std::uint32_t{ 1053364187 }))
-                                                   * std::bit_cast<float>(std::uint32_t{ 1067645315 })))
-                                 % 4);
+    if (angle > 0) {
+        angle -= std::bit_cast<float>(std::uint32_t { 1086918619 });
+    }
+    const auto quarter = static_cast<std::size_t>(integer(std::fabs((angle - std::bit_cast<float>(std::uint32_t { 1053364187 })) * std::bit_cast<float>(std::uint32_t { 1067645315 }))) % 4);
     // clang-format off
   return match(handle)->std::uint32_t {
     case StaffAreaResizeHandle::left_bottom or StaffAreaResizeHandle::right_top=>std::array<std::uint32_t,4>{24,23,25,22}[quarter];
@@ -96,12 +105,11 @@ bool update_staff_area_selection_validity(StaffWorld& c, StaffAreaSelectionInter
     const auto& b = e.selection;
     unsigned blocked = 0;
     //Native checks every corner, including duplicates of one-cell selections.
-    for (auto point : std::array<std::array<int, 2>, 4>{
-             { { b.start_x, b.start_y }, { b.start_x, b.end_y }, { b.end_x, b.start_y }, { b.end_x, b.end_y } } }) {
-        const auto id = static_cast<CellId>(
-            static_cast<std::uint32_t>(point[0]) + static_cast<std::uint32_t>(point[1]) * 128u + 1u);
-        if (!id || id > map_cell_count)
+    for (auto point : std::array<std::array<int, 2>, 4> { { { b.start_x, b.start_y }, { b.start_x, b.end_y }, { b.end_x, b.start_y }, { b.end_x, b.end_y } } }) {
+        const auto id = static_cast<CellId>(static_cast<std::uint32_t>(point[0]) + static_cast<std::uint32_t>(point[1]) * 128u + 1u);
+        if (!id || id > map_cell_count) {
             throw std::out_of_range("staff patrol corner");
+        }
         blocked += (primary(c).map_cells[id - 1].base.common.flags & 64u) != 0;
     }
     e.confirm_enabled = blocked < 2;
@@ -116,9 +124,7 @@ void render_staff_area_selection_overlay(StaffWorld& c, StaffAreaSelectionIntera
     //6259C0 performs a full mode transition for each overlay, followed
     //by 4D481E restoring the editor's mode. These are not raw writes:
     //they also invalidate pending construction input and tool state.
-    c.ports.construction.set_world_interaction_mode(c,
-                                                    static_cast<WorldInteractionMode>(valid ? e.render_mode : 137u),
-                                                    false);
+    c.ports.construction.set_world_interaction_mode(c, static_cast<WorldInteractionMode>(valid ? e.render_mode : 137u), false);
     emit_area(c, e.preview, valid ? 9u : 1u);
     for (const auto id : e.preview_staff) {
         const auto* payload = c.entities.at(id).payload;
@@ -130,8 +136,7 @@ void render_staff_area_selection_overlay(StaffWorld& c, StaffAreaSelectionIntera
     c.ports.construction.set_world_interaction_mode(c, static_cast<WorldInteractionMode>(e.render_mode), false);
 }
 
-void
-update_staff_area_selection_from_cursor(StaffWorld& c, StaffAreaSelectionInteraction& e, CellId cursor, bool dragging) {
+void update_staff_area_selection_from_cursor(StaffWorld& c, StaffAreaSelectionInteraction& e, CellId cursor, bool dragging) {
     const auto index = static_cast<std::uint32_t>(cursor) - 1u;
     const auto x = static_cast<int>(index & 127u), y = static_cast<int>(index >> 7);
     auto& b = e.selection;
@@ -163,26 +168,28 @@ update_staff_area_selection_from_cursor(StaffWorld& c, StaffAreaSelectionInterac
             // clang-format on
             if (b.start_x > b.end_x)
                 std::swap(b.start_x, b.end_x);
-            if (b.start_y > b.end_y)
+            if (b.start_y > b.end_y) {
                 std::swap(b.start_y, b.end_y);
+            }
         } else {
             //Native MOV[+58],X and MOV[+54],Y. The second write is the first Y
             //endpoint, rather than the tempting but incorrect +5C/end-Y field.
             b.end_x = x;
             b.start_y = y;
         }
-    } else if (!e.selection_active)
+    } else if (!e.selection_active) {
         b = { x, y, x, y };
+    }
     e.resize_handle = classify_staff_area_selection_resize_handle(e, x, y);
-    c.staff.interaction.cursor_presentation =
-        staff_area_resize_cursor(e.selection_active, e.resize_handle, c.view.camera.heading_radians);
+    c.staff.interaction.cursor_presentation = staff_area_resize_cursor(e.selection_active, e.resize_handle, c.view.camera.heading_radians);
     render_staff_area_selection_overlay(c, e);
 }
 
 void begin_staff_area_selection(StaffWorld& c, StaffRuntimeRecord& s, std::uint32_t mode) {
     initialize_world_staff_interaction(c);
-    if (!c.staff.interaction.cursor.cell && !custom_bounds(s))
+    if (!c.staff.interaction.cursor.cell && !custom_bounds(s)) {
         throw std::logic_error("staff patrol selection requires a cursor cell");
+    }
     StaffAreaSelectionInteraction editor;
     editor.target = s.base.header.id;
     editor.render_mode = mode;
@@ -201,10 +208,7 @@ void begin_staff_area_selection(StaffWorld& c, StaffRuntimeRecord& s, std::uint3
     if (custom_bounds(s)) {
         const auto pair = endpoints(s.area.bounds);
         const auto first = static_cast<std::uint32_t>(pair[0]) - 1u, last = static_cast<std::uint32_t>(pair[1]) - 1u;
-        editor.selection = { static_cast<int>(first & 127u),
-                             static_cast<int>(first >> 7),
-                             static_cast<int>(last & 127u),
-                             static_cast<int>(last >> 7) };
+        editor.selection = { static_cast<int>(first & 127u), static_cast<int>(first >> 7), static_cast<int>(last & 127u), static_cast<int>(last >> 7) };
         editor.selection_active = true;
         editor.caption_row = 108;
     } else {
@@ -222,25 +226,30 @@ void begin_staff_area_selection(StaffWorld& c, StaffRuntimeRecord& s, std::uint3
 }
 
 void commit_staff_area_selection_to_target(StaffWorld& c, StaffAreaSelectionInteraction& e) {
-    if (!e.selection_active)
+    if (!e.selection_active) {
         return;
+    }
     auto& s = record<StaffRuntimeRecord>(c, e.target);
     if (update_staff_area_selection_validity(c, e)) {
         const auto pair = endpoints(e.selection);
         set_world_object_staff_area_bounds_from_packed_cells(c, s, pair[0], pair[1]);
-    } else
+    } else {
         reset_world_object_staff_area_bounds_to_full_map(s);
+    }
 }
 
 void close_staff_area_selection_panel(StaffWorld& c, bool confirm) {
     auto* e = std::get_if<StaffAreaSelectionInteraction>(&c.staff.interaction.handler.value);
-    if (!e || !e->panel_open)
+    if (!e || !e->panel_open) {
         return;
-    if (confirm)
+    }
+    if (confirm) {
         commit_staff_area_selection_to_target(c, *e);
+    }
     e->panel_open = false;
-    if (e->target)
+    if (e->target) {
         enter_world_staff_state(c, record<StaffRuntimeRecord>(c, e->target), StaffState::frozen);
+    }
     //4D48F2 calls 673230(0,0), whose mode-zero branch replaces the active
     //handler. The shared modal context's old pointer is not active ownership.
     //This call can destroy *e; do not access it afterward.

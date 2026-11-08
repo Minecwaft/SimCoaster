@@ -9,21 +9,17 @@ class TerrainVisibilityCache;
 //rejection, without the original fixed 128-sample scratch rows or WORD limits.
 class TerrainSkyShadowCache {
     TerrainGridData grid_;
-    MeshMatrix view_projection_{};
+    MeshMatrix view_projection_ {};
     TextureImagePtr source_;
-    MeshPoint sky_offset_{};
-    float height_bias_{};
+    MeshPoint sky_offset_ {};
+    float height_bias_ {};
     std::vector<SceneVertex> vertices_;
     std::vector<std::uint32_t> indices_;
-    bool valid_{};
+    bool valid_ {};
     std::shared_ptr<TerrainVisibilityCache> visibility_;
 
 public:
     void clear();
-    void append(MeshScene&,
-                const TerrainGridView*,
-                const WeatherFrame&,
-                const MeshMatrix& view_projection,
-                bool cull_to_view = false);
+    void append(MeshScene&, const TerrainGridView*, const WeatherFrame&, const MeshMatrix& view_projection, bool cull_to_view = false);
 };
 } //namespace simcoaster

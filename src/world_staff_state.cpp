@@ -7,87 +7,71 @@ using namespace staff_detail;
 
 StaffState world_staff_association_state(const StaffRuntimeRecord& staff) noexcept {
     auto state = staff.state;
-    if (state == StaffState::frozen
-        || state == StaffState::frozen_editing_patrol_area
-        || state == StaffState::being_whinged_at)
+    if (state == StaffState::frozen || state == StaffState::frozen_editing_patrol_area || state == StaffState::being_whinged_at) {
         state = staff.saved_state;
-    if (state == StaffState::training_paused)
+    }
+    if (state == StaffState::training_paused) {
         return StaffState::training;
-    if (state == StaffState::walking_to_training_room_paused)
+    }
+    if (state == StaffState::walking_to_training_room_paused) {
         return StaffState::walking_to_training_room;
+    }
     return state;
 }
 
 bool world_staff_has_hidden_base_sprite(const StaffRuntimeRecord& staff) noexcept {
     const auto state = world_staff_association_state(staff);
-    return state == StaffState::resting
-        || state == StaffState::training
-        || state == StaffState::researching
-        || state == StaffState::picked_up;
+    return state == StaffState::resting || state == StaffState::training || state == StaffState::researching || state == StaffState::picked_up;
 }
 
-void
-enter_world_staff_state(StaffWorld& c, StaffRuntimeRecord& s, StaffState requested, ThingId removed_training_room) {
-    if (requested == StaffState::walking_to_obstacle && !resolve_mission_obstacle(c))
+void enter_world_staff_state(StaffWorld& c, StaffRuntimeRecord& s, StaffState requested, ThingId removed_training_room) {
+    if (requested == StaffState::walking_to_obstacle && !resolve_mission_obstacle(c)) {
         requested = StaffState::idle;
+    }
     if (requested == StaffState::walking_to_training_room && !first_training_room(c)) {
         s.going_to_learn = ThemeAbility::none;
         requested = StaffState::idle;
     }
     const auto previous = s.state;
     const auto association = world_staff_association_state(s);
-    const bool wrapper = requested == StaffState::frozen
-                      || requested == StaffState::frozen_editing_patrol_area
-                      || requested == StaffState::being_whinged_at;
+    const bool wrapper = requested == StaffState::frozen || requested == StaffState::frozen_editing_patrol_area || requested == StaffState::being_whinged_at;
     auto next_association = wrapper ? association : requested;
-    if (next_association == StaffState::training_paused)
+    if (next_association == StaffState::training_paused) {
         next_association = StaffState::training;
-    else if (next_association == StaffState::walking_to_training_room_paused)
+    } else if (next_association == StaffState::walking_to_training_room_paused) {
         next_association = StaffState::walking_to_training_room;
+    }
     const bool hidden = world_staff_has_hidden_base_sprite(s);
     if (association != next_association) {
         //Native transitions can leave an occupied room through pickup, research
         //assignment, firing or demolition as well as the ordinary leave helper.
         //Detach once before another state/resource can replace that ownership.
-        const bool cancelled_training =
-            association == StaffState::training && s.currently_learning != ThemeAbility::none;
-        if (association == StaffState::resting
-            || association == StaffState::training
-            || association == StaffState::researching) {
+        const bool cancelled_training = association == StaffState::training && s.currently_learning != ThemeAbility::none;
+        if (association == StaffState::resting || association == StaffState::training || association == StaffState::researching) {
             detach_staff_room_occupancy(c, s, removed_training_room);
             //Entry may recursively choose another state (notably patrolling→rest).
             //Its old occupancy is already gone; do not let that recursion release
             //it again or mistake a newly assigned room for the departed one.
             s.state = StaffState::idle;
         }
-        if (cancelled_training)
+        if (cancelled_training) {
             restore_cancelled_training_availability(c, s);
-        if ((association == StaffState::walking_to_rest_area || association == StaffState::waiting_for_empty_staff_room)
-            && next_association != StaffState::resting
-            && next_association != StaffState::walking_to_rest_area
-            && next_association != StaffState::waiting_for_empty_staff_room)
+        }
+        if ((association == StaffState::walking_to_rest_area || association == StaffState::waiting_for_empty_staff_room) && next_association != StaffState::resting && next_association != StaffState::walking_to_rest_area && next_association != StaffState::waiting_for_empty_staff_room) {
             s.rest_area = 0;
-        if (association == StaffState::walking_to_research_room
-            && next_association != StaffState::researching
-            && next_association != StaffState::walking_to_research_room)
+        }
+        if (association == StaffState::walking_to_research_room && next_association != StaffState::researching && next_association != StaffState::walking_to_research_room) {
             s.research_room = 0;
-        if (association == StaffState::walking_to_training_room
-            && next_association != StaffState::training
-            && next_association != StaffState::walking_to_training_room) {
+        }
+        if (association == StaffState::walking_to_training_room && next_association != StaffState::training && next_association != StaffState::walking_to_training_room) {
             s.currently_learning = ThemeAbility::none;
             s.going_to_learn = ThemeAbility::none;
         }
     }
-    const bool remains_hidden = next_association == StaffState::resting
-                             || next_association == StaffState::training
-                             || next_association == StaffState::researching
-                             || next_association == StaffState::picked_up;
-    if (hidden && !remains_hidden && !s.mobile.animation.sprite_script)
-        set_world_sprite_animation_resource(c,
-                                            s.mobile.animation,
-                                            3,
-                                            static_cast<std::int32_t>(s.mobile.sprite_category),
-                                            static_cast<std::int32_t>(s.mobile.sprite_id));
+    const bool remains_hidden = next_association == StaffState::resting || next_association == StaffState::training || next_association == StaffState::researching || next_association == StaffState::picked_up;
+    if (hidden && !remains_hidden && !s.mobile.animation.sprite_script) {
+        set_world_sprite_animation_resource(c, s.mobile.animation, 3, static_cast<std::int32_t>(s.mobile.sprite_category), static_cast<std::int32_t>(s.mobile.sprite_id));
+    }
     match (requested) {
         case StaffState::idle or StaffState::waiting_for_empty_staff_room => {
             s.time_started_idling = previous == StaffState::patrolling ? world(c).saved.game_tick : 0;
@@ -213,11 +197,9 @@ bool evaluate_world_staff_energy_and_activity(StaffWorld& c, StaffRuntimeRecord&
     const auto& fixed = c.visitors.environment.FixedItemInfo;
     if (striking(c, s) && get_world_park_gates_rsse_slot1(c, world(c)) == 1) {
         s.mobile.navigation.navigation_mode = 1;
-        const auto xcell = static_cast<std::uint8_t>(fixed.StrikeAreaStartX)
-                         + bounded_random(c, static_cast<std::uint32_t>(fixed.StrikeAreaSizeX));
+        const auto xcell = static_cast<std::uint8_t>(fixed.StrikeAreaStartX) + bounded_random(c, static_cast<std::uint32_t>(fixed.StrikeAreaSizeX));
         const auto x = static_cast<std::uint16_t>((xcell << 8) | static_cast<std::uint8_t>(random(c)));
-        const auto ycell = static_cast<std::uint8_t>(fixed.StrikeAreaStartY)
-                         + bounded_random(c, static_cast<std::uint32_t>(fixed.StrikeAreaSizeY));
+        const auto ycell = static_cast<std::uint8_t>(fixed.StrikeAreaStartY) + bounded_random(c, static_cast<std::uint32_t>(fixed.StrikeAreaSizeY));
         const auto y = static_cast<std::uint16_t>((ycell << 8) | static_cast<std::uint8_t>(random(c)));
         if (route(c, s, x, y)) {
             enter_world_staff_state(c, s, StaffState::walking_to_strike);
@@ -228,10 +210,11 @@ bool evaluate_world_staff_energy_and_activity(StaffWorld& c, StaffRuntimeRecord&
     if (energy > balance(c).RestLevel) {
         s.mobile.base_speed = speed(c, s, mobile_base_speed_variants[energy < 100 ? energy / 20 : 4]);
         const auto happiness = byte(s.happiness_score);
-        if (happiness <= 10)
+        if (happiness <= 10) {
             thought(c, s, MobileThoughtCode::staff_angry);
-        else if (happiness > 97 && !(random(c) & 15u))
+        } else if (happiness > 97 && !(random(c) & 15u)) {
             thought(c, s, MobileThoughtCode::staff_happy);
+        }
     } else {
         thought(c, s, MobileThoughtCode::staff_tired);
         const auto room = find_nearest_staff_rest_area(c, s);
@@ -240,15 +223,17 @@ bool evaluate_world_staff_energy_and_activity(StaffWorld& c, StaffRuntimeRecord&
             enter_world_staff_state(c, s, StaffState::walking_to_rest_area);
             return true;
         }
-        if (!(random(c) & 15u))
+        if (!(random(c) & 15u)) {
             s.happiness_score = percentage(static_cast<double>(s.happiness_score) - balance(c).HappyHitCosNoRestArea);
+        }
         if (classify_staff_activity(s) == StaffActivityStatus::working) {
             enter_world_staff_state(c, s, StaffState::idle);
             return true;
         }
     }
-    if (!s.research_mode || s.base.header.kind == ThingKind::researcher)
+    if (!s.research_mode || s.base.header.kind == ThingKind::researcher) {
         return false;
+    }
     if (byte(s.energy) < balance(c).RestLevel) {
         const auto room = find_nearest_staff_rest_area(c, s);
         if (room && route(c, s, object(c, room).entry_cell)) {
@@ -259,8 +244,9 @@ bool evaluate_world_staff_energy_and_activity(StaffWorld& c, StaffRuntimeRecord&
         enter_world_staff_state(c, s, StaffState::idle);
         return false;
     }
-    if (select_first_thinking_space_object_if_pathable(c, s))
+    if (select_first_thinking_space_object_if_pathable(c, s)) {
         enter_world_staff_state(c, s, StaffState::walking_to_research_room);
+    }
     return false;
 }
 
@@ -276,36 +262,35 @@ void update_world_staff_activity_state(StaffWorld& c, StaffRuntimeRecord& s) {
             const auto progress = navigate(c, s);
             thought(c, s, MobileThoughtCode::staff_going_on_strike);
             if (progress != NavigationResult::moving) {
-                if (state == StaffState::walking_to_strike)
+                if (state == StaffState::walking_to_strike) {
                     s.mobile.navigation.navigation_mode = 0;
-                enter_world_staff_state(c,
-                                        s,
-                                        state == StaffState::walking_to_strike ? StaffState::striking
-                                                                               : StaffState::idle);
+                }
+                enter_world_staff_state(c, s, state == StaffState::walking_to_strike ? StaffState::striking : StaffState::idle);
             }
         }
         case StaffState::striking                 => update_world_staff_striking_behavior(c, s);
         case StaffState::walking_to_training_room => update_staff_training_travel_state(c, s);
         case StaffState::training                 => update_staff_training_session(c, s);
         case StaffState::stunned                  => {
-            const auto duration = static_cast<std::uint32_t>(
-                integer((1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience) * 50.0));
-            if (world(c).saved.game_tick - s.time_started_idling > duration)
+            const auto duration = static_cast<std::uint32_t>(integer((1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience) * 50.0));
+            if (world(c).saved.game_tick - s.time_started_idling > duration) {
                 enter_world_staff_state(c, s, StaffState::idle);
+            }
         }
         case StaffState::frozen or StaffState::frozen_editing_patrol_area => restore_saved_state(c, s);
         case StaffState::being_whinged_at                                 => {
             --s.mobile.whinge_timeout;
             if (fixed::word(s.mobile.whinge_timeout) <= 0) {
                 s.state = s.saved_state;
-                if (s.saved_state == StaffState::being_whinged_at)
+                if (s.saved_state == StaffState::being_whinged_at) {
                     enter_world_staff_state(c, s, StaffState::idle);
-            } else
+                }
+            } else {
                 s.happiness_score = percentage(static_cast<double>(s.happiness_score) - 1.0);
+            }
         }
         case StaffState::researching => {
-            const auto fraction =
-                static_cast<float>(1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience);
+            const auto fraction = static_cast<float>(1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience);
             const auto energy_delta = static_cast<float>(static_cast<double>(fraction) * static_cast<double>(-.1f));
             s.energy = percentage(static_cast<double>(s.energy) + energy_delta);
             s.happiness_score = percentage(s.happiness_score + fraction * static_cast<double>(-.05f));
@@ -318,10 +303,11 @@ void update_world_staff_activity_state(StaffWorld& c, StaffRuntimeRecord& s) {
         case StaffState::waiting_for_empty_staff_room => seek_staff_rest_area(c, s);
         case StaffState::be_forced_to_destination     => {
             const auto progress = navigate(c, s);
-            if (progress == NavigationResult::arrived)
+            if (progress == NavigationResult::arrived) {
                 set_world_staff_state_by_type(c, s, s.forced_state);
-            else if (progress == NavigationResult::unreachable)
+            } else if (progress == NavigationResult::unreachable) {
                 choose_staff_task_or_rest_area(c, s);
+            }
         }
         case _ => ;
     }
@@ -329,17 +315,15 @@ void update_world_staff_activity_state(StaffWorld& c, StaffRuntimeRecord& s) {
 
 void choose_staff_task_or_rest_area(StaffWorld& c, StaffRuntimeRecord& s) {
     match (s.base.header.kind) {
-        case ThingKind::mechanic   => choose_mechanic_repair_task(c, reinterpret_cast<MechanicRuntimeRecord&>(s));
-        case ThingKind::researcher => start_world_researcher_task(c, s);
-        case ThingKind::handyman   => choose_and_start_handyman_task(c, reinterpret_cast<HandymanRuntimeRecord&>(s));
-        case ThingKind::entertainer =>
-            update_entertainer_idle_and_work_state(c, reinterpret_cast<EntertainerRuntimeRecord&>(s));
-        case ThingKind::guard => update_world_guard_idle_or_patrol_state(c, reinterpret_cast<GuardRuntimeRecord&>(s));
-        case ThingKind::gardener => start_world_gardener_task(c, reinterpret_cast<GardenerRuntimeRecord&>(s));
-        case _                   => ;
+        case ThingKind::mechanic    => choose_mechanic_repair_task(c, reinterpret_cast<MechanicRuntimeRecord&>(s));
+        case ThingKind::researcher  => start_world_researcher_task(c, s);
+        case ThingKind::handyman    => choose_and_start_handyman_task(c, reinterpret_cast<HandymanRuntimeRecord&>(s));
+        case ThingKind::entertainer => update_entertainer_idle_and_work_state(c, reinterpret_cast<EntertainerRuntimeRecord&>(s));
+        case ThingKind::guard       => update_world_guard_idle_or_patrol_state(c, reinterpret_cast<GuardRuntimeRecord&>(s));
+        case ThingKind::gardener    => start_world_gardener_task(c, reinterpret_cast<GardenerRuntimeRecord&>(s));
+        case _                      => ;
     } const auto activity = classify_staff_activity(s);
-    if (byte(s.motivation) < c.staff.recruitment.balance.Strike.MotivationPercentToStrike / 2
-        && (activity == StaffActivityStatus::working || activity == StaffActivityStatus::researching)) {
+    if (byte(s.motivation) < c.staff.recruitment.balance.Strike.MotivationPercentToStrike / 2 && (activity == StaffActivityStatus::working || activity == StaffActivityStatus::researching)) {
         const auto room = find_nearest_staff_rest_area(c, s);
         if (room && route(c, s, object(c, room).entry_cell)) {
             s.rest_area = room;
@@ -352,21 +336,23 @@ void choose_staff_task_or_rest_area(StaffWorld& c, StaffRuntimeRecord& s) {
 
 namespace staff_detail {
 void start_task_after_idle_delay(StaffWorld& c, StaffRuntimeRecord& s) {
-    const auto delay = static_cast<std::uint32_t>(
-        integer((1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience) * -50.0));
-    if (world(c).saved.game_tick > s.time_started_idling - delay)
+    const auto delay = static_cast<std::uint32_t>(integer((1.0 - static_cast<double>(s.experience) / balance(c).MaxExperience) * -50.0));
+    if (world(c).saved.game_tick > s.time_started_idling - delay) {
         choose_staff_task_or_rest_area(c, s);
+    }
 }
 
 void restore_saved_state(StaffWorld& c, StaffRuntimeRecord& s) {
-    if (s.state == StaffState::frozen_editing_patrol_area || (world(c).saved.game_tick & 3u))
+    if (s.state == StaffState::frozen_editing_patrol_area || (world(c).saved.game_tick & 3u)) {
         return;
+    }
     //Re-entering TRAINING runs the arrival effects again and clears progress.
     //A temporary freeze already retains its room and hidden sprite ownership.
-    if (s.saved_state == StaffState::training)
+    if (s.saved_state == StaffState::training) {
         s.state = StaffState::training;
-    else
+    } else {
         set_world_staff_state_by_type(c, s, s.saved_state);
+    }
 }
 } //namespace staff_detail
 } //namespace simcoaster

@@ -11,11 +11,7 @@ class WorldCoasterEditorUiController {
     std::unique_ptr<State> state_;
 
 public:
-    WorldCoasterEditorUiController(WorldRuntime&,
-                                   UiRuntime&,
-                                   UiControl* primary,
-                                   const std::filesystem::path& game_root,
-                                   WorldUiPanelHost);
+    WorldCoasterEditorUiController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, WorldUiPanelHost);
     ~WorldCoasterEditorUiController();
     WorldCoasterEditorUiController(const WorldCoasterEditorUiController&) = delete;
     WorldCoasterEditorUiController& operator=(const WorldCoasterEditorUiController&) = delete;

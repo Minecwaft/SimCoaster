@@ -4,21 +4,15 @@
 namespace simcoaster {
 using namespace park_detail;
 
-ParkRuntime::State::State(const std::filesystem::path& root,
-                          const std::string& theme,
-                          bool coaster_designer,
-                          std::function<void()> pump,
-                          std::optional<ApplicationHardwareProfile> requested_profile)
-    : bindings(root),
-      rendering(root, theme),
-      simulation(bindings) {
+ParkRuntime::State::State(const std::filesystem::path& root, const std::string& theme, bool coaster_designer, std::function<void()> pump, std::optional<ApplicationHardwareProfile> requested_profile) : bindings(root), rendering(root, theme), simulation(bindings) {
     bindings.resource_pump = std::move(pump);
-    if (requested_profile)
+    if (requested_profile) {
         configuration.hardware_profile = std::move(*requested_profile);
-    else {
+    } else {
         auto profile = load_application_hardware_profile(root, 1);
-        if (!profile)
+        if (!profile) {
             throw std::runtime_error(profile.error().reason);
+        }
         configuration.hardware_profile = std::move(*profile);
     }
     simulation.world->source.data_directory = (root / "Data").native_encoded_string();
@@ -33,7 +27,7 @@ ParkRuntime::State::State(const std::filesystem::path& root,
             try {
                 return bindings.read_asset(path);
             } catch (const std::exception& error) {
-                return std::unexpected(SoundError{ SoundFailure::io, 0, std::string{ path } + ": " + error.what() });
+                return std::unexpected(SoundError { SoundFailure::io, 0, std::string { path } + ": " + error.what() });
             }
         },
         root / "Data",
@@ -46,8 +40,7 @@ ParkRuntime::State::State(const std::filesystem::path& root,
     bindings.scene = &rendering.scene;
     bindings.track_rides = &simulation.rides;
     bindings.particles = simulation.particles.get();
-    simulation.world->random.mesh_passenger_random_state =
-        static_cast<std::uint32_t>(next_crt_random(*simulation.world)); //Native terrain preparation seeds the
+    simulation.world->random.mesh_passenger_random_state = static_cast<std::uint32_t>(next_crt_random(*simulation.world)); //Native terrain preparation seeds the
     //independent boarding stream from rand().
     simulation.world->timing.scale = 1.;
     bindings.runtime_overlays = &frame.runtime_overlays;
@@ -57,13 +50,12 @@ ParkRuntime::State::State(const std::filesystem::path& root,
     simulation.world->construction.editor = &tools.coaster_editor;
     simulation.world->construction.coaster_catalog = &tools.coaster_catalog;
     const auto recording = tools.layout_replay.bind(*simulation.world);
-    if (!recording)
+    if (!recording) {
         throw std::runtime_error(describe_layout_error(recording.error()));
-    simulation.rides.random_state =
-        static_cast<std::uint32_t>(next_crt_random(*simulation.world)); //Independent TrackRide effect stream,
+    }
+    simulation.rides.random_state = static_cast<std::uint32_t>(next_crt_random(*simulation.world)); //Independent TrackRide effect stream,
     //initialize_track_ride_simulation.
-    rendering.scene.configure_texture_set(
-        mesh_texture_set_for_quality(configuration.hardware_profile.graphics.texture_quality));
+    rendering.scene.configure_texture_set(mesh_texture_set_for_quality(configuration.hardware_profile.graphics.texture_quality));
     rendering.scene.load_terrain();
     rendering.meshes.configure_terrain_textures(rendering.scene);
     rendering.terrain = rendering.scene.terrain()->terrain->view();

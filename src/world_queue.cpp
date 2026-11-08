@@ -18,8 +18,9 @@ const PersonRuntimeView& require_person(const PersonRuntimeView* person) {
 
 PersonRuntimeView* queue_person(WorldRuntime& c, ThingId id) {
     auto* record = c.entities.at(id).payload;
-    if (!record)
+    if (!record) {
         throw std::invalid_argument("null queue person payload");
+    }
     return reinterpret_cast<PersonRuntimeView*>(record);
 }
 
@@ -34,10 +35,12 @@ std::uint8_t happiness_change(const WorldRuntime& c, HappinessChangeSize size) {
 }
 
 CellBase& primary_map_cell(WorldRuntime& c, CellId id) {
-    if (!c.simulation.reference)
+    if (!c.simulation.reference) {
         throw std::invalid_argument("null queue primary World");
-    if (!id)
+    }
+    if (!id) {
         throw std::out_of_range("zero queue cell ID");
+    }
     return c.simulation.reference->map_cells.at(static_cast<std::size_t>(id) - 1).base;
 }
 
@@ -51,14 +54,18 @@ CellId resolve_queue_start_item_id(WorldRuntime& c, const ParkObjectRuntimeView*
     const auto mask = get_world_cell_neighbor_mask(c, &get_world_map_cell_record_by_id(c, entry)->base);
     //Native priority differs from find_next: north, south, west, east. It uses
     //the object's entry ID for flat WORD arithmetic, not the record's own ID.
-    if (mask & 1)
+    if (mask & 1) {
         return offset_id(entry, -128);
-    if (mask & 16)
+    }
+    if (mask & 16) {
         return offset_id(entry, 128);
-    if (mask & 64)
+    }
+    if (mask & 64) {
         return offset_id(entry, -1);
-    if (mask & 4)
+    }
+    if (mask & 4) {
         return offset_id(entry, 1);
+    }
     return 0;
 }
 
@@ -70,28 +77,32 @@ CellId find_next_queue_item_id(WorldRuntime& c, CellId id) {
         std::uint8_t direction;
     };
 
-    constexpr std::array<Step, 4> steps{ { { { 0, -1 }, 16 }, { { 0, 1 }, 1 }, { { 1, 0 }, 64 }, { { -1, 0 }, 4 } } };
+    constexpr std::array<Step, 4> steps { { { { 0, -1 }, 16 }, { { 0, 1 }, 1 }, { { 1, 0 }, 64 }, { { -1, 0 }, 4 } } };
     for (auto step : steps) {
         const auto* neighbor = resolve_world_cell_by_scaled_local_offset(c, &origin, step.offset, 1);
-        if (neighbor && neighbor->base.common.type == 3 && get_world_cell_direction(&neighbor->base) == step.direction)
+        if (neighbor && neighbor->base.common.type == 3 && get_world_cell_direction(&neighbor->base) == step.direction) {
             return neighbor->base.index;
+        }
     }
     return 0;
 }
 
 CellId get_back_of_queue(WorldRuntime& c, ParkObjectRuntimeView* object) {
     require_object(object);
-    if (object->back_of_queue)
+    if (object->back_of_queue) {
         return object->back_of_queue;
+    }
     auto current = resolve_queue_start_item_id(c, object);
     object->queue_size_in_cells = 0;
     object->back_of_queue = current;
-    if (!current)
+    if (!current) {
         return 0;
+    }
     int remaining = 1000;
     do {
-        if (remaining-- <= 0)
+        if (remaining-- <= 0) {
             break;
+        }
         object->back_of_queue = current;
         current = find_next_queue_item_id(c, current);
         ++object->queue_size_in_cells;
@@ -105,8 +116,9 @@ bool has_usable_entry_approach(WorldRuntime& c, ParkObjectRuntimeView* object) {
     require_object(object);
     if (static_cast<std::uint16_t>(object->capabilities) & 8) {
         const auto back = get_back_of_queue(c, object);
-        if (!back)
+        if (!back) {
             return false;
+        }
         const auto* cell = &get_world_map_cell_record_by_id(c, back)->base;
         return get_world_cell_neighbor_mask(c, cell) != get_world_cell_direction(cell);
     }
@@ -114,49 +126,52 @@ bool has_usable_entry_approach(WorldRuntime& c, ParkObjectRuntimeView* object) {
     //Invalid rotations retain the entry ID's low BYTE in the original slot.
     auto direction = static_cast<std::uint8_t>(object->entry_cell);
     match (object->angle) {
-        case 0 => direction = 16;
-        case 90 => direction = 4;
+        case 0   => direction = 16;
+        case 90  => direction = 4;
         case 180 => direction = 1;
         case 270 => direction = 64;
-        case _ => {}
-    }
-    auto* definition = find_object_definition_by_id(&c.resources.object_catalog, object->definition_id);
-    if (!definition)
+        case _   => {
+        }
+    } auto* definition = find_object_definition_by_id(&c.resources.object_catalog, object->definition_id);
+    if (!definition) {
         throw std::invalid_argument("null queue entry definition");
+    }
     direction = advance_world_cell_direction(direction, definition->cached_entry_direction);
     const auto reciprocal = opposite_world_cell_direction(direction);
     direction = opposite_world_cell_direction(reciprocal);
     const auto* neighbor = resolve_world_cell_from_selector_flag_byte(c, &entry, direction);
-    if (!neighbor)
+    if (!neighbor) {
         throw std::out_of_range("non-queue entry has no approach cell");
-    return neighbor->base.common.type == 1
-        && (get_world_cell_neighbor_mask(c, &neighbor->base) & reciprocal)
-        && (get_world_cell_neighbor_mask(c, &entry) & direction);
+    }
+    return neighbor->base.common.type == 1 && (get_world_cell_neighbor_mask(c, &neighbor->base) & reciprocal) && (get_world_cell_neighbor_mask(c, &entry) & direction);
 }
 
 bool is_person_in_park_object_queue_state(const PersonRuntimeView* person) {
     auto state = require_person(person).state;
-    if (state == PersonState::temporary_appearance)
+    if (state == PersonState::temporary_appearance) {
         state = person->saved_state;
+    }
     return std::to_underlying(state) >= 14 && std::to_underlying(state) <= 17;
 }
 
-std::int32_t
-get_person_park_object_queue_position(WorldRuntime& c, const ParkObjectRuntimeView* object, ThingId requested) {
+std::int32_t get_person_park_object_queue_position(WorldRuntime& c, const ParkObjectRuntimeView* object, ThingId requested) {
     auto current = require_object(object).first_in_queue;
     std::int32_t position = 0;
     std::size_t visited = 0;
     while (current != requested && current) {
-        if (visited++ >= c.entities.size())
+        if (visited++ >= c.entities.size()) {
             throw std::length_error("cyclic Person queue");
+        }
         ++position;
         const auto* person = queue_person(c, current);
         current = is_person_in_park_object_queue_state(person) ? person->queue_next : 0;
     }
-    if (current)
+    if (current) {
         return position;
-    if (!requested)
+    }
+    if (!requested) {
         return position;
+    }
     //Native reads BASE tick only for an empty diagnostic sink on this path.
     return -1;
 }
@@ -170,20 +185,21 @@ PersonRuntimeView* remove_person_from_park_object_queue(WorldRuntime& c, ParkObj
     }
     const auto* person = queue_person(c, id);
     const auto previous = person->queue_previous, next = person->queue_next;
-    if (previous)
+    if (previous) {
         queue_person(c, previous)->queue_next = next;
-    else
+    } else {
         object->first_in_queue = next;
-    if (next)
+    }
+    if (next) {
         queue_person(c, next)->queue_previous = previous;
+    }
     queue_person(c, id)->queue_previous = 0;
     auto* result = queue_person(c, id);
     result->queue_next = 0;
     return result;
 }
 
-void
-decrease_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeView* person, HappinessChangeSize size) {
+void decrease_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeView* person, HappinessChangeSize size) {
     require_person(person);
     const auto value = static_cast<double>(person->happiness) - happiness_change(c, size);
     //Original instruction execution and unordered-comparison branches route
@@ -191,8 +207,7 @@ decrease_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeVie
     person->happiness = value >= 0 ? (value <= 100 ? static_cast<float>(value) : 100.0f) : 0.0f;
 }
 
-void
-increase_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeView* person, HappinessChangeSize size) {
+void increase_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeView* person, HappinessChangeSize size) {
     require_person(person);
     const auto value = static_cast<double>(person->happiness) + happiness_change(c, size);
     person->happiness = value >= 0 ? (value <= 100 ? static_cast<float>(value) : 100.0f) : 0.0f;
@@ -201,11 +216,9 @@ increase_person_happiness_by_configured_amount(WorldRuntime& c, PersonRuntimeVie
 void dismiss_person_from_park_object_queue(WorldRuntime& c, PersonRuntimeView* person, bool suppress) {
     require_person(person);
     if (!suppress) {
-        if (!(person->base.header.id & 7))
-            c.ports.resources.submit_mobile_entity_positioned_template_request(c,
-                                                                               person,
-                                                                               c.resources.kids_catalog_slot,
-                                                                               128);
+        if (!(person->base.header.id & 7)) {
+            c.ports.resources.submit_mobile_entity_positioned_template_request(c, person, c.resources.kids_catalog_slot, 128);
+        }
         decrease_person_happiness_by_configured_amount(c, person, HappinessChangeSize::medium);
     }
     person->queue_previous = person->queue_next = 0;
@@ -220,22 +233,21 @@ void dismiss_person_from_park_object_queue(WorldRuntime& c, PersonRuntimeView* p
 void remove_person_from_shortened_queue_if_over_capacity(WorldRuntime& c, PersonRuntimeView* person) {
     require_person(person);
     auto* payload = c.entities.at(person->major_destination).payload;
-    if (!payload)
+    if (!payload) {
         throw std::invalid_argument("queued person has no destination payload");
+    }
     auto* object = reinterpret_cast<ParkObjectRuntimeView*>(payload);
     const auto capacity = object->queue_size_in_cells * 4u;
-    const auto position =
-        std::bit_cast<std::uint32_t>(get_person_park_object_queue_position(c, object, person->base.header.id));
-    if (position < capacity || person->state == PersonState::wait_for_object_script)
+    const auto position = std::bit_cast<std::uint32_t>(get_person_park_object_queue_position(c, object, person->base.header.id));
+    if (position < capacity || person->state == PersonState::wait_for_object_script) {
         return;
+    }
     //Native resolves the sprite resource into unused local position/rotation
     //outputs here. Its inspected callee is a pure pool read; the dead lookup
     //carries no observable behavior into the natural x64 implementation.
-    if (!(person->base.header.id % 3))
-        world_operations::set_mobile_entity_thought_bubble(c,
-                                                           &person->mobile.thought_history,
-                                                           MobileThoughtCode::angry,
-                                                           false);
+    if (!(person->base.header.id % 3)) {
+        world_operations::set_mobile_entity_thought_bubble(c, &person->mobile.thought_history, MobileThoughtCode::angry, false);
+    }
     remove_person_from_park_object_queue(c, object, person->base.header.id);
     dismiss_person_from_park_object_queue(c, person, false);
     person->major_destination = 0;
@@ -253,13 +265,15 @@ void rebuild_park_object_queue_layout(WorldRuntime& c, ParkObjectRuntimeView* ob
     auto current = object->first_in_queue;
     std::size_t visited = 0;
     while (current) {
-        if (visited++ >= c.entities.size())
+        if (visited++ >= c.entities.size()) {
             throw std::length_error("cyclic queue rebuild list");
+        }
         const bool loading = current == object->person_being_loaded;
         auto* person = queue_person(c, current);
         current = person->queue_next;
-        if (!loading)
+        if (!loading) {
             remove_person_from_shortened_queue_if_over_capacity(c, person);
+        }
     }
     (void)has_usable_entry_approach(c, object);
     object->assigned_staff_member = 0;

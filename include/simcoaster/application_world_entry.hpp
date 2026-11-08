@@ -10,8 +10,8 @@ enum class ApplicationWorldEntryPresentation {
 };
 
 struct ApplicationWorldEntryResult {
-    ApplicationWorldEntryPresentation presentation{};
-    ThingId flyby_target{};
+    ApplicationWorldEntryPresentation presentation {};
+    ThingId flyby_target {};
 };
 
 //7468B0->64B940 plus State10's first-prebuilt repair. The Session calls this
@@ -24,6 +24,5 @@ void reset_application_prebuilt_world(ParkRuntime&);
 //The caller consumes its native MapSourceSelection+50 chooser latch and opens
 //chooser(source4,hide-close1) or Tip.show(false) as recommended. A rejected
 //Tip, missing flyby or day gate does NOT imply an initial-mission event.
-ApplicationWorldEntryResult
-apply_application_world_entry(ParkRuntime&, ApplicationWorldEntry, bool post_load_chooser_pending = false);
+ApplicationWorldEntryResult apply_application_world_entry(ParkRuntime&, ApplicationWorldEntry, bool post_load_chooser_pending = false);
 } //namespace simcoaster

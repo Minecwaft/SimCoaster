@@ -5,8 +5,9 @@ using namespace staff_detail;
 
 namespace staff_detail {
 void detach_staff_room_occupancy(StaffWorld& c, StaffRuntimeRecord& staff, ThingId removed_training_room) {
-    if (staff.room_occupancy_detaching)
+    if (staff.room_occupancy_detaching) {
         return;
+    }
     staff.room_occupancy_detaching = true;
 
     struct Reset {
@@ -15,7 +16,7 @@ void detach_staff_room_occupancy(StaffWorld& c, StaffRuntimeRecord& staff, Thing
         ~Reset() {
             flag = false;
         }
-    } reset{ staff.room_occupancy_detaching };
+    } reset { staff.room_occupancy_detaching };
 
     const auto association = world_staff_association_state(staff);
     const auto decrement = [&](ThingId id, ParkObjectCapabilities capability) {
@@ -23,17 +24,14 @@ void detach_staff_room_occupancy(StaffWorld& c, StaffRuntimeRecord& staff, Thing
         //reinterpret a retired payload or debit an unrelated reused object ID.
         if (auto* room = live_room(c, id, capability)) {
             auto* state = script(c, *room);
-            world_operations::set_script_slot(c,
-                                              state,
-                                              0,
-                                              fixed::subtract(world_operations::script_slot(c, state, 0), 1));
+            world_operations::set_script_slot(c, state, 0, fixed::subtract(world_operations::script_slot(c, state, 0), 1));
         }
     };
     if (association == StaffState::resting) {
         const auto room = staff.rest_area;
         if (room) {
             //Native exit observers see both the room link and original count.
-            notify(c, WorldEvent{ StaffRestAreaEvent{ staff.base.header.id, 0 } });
+            notify(c, WorldEvent { StaffRestAreaEvent { staff.base.header.id, 0 } });
             decrement(room, ParkObjectCapabilities::chills_you_out);
             staff.rest_area = 0;
         }
@@ -43,8 +41,7 @@ void detach_staff_room_occupancy(StaffWorld& c, StaffRuntimeRecord& staff, Thing
     } else if (association == StaffState::training) {
         //Training rooms have UsageInfo.SingleInstance=1 in the shipped SAM.
         //During event10 the dying room is already absent from the object list.
-        decrement(removed_training_room ? removed_training_room : first_training_room(c),
-                  ParkObjectCapabilities::training_room);
+        decrement(removed_training_room ? removed_training_room : first_training_room(c), ParkObjectCapabilities::training_room);
         staff.currently_learning = ThemeAbility::none;
         staff.going_to_learn = ThemeAbility::none;
     }
@@ -70,16 +67,20 @@ ThingId find_nearest_staff_rest_area(StaffWorld& c, const StaffRuntimeRecord& st
 
 bool try_send_staff_to_nearest_rest_area(StaffWorld& c, StaffRuntimeRecord& staff) {
     const auto& b = balance(c);
-    if (byte(staff.energy) >= b.StaffSlackingEnergy)
+    if (byte(staff.energy) >= b.StaffSlackingEnergy) {
         return false;
+    }
     const auto id = find_nearest_staff_rest_area(c, staff);
-    if (!id)
+    if (!id) {
         return false;
+    }
     auto& room = object(c, id);
-    if (distance(staff.base, room.base) > static_cast<std::uint32_t>(b.MinDistanceForSlacking))
+    if (distance(staff.base, room.base) > static_cast<std::uint32_t>(b.MinDistanceForSlacking)) {
         return false;
-    if (!route(c, staff, room.entry_cell))
+    }
+    if (!route(c, staff, room.entry_cell)) {
         return false;
+    }
     staff.rest_area = id;
     return true;
 }
@@ -87,8 +88,7 @@ bool try_send_staff_to_nearest_rest_area(StaffWorld& c, StaffRuntimeRecord& staf
 void handle_staff_rest_area_arrival(StaffWorld& c, StaffRuntimeRecord& staff) {
     const auto progress = navigate(c, staff);
     if (progress == NavigationResult::unreachable) {
-        staff.happiness_score =
-            percentage(static_cast<double>(staff.happiness_score) - balance(c).HappyHitCosRoomInaccessible);
+        staff.happiness_score = percentage(static_cast<double>(staff.happiness_score) - balance(c).HappyHitCosRoomInaccessible);
         thought(c, staff, MobileThoughtCode::staff_confused);
         enter_world_staff_state(c, staff, StaffState::idle);
     } else if (progress == NavigationResult::arrived) {
@@ -103,7 +103,7 @@ void handle_staff_rest_area_arrival(StaffWorld& c, StaffRuntimeRecord& staff) {
             world_operations::set_script_slot(c, state, 0, fixed::add(count, 1));
             increment_park_object_use_history_counters(room);
             enter_world_staff_state(c, staff, StaffState::resting);
-            notify(c, WorldEvent{ StaffRestAreaEvent{ staff.base.header.id, 1 } });
+            notify(c, WorldEvent { StaffRestAreaEvent { staff.base.header.id, 1 } });
         }
     }
 }
@@ -122,13 +122,16 @@ void recover_staff_energy_and_happiness_at_rest_area(StaffWorld& c, StaffRuntime
         recovery += agency.RecuperationModifier * recovery * static_cast<double>(0.01f);
         energy_delta = static_cast<float>(recovery);
     }
-    if (recovery > b.MaxRecuperationRate)
+    if (recovery > b.MaxRecuperationRate) {
         energy_delta = b.MaxRecuperationRate;
+    }
     double happiness_delta = fraction * 10.0 * b.MinHappinessRecuperationRate;
-    if (agency.HappinessRecuperationModifier && happiness_delta != 0.0)
+    if (agency.HappinessRecuperationModifier && happiness_delta != 0.0) {
         happiness_delta += agency.HappinessRecuperationModifier * happiness_delta * static_cast<double>(0.01f);
-    if (happiness_delta > b.MaxHappinessRecuperationRate)
+    }
+    if (happiness_delta > b.MaxHappinessRecuperationRate) {
         happiness_delta = b.MaxHappinessRecuperationRate;
+    }
     staff.energy = percentage(static_cast<double>(staff.energy) + energy_delta);
     staff.happiness_score = percentage(staff.happiness_score + happiness_delta);
     staff.motivation = percentage(staff.motivation + happiness_delta);
@@ -160,8 +163,8 @@ void seek_staff_rest_area(StaffWorld& c, StaffRuntimeRecord& staff) {
         }
     }
     //The native penalty also runs after a successful retry.
-    if (!(random(c) & 15u))
-        staff.happiness_score =
-            percentage(static_cast<double>(staff.happiness_score) - balance(c).HappyHitCosNoRestArea);
+    if (!(random(c) & 15u)) {
+        staff.happiness_score = percentage(static_cast<double>(staff.happiness_score) - balance(c).HappyHitCosNoRestArea);
+    }
 }
 } //namespace simcoaster

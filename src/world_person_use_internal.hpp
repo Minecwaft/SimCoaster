@@ -41,18 +41,11 @@ T& record(VisitorWorld& c, ThingId id) {
 }
 
 inline ParkAnalyserState& analyser(VisitorWorld& c, bool primary = false) {
-    return record<ParkAnalyserState>(
-        c,
-        (primary ? person_detail::primary_world(c) : person_detail::base_world(c)).saved.park_analyser);
+    return record<ParkAnalyserState>(c, (primary ? person_detail::primary_world(c) : person_detail::base_world(c)).saved.park_analyser);
 }
 
 inline void progress(ScriptWorld& c, ChallengeType type, std::int32_t amount) {
-    add_progress_to_matching_world_challenges(
-        record<ChallengeManagerRecord>(c, person_detail::base_world(c).saved.challenge_manager),
-        type,
-        amount,
-        0,
-        false);
+    add_progress_to_matching_world_challenges(record<ChallengeManagerRecord>(c, person_detail::base_world(c).saved.challenge_manager), type, amount, 0, false);
 }
 
 inline void adjust(float& value, double amount) {
@@ -61,8 +54,9 @@ inline void adjust(float& value, double amount) {
 
 inline std::int32_t integer(double value) {
     const auto integral = std::trunc(value), limit = std::ldexp(1.0, 63);
-    if (!std::isfinite(integral) || integral < -limit || integral >= limit)
+    if (!std::isfinite(integral) || integral < -limit || integral >= limit) {
         return 0;
+    }
     return fixed::word(static_cast<std::uint32_t>(static_cast<std::int64_t>(integral)));
 }
 
@@ -79,14 +73,12 @@ inline std::uint32_t random(VisitorWorld& c) {
 }
 
 inline void short_history(ParkObjectRuntimeView& o, std::size_t index) {
-    if (o.history)
+    if (o.history) {
         ++o.history->dword_history_30.at(index).temporary;
+    }
 }
 
 inline void sprite_effect(VisitorWorld& c, PersonRuntimeView& p, std::int32_t effect) {
-    c.ports.resources.submit_mobile_entity_positioned_template_request(c,
-                                                                       p.mobile,
-                                                                       c.resources.kids_catalog_slot,
-                                                                       effect);
+    c.ports.resources.submit_mobile_entity_positioned_template_request(c, p.mobile, c.resources.kids_catalog_slot, effect);
 }
 } //namespace simcoaster::person_use

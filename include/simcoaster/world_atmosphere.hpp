@@ -9,7 +9,7 @@ struct SceneCamera;
 //4288F0 copies these ThemeEngine fields directly, without swapping channels.
 //Their representation is D3DCOLOR ARGB; display clear/fog use only RGB.
 struct WorldAtmosphereColors {
-    std::uint32_t background_argb{};
+    std::uint32_t background_argb {};
     std::uint32_t fog_argb = 4194432; //6F1D0D, before the theme is loaded.
 };
 
@@ -24,7 +24,7 @@ struct WorldFogRange {
 //Z = sin(fov/2) / (1-near/far) * (positive_camera_Z-near).
 //This is neither radial distance nor the final normalized depth buffer.
 struct WorldFogProjection {
-    float scale = 1.f, bias{};
+    float scale = 1.f, bias {};
 };
 
 //A frame snapshot, not another owner of camera, profile or animation state.
@@ -35,7 +35,7 @@ struct WorldAtmosphere {
     WorldAtmosphereColors colors;
     WorldFogRange range;
     WorldFogProjection projection;
-    bool fog_enabled{}, alternate_clear_color{};
+    bool fog_enabled {}, alternate_clear_color {};
 };
 
 inline constexpr std::uint32_t world_fog_material_flag = 0x100000u;
@@ -49,11 +49,7 @@ enum class WorldFogEligibility : std::uint8_t {
 };
 
 WorldFogProjection world_fog_projection(float near_clip, float far_clip, float vertical_fov_radians);
-WorldAtmosphere make_world_atmosphere(WorldAtmosphereColors,
-                                      WorldFogRange,
-                                      const SceneCamera&,
-                                      bool fog_enabled,
-                                      bool alternate_clear_color = false);
+WorldAtmosphere make_world_atmosphere(WorldAtmosphereColors, WorldFogRange, const SceneCamera&, bool fog_enabled, bool alternate_clear_color = false);
 
 //6A5351's special-view latch tracks flags0x16. Distances come from the live
 //WorldRuntime, including an active5D0400 animation override and5D0840 restoration.
@@ -80,7 +76,7 @@ float world_fog_factor(const WorldAtmosphere&, float preprojection_depth);
 
 struct WorldFogContribution {
     float diffuse_scale = 1.f;
-    std::array<float, 3> additive_rgb{};
+    std::array<float, 3> additive_rgb {};
 };
 
 //6D84C0's two RGB operands, suitable for vertex production: attenuate diffuse
@@ -90,6 +86,5 @@ struct WorldFogContribution {
 //The portable fixed-function-style path uses noperspective colour varyings;
 //UV interpolation remains perspective-correct. This replaces the original
 //device-dependent colour interpolation/probing with one explicit policy.
-WorldFogContribution
-world_fog_contribution(const WorldAtmosphere&, std::uint32_t material_flags, float preprojection_depth);
+WorldFogContribution world_fog_contribution(const WorldAtmosphere&, std::uint32_t material_flags, float preprojection_depth);
 } //namespace simcoaster

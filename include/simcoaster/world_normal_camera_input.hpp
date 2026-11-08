@@ -19,37 +19,37 @@ enum class WorldNormalCameraPointerEvent {
 struct WorldNormalCameraPointerSample {
     //Native5070A0's movement threshold is in logical2048x1536 coordinates.
     UiPoint logical_position;
-    std::chrono::milliseconds ui_time{}, platform_time{};
+    std::chrono::milliseconds ui_time {}, platform_time {};
     //Only original interaction handlerkind10 bypasses the RMB cancel delay.
-    bool staff_area_selection{};
+    bool staff_area_selection {};
 };
 
 struct WorldNormalCameraPointerFeedback {
-    bool capture_pointer{}, release_pointer{};
+    bool capture_pointer {}, release_pointer {};
     //On a short RMB release, replace the handler with BASE, set mode0 with
     //recording, and deactivate the coaster editor BEFORE forwarding release.
-    bool cancel_interaction{};
+    bool cancel_interaction {};
     //5070A0 attempts the menu before 4D2260 applies its handler-up deadline.
-    bool context_menu_release{};
-    bool handler_right_down{}, handler_right_up{};
+    bool context_menu_release {};
+    bool handler_right_down {}, handler_right_up {};
 };
 
 struct WorldNormalCameraInput {
-    bool active{}, pointer_inside_world{};
-    std::array<std::int32_t, 2> pointer{}; //pixels
-    std::array<std::uint32_t, 2> viewport{ 1100, 760 };
-    bool middle_button{}, rotate_left{}, rotate_right{}, zoom_in{}, zoom_out{};
-    bool pan_forward{}, pan_backward{}, pan_left{}, pan_right{};
+    bool active {}, pointer_inside_world {};
+    std::array<std::int32_t, 2> pointer {}; //pixels
+    std::array<std::uint32_t, 2> viewport { 1100, 760 };
+    bool middle_button {}, rotate_left {}, rotate_right {}, zoom_in {}, zoom_out {};
+    bool pan_forward {}, pan_backward {}, pan_left {}, pan_right {};
     //Native input bit128 defaults enabled in466DE0. Bit512's alternate
     //limits remain in WorldRuntime.world_view_camera.alternate_zoom_limits.
     bool zoom_limits_enabled = true;
-    std::chrono::milliseconds ui_time{};
+    std::chrono::milliseconds ui_time {};
 };
 
 struct WorldNormalCameraFeedback {
-    bool changed{}, camera_right_held{}, release_pointer{};
+    bool changed {}, camera_right_held {}, release_pointer {};
     //Native500A40/597580 closes the Visitor Locator on an explicit pan.
-    bool close_visitor_locator{};
+    bool close_visitor_locator {};
 };
 
 //466B40/467930 normal-view movement and5070A0/4D2260 RMB routing. The
@@ -65,10 +65,8 @@ public:
     WorldNormalCameraInputRuntime(const WorldNormalCameraInputRuntime&) = delete;
     WorldNormalCameraInputRuntime& operator=(const WorldNormalCameraInputRuntime&) = delete;
     void configure_balance(std::string_view, bool preserve);
-    WorldNormalCameraPointerFeedback
-    pointer(WorldNormalCameraPointerEvent, const WorldNormalCameraPointerSample&, const UiPreferences&);
+    WorldNormalCameraPointerFeedback pointer(WorldNormalCameraPointerEvent, const WorldNormalCameraPointerSample&, const UiPreferences&);
     WorldNormalCameraPointerFeedback reset();
-    WorldNormalCameraFeedback
-    advance(WorldRuntime&, const UiPreferences&, const WorldNormalCameraInput&, std::chrono::milliseconds);
+    WorldNormalCameraFeedback advance(WorldRuntime&, const UiPreferences&, const WorldNormalCameraInput&, std::chrono::milliseconds);
 };
 } //namespace simcoaster

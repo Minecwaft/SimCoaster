@@ -34,18 +34,18 @@ struct ParkRuntimeOpen {
     std::string theme;
     std::optional<std::filesystem::path> saved_park;
     //Borrowed during construction only; the new WorldRuntime owns its copied state.
-    const CampaignProfile* campaign{};
-    bool coaster_designer{};
-    const ApplicationCoasterSourceSelection* coaster_source{};
-    std::function<void()> resource_pump{};
-    std::optional<ApplicationHardwareProfile> hardware_profile{};
+    const CampaignProfile* campaign {};
+    bool coaster_designer {};
+    const ApplicationCoasterSourceSelection* coaster_source {};
+    std::function<void()> resource_pump {};
+    std::optional<ApplicationHardwareProfile> hardware_profile {};
 };
 enum class CoasterGeometryPointerPhase;
 
 struct ParkRuntimeStatistics {
-    std::size_t things{}, mesh_instances{}, scripts{}, event_subscriptions{}, coaster_records{};
-    std::size_t restored_bytes{};
-    std::size_t train_slots{}, car_slots{}, passenger_references{};
+    std::size_t things {}, mesh_instances {}, scripts {}, event_subscriptions {}, coaster_records {};
+    std::size_t restored_bytes {};
+    std::size_t train_slots {}, car_slots {}, passenger_references {};
 };
 
 //Production owners for a restored park. Assets, script sources and terrain
@@ -92,16 +92,12 @@ public:
     void set_lobby_view(const ApplicationLobbyView*);
     void stage_coaster_source(const ApplicationCoasterSourceSelection&);
     bool activate_pending_coaster_source();
-    std::optional<WorldMobilePick>
-    pick_mobile(std::array<std::int32_t, 2> pixel, std::uint32_t width, std::uint32_t height);
+    std::optional<WorldMobilePick> pick_mobile(std::array<std::int32_t, 2> pixel, std::uint32_t width, std::uint32_t height);
     bool focus_staff_view(std::uint16_t staff);
     bool focus_person_view(std::uint16_t person, bool follow = false);
     bool focus_mobile_view(std::uint16_t person_or_staff, bool interpolate);
     std::uint16_t pick_ui_world_cursor();
-    bool coaster_geometry_pointer(CoasterGeometryPointerPhase,
-                                  std::array<std::int32_t, 2> pixel,
-                                  std::uint32_t width,
-                                  std::uint32_t height);
+    bool coaster_geometry_pointer(CoasterGeometryPointerPhase, std::array<std::int32_t, 2> pixel, std::uint32_t width, std::uint32_t height);
     std::vector<SoundError> audio_diagnostics() const;
     //Camera inspection owns this slot;0 selects the normal World preset.
     void set_audio_inspected_mesh(std::uint32_t);

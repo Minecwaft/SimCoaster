@@ -13,7 +13,7 @@ enum class WorldUiCommand : std::int32_t;
 //UiEvent.value retains native repeat state in bit24 and modifier BYTE2.
 //The Win32 extended-key bit is carried separately so4D0960 can distinguish
 //an extended cursor key from the same unextended virtual-key code.
-inline constexpr std::uint32_t world_ui_extended_key_flag = std::uint32_t{ 1 } << 25;
+inline constexpr std::uint32_t world_ui_extended_key_flag = std::uint32_t { 1 } << 25;
 std::uint16_t normalize_world_ui_platform_key(std::uint32_t virtual_key, std::uint32_t mapped_character, bool extended);
 std::uint32_t world_ui_platform_key_flags(std::uintptr_t lparam, std::uint32_t modifiers);
 enum class WorldUiShortcutFamily {
@@ -79,8 +79,7 @@ public:
     WorldUiShortcuts(const WorldUiShortcuts&) = delete;
     WorldUiShortcuts& operator=(const WorldUiShortcuts&) = delete;
     bool key(const UiEvent&, WorldUiShortcutRoute);
-    std::optional<std::uint16_t>
-    action_for_key(WorldUiShortcutFamily, std::uint16_t native_key, std::uint16_t modifiers) const;
+    std::optional<std::uint16_t> action_for_key(WorldUiShortcutFamily, std::uint16_t native_key, std::uint16_t modifiers) const;
     bool active(WorldUiShortcutFamily, std::uint16_t action) const;
     //Match430BE0 when the host disables command families or loses input.
     void clear_active();

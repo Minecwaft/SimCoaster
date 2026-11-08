@@ -50,7 +50,7 @@ enum class ResourceOpcode : std::uint8_t {
 //indices. Neither executable pointers nor an x86 instruction engine survive.
 struct ResourceScriptWord {
     ResourceOpcode opcode;
-    std::uint32_t value{};
+    std::uint32_t value {};
 };
 
 struct ResourceScriptEntry {
@@ -65,7 +65,7 @@ enum class ResourceRunState : std::uint32_t {
 };
 
 struct ResourceValue {
-    std::uint32_t bits{};
+    std::uint32_t bits {};
 
     std::int32_t integer() const {
         return std::bit_cast<std::int32_t>(bits);
@@ -82,15 +82,15 @@ struct ResourceValue {
 
 struct ResourceVariant {
     //Host allocation identity; never serialized or copied into a new lease.
-    std::uint64_t generation{};
-    std::uint32_t latched_word{}, handle{}, cursor{}, entry{}, last_cursor{};
+    std::uint64_t generation {};
+    std::uint32_t latched_word {}, handle {}, cursor {}, entry {}, last_cursor {};
     ResourceRunState state = ResourceRunState::running;
     std::int32_t stack_top = 20;
-    std::array<std::uint32_t, 20> stack{};
-    std::int32_t control_depth{}, call_depth{}, loop_depth{};
-    std::uint32_t deadline{}, delay = 62;
-    std::array<ResourceValue, 19> values{};
-    bool render_enabled{};
+    std::array<std::uint32_t, 20> stack {};
+    std::int32_t control_depth {}, call_depth {}, loop_depth {};
+    std::uint32_t deadline {}, delay = 62;
+    std::array<ResourceValue, 19> values {};
+    bool render_enabled {};
 };
 
 std::span<const ResourceScriptWord> builtin_resource_variant_programs();
@@ -98,12 +98,12 @@ ResourceScriptEntry resource_program_entry(ResourceProgram);
 std::uint32_t resource_metadata_program_entry(std::uint32_t);
 
 struct ResourceVariantRuntime {
-    std::uint64_t next_generation{}; //Monotonic across pool reset/restore.
-    bool initialized{};
-    std::uint32_t step_budget = 50, steps_this_update{}, time_snapshot{};
+    std::uint64_t next_generation {}; //Monotonic across pool reset/restore.
+    bool initialized {};
+    std::uint32_t step_budget = 50, steps_this_update {}, time_snapshot {};
     std::vector<std::unique_ptr<ResourceVariant>> slots;
-    ResourceVariant* active{};
-    const LoadedSpriteCatalog* catalog{}; //Borrowed from the owning asset session.
+    ResourceVariant* active {};
+    const LoadedSpriteCatalog* catalog {}; //Borrowed from the owning asset session.
     //Quality affects subsequent appearance choices, not the admission of
     //already-live category-relative variants or the immutable catalog ranges.
     std::vector<std::int32_t> appearance_variant_counts;
@@ -127,12 +127,7 @@ void suspend_active_resource_variant(WorldRuntime&, std::uint32_t validation_han
 void resume_active_resource_variant(WorldRuntime&, std::uint32_t validation_handle);
 void call_resource_variant(WorldRuntime&, std::uint32_t handle, std::uint32_t entry);
 void return_resource_variant(WorldRuntime&, std::uint32_t handle);
-std::uint32_t clone_resource_variant_for_preview(WorldRuntime&,
-                                                 std::uint32_t handle,
-                                                 float x,
-                                                 float y,
-                                                 float scale,
-                                                 float adjustment);
+std::uint32_t clone_resource_variant_for_preview(WorldRuntime&, std::uint32_t handle, float x, float y, float scale, float adjustment);
 void copy_resource_variant_state(WorldRuntime&, std::uint32_t destination, std::uint32_t source);
 void normalize_resource_variant_indices(WorldRuntime&);
 } //namespace simcoaster

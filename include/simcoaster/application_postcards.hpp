@@ -17,11 +17,11 @@ struct PostcardError {
 };
 
 struct PostcardDate {
-    std::int32_t day{}, month{}, year{};
+    std::int32_t day {}, month {}, year {};
 };
 
 struct PostcardRecord {
-    std::uint32_t id{};
+    std::uint32_t id {};
     PostcardDate date;
     std::string from, subject;
     std::vector<std::string> recipients;

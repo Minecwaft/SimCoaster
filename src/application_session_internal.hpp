@@ -12,10 +12,10 @@ bool extension_is(const std::filesystem::path&, std::u16string_view);
 
 struct FileIdentity {
     std::filesystem::path path;
-    ApplicationFileKind kind{};
+    ApplicationFileKind kind {};
     std::optional<std::uint32_t> profile;
-    std::uint64_t profile_generation{};
-    std::array<std::uint32_t, 7> stamp{};
+    std::uint64_t profile_generation {};
+    std::array<std::uint32_t, 7> stamp {};
 };
 
 std::array<std::uint32_t, 7> file_stamp(const std::filesystem::path&);
@@ -24,12 +24,12 @@ ApplicationFileDate file_date(const std::filesystem::path&);
 class FileTransaction {
     struct Entry {
         std::filesystem::path destination, staged, backup;
-        bool existed{}, published{};
+        bool existed {}, published {};
     };
 
     std::filesystem::path directory_;
     std::vector<Entry> entries_;
-    bool preserve_{};
+    bool preserve_ {};
 
 public:
     explicit FileTransaction(const std::filesystem::path& root);
@@ -44,10 +44,10 @@ public:
 namespace simcoaster {
 struct ApplicationSession::State {
     struct SourceTransition {
-        std::int32_t source{};
-        bool from_profile{}, designer{};
+        std::int32_t source {};
+        bool from_profile {}, designer {};
         std::optional<ApplicationCoasterSourceSelection> coaster_source;
-        std::uint64_t serial{};
+        std::uint64_t serial {};
     };
 
     struct SavedParkTransition {
@@ -63,7 +63,7 @@ struct ApplicationSession::State {
     struct QuitTransition {};
 
     struct Pending {
-        std::uint64_t epoch{};
+        std::uint64_t epoch {};
         std::variant<SourceTransition, GameTransition, SavedParkTransition, QuitTransition> payload;
     };
 
@@ -77,13 +77,13 @@ struct ApplicationSession::State {
     std::unique_ptr<ApplicationProfiles> profiles;
     ApplicationSessionPage page = ApplicationSessionPage::intro;
     std::int32_t selected = 3, active = -1;
-    std::uint64_t epoch{}, next_file{};
+    std::uint64_t epoch {}, next_file {};
     std::deque<Pending> requests;
     std::map<std::uint64_t, application_session_detail::FileIdentity> files;
     std::vector<ApplicationSessionError> diagnostics;
-    bool processing{};
-    bool binding_rollback{}, transition_completed{};
-    bool post_load_chooser_pending{};
+    bool processing {};
+    bool binding_rollback {}, transition_completed {};
+    bool post_load_chooser_pending {};
     ApplicationWorldEntry world_entry = ApplicationWorldEntry::none;
     State(const std::filesystem::path&, std::span<const std::string_view>, UiPreferences, ApplicationSessionHost);
     CampaignProfile capture() const;
@@ -96,19 +96,9 @@ struct ApplicationSession::State {
         std::optional<std::uint32_t> slot;
     };
 
-    void replace(std::unique_ptr<ParkRuntime>,
-                 CampaignProfile,
-                 std::int32_t,
-                 ApplicationSessionPage,
-                 std::uint64_t,
-                 ApplicationWorldEntry = ApplicationWorldEntry::none,
-                 bool post_load_chooser = false,
-                 std::function<void()> publish = {},
-                 std::optional<ApplicationCoasterSourceSelection> = {},
-                 std::optional<ProfileBinding> = {});
+    void replace(std::unique_ptr<ParkRuntime>, CampaignProfile, std::int32_t, ApplicationSessionPage, std::uint64_t, ApplicationWorldEntry = ApplicationWorldEntry::none, bool post_load_chooser = false, std::function<void()> publish = {}, std::optional<ApplicationCoasterSourceSelection> = {}, std::optional<ProfileBinding> = {});
     bool can_autosave() const;
-    void
-    stage_save(application_session_detail::FileTransaction&, CampaignProfile&, std::u16string_view, bool gmi = false);
+    void stage_save(application_session_detail::FileTransaction&, CampaignProfile&, std::u16string_view, bool gmi = false);
     void persist_profile();
     void discard_intro_profile_selection();
     void source(const SourceTransition&);

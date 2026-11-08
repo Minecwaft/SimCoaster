@@ -8,37 +8,10 @@
 #include <stdexcept>
 
 namespace simcoaster {
-ApplicationFrontendController::State::State(WorldRuntime& context,
-                                            UiRuntime& runtime,
-                                            UiControl* root,
-                                            const std::filesystem::path& path,
-                                            ApplicationFrontendHost callbacks,
-                                            std::string locale)
-    : c(context),
-      ui(runtime),
-      parent(root),
-      game_root(path),
-      host(std::move(callbacks)),
-      language(std::move(locale)) {
-    if (!ui.owns(parent)
-        || !host.profiles
-        || !host.activate_profile
-        || !host.create_profile
-        || !host.delete_profile
-        || !host.selected_resource_source
-        || !host.select_resource_source
-        || !host.request_source
-        || !host.open_load_game
-        || !host.open_coaster_source_picker
-        || !host.request_quit
-        || !host.message
-        || !host.command_families_enabled
-        || !host.persistent_visible
-        || !host.resume_ui_transition
-        || !host.lobby_view
-        || !host.lobby_sound
-        || !host.cursor)
+ApplicationFrontendController::State::State(WorldRuntime& context, UiRuntime& runtime, UiControl* root, const std::filesystem::path& path, ApplicationFrontendHost callbacks, std::string locale) : c(context), ui(runtime), parent(root), game_root(path), host(std::move(callbacks)), language(std::move(locale)) {
+    if (!ui.owns(parent) || !host.profiles || !host.activate_profile || !host.create_profile || !host.delete_profile || !host.selected_resource_source || !host.select_resource_source || !host.request_source || !host.open_load_game || !host.open_coaster_source_picker || !host.request_quit || !host.message || !host.command_families_enabled || !host.persistent_visible || !host.resume_ui_transition || !host.lobby_view || !host.lobby_sound || !host.cursor) {
         throw std::invalid_argument("Original application frontend requires its complete session host");
+    }
 }
 
 ApplicationFrontendController::State::~State() {
@@ -53,27 +26,31 @@ UiControl& ApplicationFrontendController::State::required(UiControl* root, std::
 UiControl* ApplicationFrontendController::State::parse(std::span<const unsigned char> bytes, std::uint32_t id) {
     const auto previous = parent->children;
     const auto parsed = ui.parse_template(parent, std::as_bytes(bytes));
-    if (!parsed)
-        throw std::runtime_error(
-            "Original application template word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
-    UiControl* result{};
-    for (auto* child : parent->children)
+    if (!parsed) {
+        throw std::runtime_error("Original application template word " + std::to_string(parsed.error().word) + ": " + parsed.error().reason);
+    }
+    UiControl* result {};
+    for (auto* child : parent->children) {
         if (std::ranges::find(previous, child) == previous.end()) {
             owners.push_back(child);
             bind(*child, true);
-            if (child->id == id)
+            if (child->id == id) {
                 result = child;
+            }
         }
-    if (!result)
+    }
+    if (!result) {
         throw std::runtime_error("Original application template has no root " + std::to_string(id));
+    }
     return result;
 }
 
 void ApplicationFrontendController::State::bind(UiControl& control, bool is_root) {
     const auto widget = control.primary_callback;
     ui.set_primary_callback(control, [this, is_root, widget](UiControl& sender, const UiEvent& value) {
-        if (is_root || (value.type >= 256 && value.type <= 2055))
+        if (is_root || (value.type >= 256 && value.type <= 2055)) {
             return event(sender, value);
+        }
         //542B90 wraps one button only.543100 restores Skip's stock
         //callback at the first speech and later wraps Play instead.
         if (phase == ApplicationFrontendPhase::intro && sender.id == intro_pulse_button) {
@@ -82,9 +59,9 @@ void ApplicationFrontendController::State::bind(UiControl& control, bool is_root
                 pulse_phase = false;
                 pulse_deadline = 0;
                 ui.set_button_auxiliary_state(sender, false);
-            } else if (value.type == 65538)
+            } else if (value.type == 65538) {
                 pulse_enabled = true;
-            else if (value.type == 30 && pulse_enabled) {
+            } else if (value.type == 30 && pulse_enabled) {
                 const auto now = std::bit_cast<std::int32_t>(clock());
                 if (now >= pulse_deadline) {
                     pulse_deadline = std::bit_cast<std::int32_t>(std::bit_cast<std::uint32_t>(now) + 300u);
@@ -95,29 +72,34 @@ void ApplicationFrontendController::State::bind(UiControl& control, bool is_root
         }
         return widget ? widget(sender, value) : ui.secondary(sender, value);
     });
-    for (auto* child : control.children)
+    for (auto* child : control.children) {
         bind(*child);
+    }
 }
 
 void ApplicationFrontendController::State::remove(UiControl*& control) {
     auto* old = std::exchange(control, nullptr);
     const bool was_closing = std::exchange(closing, true);
-    if (ui.owns(old))
+    if (ui.owns(old)) {
         ui.destroy(old);
+    }
     std::erase(owners, old);
     closing = was_closing;
 }
 
 void ApplicationFrontendController::State::close() {
-    if (closing)
+    if (closing) {
         return;
+    }
     closing = true;
     const auto previous = std::move(owners);
     owners.clear();
     intro = profile = overview = nullptr;
-    for (auto* control : previous)
-        if (ui.owns(control))
+    for (auto* control : previous) {
+        if (ui.owns(control)) {
             ui.destroy(control);
+        }
+    }
     ui.set_input_root(parent);
     phase = ApplicationFrontendPhase::none;
     leave_lobby();
@@ -127,10 +109,12 @@ void ApplicationFrontendController::State::close() {
 
 std::intptr_t ApplicationFrontendController::State::event(UiControl& control, const UiEvent& value) {
     if (value.type == 20) {
-        if (closing)
+        if (closing) {
             return ui.secondary(control, value);
-        if (&control == intro)
+        }
+        if (&control == intro) {
             intro = nullptr;
+        }
         if (&control == profile) {
             profile = nullptr;
             commands(true);
@@ -142,8 +126,9 @@ std::intptr_t ApplicationFrontendController::State::event(UiControl& control, co
             restore_park_ui();
         }
         std::erase(owners, &control);
-        if (!intro && !profile && !overview)
+        if (!intro && !profile && !overview) {
             phase = ApplicationFrontendPhase::none;
+        }
         return ui.secondary(control, value);
     }
     if (value.type == 4 || value.type == 5) {
@@ -156,30 +141,32 @@ std::intptr_t ApplicationFrontendController::State::event(UiControl& control, co
         }
     }
     if (phase == ApplicationFrontendPhase::intro) {
-        if (value.type == 30 && &control == intro)
+        if (value.type == 30 && &control == intro) {
             update_intro();
-        else if (value.type == 256) {
-            if (value.id == 111001)
+        } else if (value.type == 256) {
+            if (value.id == 111001) {
                 play_intro();
-            else if (value.id == 111004)
+            } else if (value.id == 111004) {
                 skip_intro();
+            }
         }
         return ui.secondary(control, value);
     }
-    if (profile
-        && (phase == ApplicationFrontendPhase::profiles || phase == ApplicationFrontendPhase::profile_transition)) {
-        if (value.type == 257 && value.value == 1 && value.id >= 51005 && value.id <= 51008)
+    if (profile && (phase == ApplicationFrontendPhase::profiles || phase == ApplicationFrontendPhase::profile_transition)) {
+        if (value.type == 257 && value.value == 1 && value.id >= 51005 && value.id <= 51008) {
             select_profile(value.id - 51005);
-        else if ((value.type == 256 && value.id == 51031) || value.type == 2050)
+        } else if ((value.type == 256 && value.id == 51031) || value.type == 2050) {
             create_profile();
-        else if (value.type == 256)
+        } else if (value.type == 256) {
             profile_action(value.id);
-        else if (value.type == 2049) {
+        } else if (value.type == 2049) {
             const auto& edit = required(profile, 51032);
             auto folded = [](std::u16string text) {
-                for (auto& ch : text)
-                    if (ch >= u'A' && ch <= u'Z')
+                for (auto& ch : text) {
+                    if (ch >= u'A' && ch <= u'Z') {
                         ch = static_cast<char16_t>(ch + u'a' - u'A');
+                    }
+                }
                 return text;
             };
             ui.set_enabled(required(profile, 51031), !edit.text.empty() && folded(edit.text) != folded(text(32)));
@@ -193,59 +180,55 @@ std::intptr_t ApplicationFrontendController::State::event(UiControl& control, co
                 restore_park_ui();
                 return 0;
             }
-            if (value.id == 90004)
+            if (value.id == 90004) {
                 navigate(-1);
-            else if (value.id == 90005)
+            } else if (value.id == 90005) {
                 navigate(1);
-            else if (value.id == 90011)
+            } else if (value.id == 90011) {
                 select_mode(initial_mode);
+            }
         }
-        if (value.type == 65542 && value.id == 0 && &control == overview)
+        if (value.type == 65542 && value.id == 0 && &control == overview) {
             area_click = true;
+        }
     }
     return ui.secondary(control, value);
 }
 
-std::u16string ApplicationFrontendController::State::format(std::span<const std::byte> data,
-                                                            std::uint32_t row,
-                                                            std::span<const BfstWideStringArgument> strings,
-                                                            std::span<const BfstSignedIntegerArgument> integers) {
-    const auto result =
-        format_bfst_wide_string(data, c.messages.mail_language.conversion, row, 16383, strings, integers);
-    if (!result)
+std::u16string ApplicationFrontendController::State::format(std::span<const std::byte> data, std::uint32_t row, std::span<const BfstWideStringArgument> strings, std::span<const BfstSignedIntegerArgument> integers) {
+    const auto result = format_bfst_wide_string(data, c.messages.mail_language.conversion, row, 16383, strings, integers);
+    if (!result) {
         throw std::runtime_error("Original application text " + std::to_string(row) + ": " + result.error().reason);
+    }
     return *result;
 }
 
-std::u16string ApplicationFrontendController::State::text(std::uint32_t row,
-                                                          std::span<const BfstWideStringArgument> strings,
-                                                          std::span<const BfstSignedIntegerArgument> integers) {
+std::u16string ApplicationFrontendController::State::text(std::uint32_t row, std::span<const BfstWideStringArgument> strings, std::span<const BfstSignedIntegerArgument> integers) {
     return format(c.messages.mail_language.ui_text, row, strings, integers);
 }
 
 const std::vector<std::byte>& ApplicationFrontendController::State::table(std::string_view name) {
-    if (const auto found = tables.find(name); found != tables.end())
+    if (const auto found = tables.find(name); found != tables.end()) {
         return found->second;
+    }
     const auto path = (game_root / "Data/Language" / language / name).native_encoded_string();
     const auto contents = c.ports.assets.read_balance_asset(c, path);
-    if (!contents)
+    if (!contents) {
         throw std::runtime_error("Missing original application language table " + path);
+    }
     const auto bytes = std::as_bytes(std::span(contents->data(), contents->size()));
     return tables.emplace(std::string(name), std::vector<std::byte>(bytes.begin(), bytes.end())).first->second;
 }
 
 std::u16string ApplicationFrontendController::State::theme_name(int category) {
-    constexpr std::array<std::uint32_t, 4> rows{ 3, 0, 1, 2 };
-    if (category < 0 || category >= static_cast<int>(rows.size()))
+    constexpr std::array<std::uint32_t, 4> rows { 3, 0, 1, 2 };
+    if (category < 0 || category >= static_cast<int>(rows.size())) {
         throw std::out_of_range("Original application theme category");
+    }
     return format(table("THEMENAMES.str"), rows[static_cast<std::size_t>(category)]);
 }
 
-void ApplicationFrontendController::State::caption(UiControl& control,
-                                                   std::u16string_view value,
-                                                   std::uint32_t font,
-                                                   std::int32_t horizontal,
-                                                   std::int32_t vertical) {
+void ApplicationFrontendController::State::caption(UiControl& control, std::u16string_view value, std::uint32_t font, std::int32_t horizontal, std::int32_t vertical) {
     control.secondary_asset_hash = 0;
     control.font = font;
     control.horizontal_alignment = horizontal;
@@ -259,15 +242,17 @@ void ApplicationFrontendController::State::numeric(UiControl& control, std::int3
 }
 
 AdvisorRecord* ApplicationFrontendController::State::advisor() {
-    if (!c.simulation.current || !c.simulation.current->saved.advisor)
+    if (!c.simulation.current || !c.simulation.current->saved.advisor) {
         return nullptr;
+    }
     auto* header = c.entities.at(c.simulation.current->saved.advisor).payload;
     return header && header->kind == ThingKind::advisor ? reinterpret_cast<AdvisorRecord*>(header) : nullptr;
 }
 
 void ApplicationFrontendController::State::queue_advisor(std::int32_t action) {
-    if (restoring)
+    if (restoring) {
         return;
+    }
     if (auto* record = advisor()) {
         auto candidate = world_operations::make_advisor_action_candidate(c, action);
         (void)world_operations::queue_advisor_action_candidate(c, record, candidate);
@@ -275,8 +260,9 @@ void ApplicationFrontendController::State::queue_advisor(std::int32_t action) {
 }
 
 void ApplicationFrontendController::State::cancel_advisor(std::int32_t action) {
-    if (auto* record = advisor())
+    if (auto* record = advisor()) {
         world_operations::cancel_advisor_action_by_id(c, record, action);
+    }
 }
 
 void ApplicationFrontendController::State::commands(bool enabled) {
@@ -294,13 +280,7 @@ std::uint32_t ApplicationFrontendController::State::clock() {
     return c.ports.clock.get_simulation_clock_time_ms(c);
 }
 
-ApplicationFrontendController::ApplicationFrontendController(WorldRuntime& c,
-                                                             UiRuntime& ui,
-                                                             UiControl* root,
-                                                             const std::filesystem::path& path,
-                                                             ApplicationFrontendHost host,
-                                                             std::string language)
-    : state_(std::make_unique<State>(c, ui, root, path, std::move(host), std::move(language))) {}
+ApplicationFrontendController::ApplicationFrontendController(WorldRuntime& c, UiRuntime& ui, UiControl* root, const std::filesystem::path& path, ApplicationFrontendHost host, std::string language) : state_(std::make_unique<State>(c, ui, root, path, std::move(host), std::move(language))) {}
 
 ApplicationFrontendController::~ApplicationFrontendController() = default;
 
@@ -333,22 +313,26 @@ ApplicationFrontendResumeState ApplicationFrontendController::capture_resume_sta
     static_assert(schema::matching_fields<ApplicationFrontendResumeState::Detail, State>.size() == 28);
     schema::copy_matching(*d, s);
     if (s.intro) {
-        constexpr std::array ids{ 111002u, 111001u, 111004u };
-        for (std::size_t i = 0; i < ids.size(); ++i)
+        constexpr std::array ids { 111002u, 111001u, 111004u };
+        for (std::size_t i = 0; i < ids.size(); ++i) {
             d->intro_visible[i] = s.required(s.intro, ids[i]).visible();
+        }
     }
-    if (s.profile)
+    if (s.profile) {
         d->profile_edit = s.required(s.profile, 51032).text;
+    }
     return { s.phase, s.mode, s.hide_chooser_close, s.suppress_buttons, std::move(d) };
 }
 
 void ApplicationFrontendController::restore_resume_state(const ApplicationFrontendResumeState& saved) {
     auto& s = *state_;
     s.close();
-    if (saved.phase == ApplicationFrontendPhase::none)
+    if (saved.phase == ApplicationFrontendPhase::none) {
         return;
-    if (!saved.detail || saved.detail->context != &s.c)
+    }
+    if (!saved.detail || saved.detail->context != &s.c) {
         throw std::invalid_argument("Frontend recovery belongs to another World");
+    }
     const auto& d = *saved.detail;
     s.restoring = true;
 
@@ -358,7 +342,7 @@ void ApplicationFrontendController::restore_resume_state(const ApplicationFronte
         ~RestoreFlag() {
             value = false;
         }
-    } restore{ s.restoring };
+    } restore { s.restoring };
 
     s.mode = saved.selection_mode;
     s.selected_profile = d.selected_profile;
@@ -367,8 +351,9 @@ void ApplicationFrontendController::restore_resume_state(const ApplicationFronte
     match (saved.phase) {
         case ApplicationFrontendPhase::intro => {
             s.open_intro(saved.suppress_intro_buttons);
-            if (d.lobby_bound)
+            if (d.lobby_bound) {
                 s.bind_lobby(d.lobby_intro);
+            }
         }
         case ApplicationFrontendPhase::profiles or ApplicationFrontendPhase::profile_transition => {
             s.open_profiles();
@@ -377,10 +362,11 @@ void ApplicationFrontendController::restore_resume_state(const ApplicationFronte
         case ApplicationFrontendPhase::chooser or ApplicationFrontendPhase::area_transition => {
             s.open_chooser(4, saved.hide_close);
         }
-        case ApplicationFrontendPhase::none => {}
-        case _ => {}
-    }
-    s.skip_requested = d.skip_requested;
+        case ApplicationFrontendPhase::none => {
+        }
+        case _ => {
+        }
+    } s.skip_requested = d.skip_requested;
     s.final_speech = d.final_speech;
     s.pulse_enabled = d.pulse_enabled;
     s.pulse_phase = d.pulse_phase;
@@ -407,23 +393,27 @@ void ApplicationFrontendController::restore_resume_state(const ApplicationFronte
     s.ambient = d.ambient;
     s.select_mode(saved.selection_mode, false);
     if (s.intro) {
-        constexpr std::array ids{ 111002u, 111001u, 111004u };
-        for (std::size_t i = 0; i < ids.size(); ++i)
+        constexpr std::array ids { 111002u, 111001u, 111004u };
+        for (std::size_t i = 0; i < ids.size(); ++i) {
             s.ui.set_visible(s.required(s.intro, ids[i]), d.intro_visible[i]);
+        }
     }
-    if (s.lobby_bound)
+    if (s.lobby_bound) {
         s.publish_lobby_view();
+    }
 }
 
 void ApplicationFrontendController::advance() {
     auto& s = *state_;
-    if (s.lobby_bound)
+    if (s.lobby_bound) {
         s.update_lobby();
+    }
 }
 
 void ApplicationFrontendController::viewport(std::uint32_t width, std::uint32_t height) {
-    if (!width || !height || width > 16384 || height > 16384)
+    if (!width || !height || width > 16384 || height > 16384) {
         throw std::invalid_argument("Application UI viewport");
+    }
     state_->pixel_width = width;
     state_->pixel_height = height;
 }

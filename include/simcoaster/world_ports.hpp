@@ -67,8 +67,7 @@ struct WorldUiHostPort {
         missing_runtime_service();
     }
 
-    virtual std::intptr_t
-    invoke_secondary_ui_event_callback(WorldRuntime&, UiControl*, int event, std::uint32_t id, std::intptr_t value) {
+    virtual std::intptr_t invoke_secondary_ui_event_callback(WorldRuntime&, UiControl*, int event, std::uint32_t id, std::intptr_t value) {
         missing_runtime_service();
     }
 
@@ -117,10 +116,7 @@ struct WorldUiHostPort {
         missing_runtime_service();
     }
 
-    virtual void
-    set_primary_ui_event_callback(WorldRuntime&,
-                                  UiControl*,
-                                  std::intptr_t (*)(WorldRuntime&, UiControl*, int, std::uint32_t, std::intptr_t)) {
+    virtual void set_primary_ui_event_callback(WorldRuntime&, UiControl*, std::intptr_t (*)(WorldRuntime&, UiControl*, int, std::uint32_t, std::intptr_t)) {
         missing_runtime_service();
     }
 
@@ -140,10 +136,7 @@ struct ConstructionHostPort {
         missing_runtime_service();
     }
 
-    virtual std::uint8_t dispatch_world_interaction(WorldRuntime&,
-                                                    WorldCellCoordinates,
-                                                    WorldInputModifierMask,
-                                                    bool use_preview_coordinates) {
+    virtual std::uint8_t dispatch_world_interaction(WorldRuntime&, WorldCellCoordinates, WorldInputModifierMask, bool use_preview_coordinates) {
         missing_runtime_service();
     }
 
@@ -159,8 +152,7 @@ struct AssetIoPort {
         missing_runtime_service();
     }
 
-    virtual int
-    load_quickload_index_files(WorldRuntime&, std::string_view, std::string_view, std::optional<std::string_view>) {
+    virtual int load_quickload_index_files(WorldRuntime&, std::string_view, std::string_view, std::optional<std::string_view>) {
         missing_runtime_service();
     }
 
@@ -192,8 +184,7 @@ struct ParticlePort {
         missing_runtime_service();
     }
 
-    virtual std::uint32_t
-    create_particle_effect(WorldRuntime&, std::uint32_t, const std::array<std::int32_t, 3>&, std::int32_t lifetime) {
+    virtual std::uint32_t create_particle_effect(WorldRuntime&, std::uint32_t, const std::array<std::int32_t, 3>&, std::int32_t lifetime) {
         missing_runtime_service();
     }
 
@@ -201,10 +192,7 @@ struct ParticlePort {
         missing_runtime_service();
     }
 
-    virtual std::uint32_t create_particle_effect_with_direction(WorldRuntime&,
-                                                                std::uint32_t,
-                                                                const std::array<std::int32_t, 3>& position,
-                                                                const std::array<std::int32_t, 3>& direction) {
+    virtual std::uint32_t create_particle_effect_with_direction(WorldRuntime&, std::uint32_t, const std::array<std::int32_t, 3>& position, const std::array<std::int32_t, 3>& direction) {
         missing_runtime_service();
     }
 
@@ -215,20 +203,16 @@ struct ParticlePort {
 
 struct ResourceHostPort {
     virtual ~ResourceHostPort() = default;
-    virtual std::uint32_t
-    update_positioned_request_position(WorldRuntime&, std::uint32_t, const std::array<std::int32_t, 3>&);
+    virtual std::uint32_t update_positioned_request_position(WorldRuntime&, std::uint32_t, const std::array<std::int32_t, 3>&);
     virtual void submit_resource_target_parameter_request(WorldRuntime&, std::uint32_t request);
     virtual void request_target_recycle(WorldRuntime&, std::uint32_t request);
 
-    virtual std::uint32_t
-    process_resource_operation(WorldRuntime&, std::uint32_t target, std::int32_t operation, std::int32_t value) {
+    virtual std::uint32_t process_resource_operation(WorldRuntime&, std::uint32_t target, std::int32_t operation, std::int32_t value) {
         missing_runtime_service();
     }
 
-    virtual void
-    submit_mobile_entity_positioned_template_request(WorldRuntime&, PersonRuntimeView*, std::uint32_t, std::int32_t);
-    virtual void
-    submit_mobile_entity_positioned_template_request(WorldRuntime&, MobileEntityState&, std::uint32_t, std::int32_t);
+    virtual void submit_mobile_entity_positioned_template_request(WorldRuntime&, PersonRuntimeView*, std::uint32_t, std::int32_t);
+    virtual void submit_mobile_entity_positioned_template_request(WorldRuntime&, MobileEntityState&, std::uint32_t, std::int32_t);
 };
 
 struct AudioHostPort {
@@ -242,15 +226,13 @@ struct AudioHostPort {
     virtual void submit_sound_target_restart_request(WorldRuntime&, std::uint32_t target);
     virtual void submit_sound_target_pause_request(WorldRuntime&, std::uint32_t target);
     virtual std::uint32_t get_sound_target_sample_time(WorldRuntime&, std::uint32_t target);
-    virtual std::uint32_t
-    refresh_sound_target_position(WorldRuntime&, std::uint32_t target, const std::array<std::int32_t, 3>&);
+    virtual std::uint32_t refresh_sound_target_position(WorldRuntime&, std::uint32_t target, const std::array<std::int32_t, 3>&);
 
     virtual void delete_rsse_sound_occlusion_region(WorldRuntime&, RsseSoundOcclusionRegion*) {
         missing_runtime_service();
     }
 
-    virtual RsseSoundOcclusionRegion*
-    create_rsse_sound_occlusion_region(WorldRuntime&, float x, float y, float z, float radius, float height) {
+    virtual RsseSoundOcclusionRegion* create_rsse_sound_occlusion_region(WorldRuntime&, float x, float y, float z, float radius, float height) {
         missing_runtime_service();
     }
 
@@ -258,8 +240,7 @@ struct AudioHostPort {
         missing_runtime_service();
     }
 
-    virtual std::uint32_t
-    process_positioned_sound_request(WorldRuntime&, std::uint32_t, const PositionedTemplateRequest&) {
+    virtual std::uint32_t process_positioned_sound_request(WorldRuntime&, std::uint32_t, const PositionedTemplateRequest&) {
         missing_runtime_service();
     }
 };
@@ -267,8 +248,7 @@ struct AudioHostPort {
 struct MeshHostPort {
     virtual ~MeshHostPort() = default;
 
-    virtual std::int32_t
-    find_embedded_node_resource_record(WorldRuntime&, std::uint32_t mesh, std::uint32_t flags, std::int32_t node) {
+    virtual std::int32_t find_embedded_node_resource_record(WorldRuntime&, std::uint32_t mesh, std::uint32_t flags, std::int32_t node) {
         missing_runtime_service();
     }
 
@@ -370,9 +350,9 @@ struct WorldPorts {
 
     template <class Port, class Backend>
     static Port& bind(Backend& backend) {
-        if constexpr (std::derived_from<Backend, Port>)
+        if constexpr (std::derived_from<Backend, Port>) {
             return backend;
-        else {
+        } else {
             static_assert(!std::same_as<Port, AllocationPort>, "an allocation backend is required");
             static Port unbound;
             return unbound;

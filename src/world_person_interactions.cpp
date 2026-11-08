@@ -22,38 +22,25 @@ void write_slot(VisitorWorld& c, const ParkObjectRuntimeView& object, int index,
 }
 
 void dispatch_action(VisitorWorld& c, PersonRuntimeView& person, PersonActionCode action) {
-    WorldEvent event{ PersonActionEvent{ person.base.header.id, action } };
-    dispatch_world_event_to_subscribers(c,
-                                        get_world_event_subscription_registry(c),
-                                        &event,
-                                        deliver_world_record_event,
-                                        nullptr);
+    WorldEvent event { PersonActionEvent { person.base.header.id, action } };
+    dispatch_world_event_to_subscribers(c, get_world_event_subscription_registry(c), &event, deliver_world_record_event, nullptr);
 }
 
 void dirty_bin_effect(VisitorWorld& c, const ParkObjectRuntimeView& bin) {
-    (void)remove_world_re_cell_effect_profile(c.simulation.region_effects,
-                                              RegionEffectProfileId::clean_bin,
-                                              person_detail::cell_id(bin.base));
-    (void)add_world_re_cell_effect_profile(c.simulation.region_effects,
-                                           RegionEffectProfileId::dirty_bin,
-                                           person_detail::cell_id(bin.base));
+    (void)remove_world_re_cell_effect_profile(c.simulation.region_effects, RegionEffectProfileId::clean_bin, person_detail::cell_id(bin.base));
+    (void)add_world_re_cell_effect_profile(c.simulation.region_effects, RegionEffectProfileId::dirty_bin, person_detail::cell_id(bin.base));
 }
 
 void fallback_litter(VisitorWorld& c, PersonRuntimeView& person) {
-    const auto selector = static_cast<LitterSelector>(
-        static_cast<std::uint32_t>(next_world_prng_value(person_detail::base_world(c))) % 5u + 1u);
-    if (!c.simulation.map_cell_records)
+    const auto selector = static_cast<LitterSelector>(static_cast<std::uint32_t>(next_world_prng_value(person_detail::base_world(c))) % 5u + 1u);
+    if (!c.simulation.map_cell_records) {
         throw std::logic_error("litter arrival has no map cells");
-    initialize_world_litter_record(c,
-                                   c.simulation.map_cell_records[person_detail::cell_id(person.base) - 1u],
-                                   selector);
+    }
+    initialize_world_litter_record(c, c.simulation.map_cell_records[person_detail::cell_id(person.base) - 1u], selector);
 }
 
 void finish_prank(VisitorWorld& c, PersonRuntimeView& person, PersonActionCode action) {
-    world_operations::set_mobile_entity_thought_bubble(c,
-                                                       &person.mobile.thought_history,
-                                                       MobileThoughtCode::naughty,
-                                                       false);
+    world_operations::set_mobile_entity_thought_bubble(c, &person.mobile.thought_history, MobileThoughtCode::naughty, false);
     dispatch_action(c, person, action);
     const auto value = static_cast<double>(person.happiness) + 1.0;
     //Unlike the roaming controller's reward, these arrivals map NaN to zero.
@@ -61,19 +48,19 @@ void finish_prank(VisitorWorld& c, PersonRuntimeView& person, PersonActionCode a
 }
 
 void note_whinge_victim(VisitorWorld& c, PersonRuntimeView& person, PersonActionCode action) {
-    if (!(std::bit_cast<std::int32_t>(person.prank_timer) % 30))
-        world_operations::set_mobile_entity_thought_bubble(c,
-                                                           &person.mobile.thought_history,
-                                                           MobileThoughtCode::whinge_to_staff,
-                                                           false);
+    if (!(std::bit_cast<std::int32_t>(person.prank_timer) % 30)) {
+        world_operations::set_mobile_entity_thought_bubble(c, &person.mobile.thought_history, MobileThoughtCode::whinge_to_staff, false);
+    }
     if (!person.found_whinge_victim) {
         dispatch_action(c, person, action);
         //Native only clamps existing happiness here; it adds no reward.
         if (person.happiness <= 100.f) {
-            if (person.happiness < 0.f)
+            if (person.happiness < 0.f) {
                 person.happiness = 0.f;
-        } else
+            }
+        } else {
             person.happiness = 100.f;
+        }
         person.found_whinge_victim = 1;
     }
 }
@@ -85,13 +72,15 @@ CellId wrapped_scan_cell(WorldCellCoordinates point) {
 template <class Visit>
 void occupants(VisitorWorld& c, CellId cell, Visit&& visit) {
     auto& world = person_detail::base_world(c);
-    if (!cell || cell > map_cell_count)
+    if (!cell || cell > map_cell_count) {
         throw std::out_of_range("guest interaction outside map cells");
+    }
     auto id = static_cast<ThingId>(world.map_cells[cell - 1u].who);
     std::size_t visited = 0;
     while (id) {
-        if (visited++ >= thing_slot_count)
+        if (visited++ >= thing_slot_count) {
             throw std::length_error("cyclic guest interaction occupants");
+        }
         auto& object = person_detail::map_object(c, id);
         visit(id, object);
         id = object.map_child;
@@ -107,9 +96,11 @@ void prank_area(VisitorWorld& c, PersonRuntimeView& person, std::int32_t width, 
     }
     const auto x = fixed::subtract(person.base.x >> 8, width / 2), y = fixed::subtract(person.base.y >> 8, width / 2);
     const auto end_x = fixed::add(x, width), end_y = fixed::add(y, width);
-    for (auto cy = y; cy < end_y; ++cy)
-        for (auto cx = x; cx < end_x; ++cx)
-            visit(WorldCellCoordinates{ cx, cy });
+    for (auto cy = y; cy < end_y; ++cy) {
+        for (auto cx = x; cx < end_x; ++cx) {
+            visit(WorldCellCoordinates { cx, cy });
+        }
+    }
 }
 } //namespace
 
@@ -122,8 +113,9 @@ void increment_park_object_use_history_counters(ParkObjectRuntimeView& object) {
 
 void record_park_object_queue_walkaway(ParkObjectRuntimeView& object) {
     ++object.num_walk_aways;
-    if (object.history)
+    if (object.history) {
         ++object.history->dword_history_30[3].temporary;
+    }
 }
 
 void handle_person_litter_bin_use_arrival(VisitorWorld& c, PersonRuntimeView& person) {
@@ -136,17 +128,20 @@ void handle_person_litter_bin_use_arrival(VisitorWorld& c, PersonRuntimeView& pe
             const auto capacity = read_slot(c, bin, 3), contents = read_slot(c, bin, 4), on_fire = read_slot(c, bin, 5);
             if (contents < capacity && !on_fire) {
                 write_slot(c, bin, 0, 1);
-                if (park_object_requires_staff_service(c, bin))
+                if (park_object_requires_staff_service(c, bin)) {
                     dirty_bin_effect(c, bin);
+                }
                 dropped = false;
             }
         }
-        if (dropped)
+        if (dropped) {
             fallback_litter(c, person);
-    } else if (navigation == NavigationResult::unreachable)
+        }
+    } else if (navigation == NavigationResult::unreachable) {
         fallback_litter(c, person);
-    else
+    } else {
         return;
+    }
     person.needs.litter_meter = 0;
     world_operations::enter_world_person_state(c, &person, PersonState::roaming);
 }
@@ -154,18 +149,21 @@ void handle_person_litter_bin_use_arrival(VisitorWorld& c, PersonRuntimeView& pe
 void handle_person_litter_bin_prank_arrival(VisitorWorld& c, PersonRuntimeView& person) {
     const auto navigation = update_mobile_entity_navigation(c, person.base, person.mobile);
     if (navigation == NavigationResult::arrived) {
-        if (!person.major_destination)
+        if (!person.major_destination) {
             return;
+        }
         auto& bin = person_detail::park_object(c, person.major_destination);
         if (!read_slot(c, bin, 10)) {
             write_slot(c, bin, 2, 1);
             const auto contents = read_slot(c, bin, 4);
-            if (contents >= read_slot(c, bin, 12))
+            if (contents >= read_slot(c, bin, 12)) {
                 dirty_bin_effect(c, bin);
+            }
             finish_prank(c, person, PersonActionCode::litter_bin_prank);
         }
-    } else if (navigation != NavigationResult::unreachable)
+    } else if (navigation != NavigationResult::unreachable) {
         return;
+    }
     world_operations::enter_world_person_state(c, &person, PersonState::roaming);
 }
 
@@ -179,22 +177,20 @@ void handle_person_vegetation_fire_prank_arrival(VisitorWorld& c, PersonRuntimeV
                 finish_prank(c, person, PersonActionCode::vegetation_fire_prank);
             }
         }
-    } else if (navigation != NavigationResult::unreachable)
+    } else if (navigation != NavigationResult::unreachable) {
         return;
+    }
     world_operations::enter_world_person_state(c, &person, PersonState::roaming);
 }
 
 void spread_rumours_in_cell(VisitorWorld& c, PersonRuntimeView& person, WorldCellCoordinates point) {
     occupants(c, wrapped_scan_cell(point), [&](ThingId id, MapObjectBase& base) {
-        if (id == person.base.header.id || base.header.kind != ThingKind::person)
+        if (id == person.base.header.id || base.header.kind != ThingKind::person) {
             return;
+        }
         auto& target = *reinterpret_cast<PersonRuntimeView*>(&base);
-        const auto state = target.state,
-                   effective = state == PersonState::temporary_appearance ? target.saved_state : state;
-        if ((std::to_underlying(effective) < 14 || std::to_underlying(effective) > 17)
-            && state != PersonState::temporary_appearance
-            && target.generation != PersonGeneration::child
-            && state != PersonState::walk_to_exit) {
+        const auto state = target.state, effective = state == PersonState::temporary_appearance ? target.saved_state : state;
+        if ((std::to_underlying(effective) < 14 || std::to_underlying(effective) > 17) && state != PersonState::temporary_appearance && target.generation != PersonGeneration::child && state != PersonState::walk_to_exit) {
             world_operations::enter_world_person_state(c, &target, PersonState::listen_to_vicious_rumours);
             note_whinge_victim(c, person, PersonActionCode::spread_vicious_rumours);
         }
@@ -204,8 +200,9 @@ void spread_rumours_in_cell(VisitorWorld& c, PersonRuntimeView& person, WorldCel
 
 void whinge_at_staff_in_cell(VisitorWorld& c, PersonRuntimeView& person, WorldCellCoordinates point) {
     occupants(c, wrapped_scan_cell(point), [&](ThingId id, MapObjectBase& base) {
-        if (id == person.base.header.id || !is_staff_record_kind(base.header.kind))
+        if (id == person.base.header.id || !is_staff_record_kind(base.header.kind)) {
             return;
+        }
         auto& target = *reinterpret_cast<StaffRuntimeRecord*>(&base);
         enter_world_staff_state(c, target, StaffState::being_whinged_at);
         note_whinge_victim(c, person, PersonActionCode::whinge_at_staff);
@@ -237,8 +234,9 @@ void update_person_after_info_desk_wait(VisitorWorld& c, PersonRuntimeView& pers
         person.major_destination = promoted;
         set_mobile_entity_purpose_speed(person.mobile, PurposeSpeedMode::boost_50, person.umbrella_state);
         world_operations::enter_world_person_state(c, &person, PersonState::travel_to_object_queue);
-    } else
+    } else {
         world_operations::enter_world_person_state(c, &person, PersonState::roaming);
+    }
 }
 
 void update_person_after_park_object_exit(VisitorWorld& c, PersonRuntimeView& person) {
@@ -248,12 +246,14 @@ void update_person_after_park_object_exit(VisitorWorld& c, PersonRuntimeView& pe
         world_operations::enter_world_person_state(c, &person, PersonState::roaming);
         return;
     }
-    if (navigation != NavigationResult::arrived)
+    if (navigation != NavigationResult::arrived) {
         return;
+    }
     const auto resume = [&](ParkObjectRuntimeView& object) {
         const auto cell = get_back_of_queue(c, &object);
-        if (!cell || !try_set_mobile_entity_path_to_cell(c, person.base, person.mobile, cell))
+        if (!cell || !try_set_mobile_entity_path_to_cell(c, person.base, person.mobile, cell)) {
             return false;
+        }
         world_operations::enter_world_person_state(c, &person, PersonState::travel_to_object_queue);
         return true;
     };
@@ -264,10 +264,12 @@ void update_person_after_park_object_exit(VisitorWorld& c, PersonRuntimeView& pe
         const auto* definition = target ? get_park_object_definition(c, target) : nullptr;
         if (definition && definition->is_photo_booth) {
             person.major_destination = person.photo_booth;
-            if (resume(*target))
+            if (resume(*target)) {
                 return;
-        } else
+            }
+        } else {
             person.photo_booth = 0;
+        }
         person.major_destination = 0;
     }
     if (person.saved_major_destination) {
@@ -275,24 +277,16 @@ void update_person_after_park_object_exit(VisitorWorld& c, PersonRuntimeView& pe
         person.saved_major_destination = 0;
         if (auto* target = person_detail::find_live_park_object(c, person.major_destination)) {
             auto& object = *target;
-            const bool already_umbrella = get_park_object_balance(c, object).UsageInfo.AppearanceEffect
-                                           == std::to_underlying(PersonAppearanceEffect::umbrella)
-                                       && person.umbrella_state != PersonUmbrellaState::none;
-            if (!already_umbrella
-                && !(get_park_object_balance(c, object).UsageInfo.AppearanceEffect
-                         == std::to_underlying(PersonAppearanceEffect::balloon)
-                     && (person.balloon_script || person.remaining_balloon_life))
-                && resume(object))
+            const bool already_umbrella = get_park_object_balance(c, object).UsageInfo.AppearanceEffect == std::to_underlying(PersonAppearanceEffect::umbrella) && person.umbrella_state != PersonUmbrellaState::none;
+            if (!already_umbrella && !(get_park_object_balance(c, object).UsageInfo.AppearanceEffect == std::to_underlying(PersonAppearanceEffect::balloon) && (person.balloon_script || person.remaining_balloon_life)) && resume(object)) {
                 return;
+            }
         }
         person.major_destination = 0;
     }
     world_operations::enter_world_person_state(c, &person, PersonState::roaming);
-    if (person.umbrella_state == PersonUmbrellaState::none || person.umbrella_state == PersonUmbrellaState::inactive)
-        start_person_temporary_appearance_animation(
-            c,
-            person,
-            person.won_last_thang ? static_cast<std::uint32_t>(get_person_sprite_generation_variant_code(c, person))
-                                  : 10u);
+    if (person.umbrella_state == PersonUmbrellaState::none || person.umbrella_state == PersonUmbrellaState::inactive) {
+        start_person_temporary_appearance_animation(c, person, person.won_last_thang ? static_cast<std::uint32_t>(get_person_sprite_generation_variant_code(c, person)) : 10u);
+    }
 }
 } //namespace simcoaster

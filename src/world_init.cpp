@@ -16,8 +16,9 @@ StaffCandidate* initialize_world_prefix_record(StaffCandidate* record) {
 }
 
 World* initialize_world_structure_prefix(World* world) {
-    for (auto& candidate : world->staff_candidates)
+    for (auto& candidate : world->staff_candidates) {
         initialize_world_prefix_record(&candidate);
+    }
     world->staff_pool.last_update_tick = 0;
     world->staff_pool.opening_pool_generated = 0;
     world->staff_pool.stop_producing.fill(0);
@@ -55,16 +56,14 @@ RegionEffectCell* initialize_world_re_cell_record(RegionEffectCell* cell) {
 MapCell* register_world_map_cell_range(WorldRuntime& c, MapCell* base, std::uint32_t stride) {
     c.simulation.map_range_base = base;
     c.simulation.map_record_stride = stride;
-    c.simulation.map_range_end =
-        reinterpret_cast<MapCell*>(reinterpret_cast<std::byte*>(base) + std::size_t{ stride } * map_cell_count);
+    c.simulation.map_range_end = reinterpret_cast<MapCell*>(reinterpret_cast<std::byte*>(base) + std::size_t { stride } * map_cell_count);
     return base;
 }
 
 TrackCell* register_world_track_cell_range(WorldRuntime& c, TrackCell* base, std::uint32_t stride) {
     c.simulation.track_range_base = base;
     c.simulation.track_record_stride = stride;
-    c.simulation.track_range_end =
-        reinterpret_cast<TrackCell*>(reinterpret_cast<std::byte*>(base) + std::size_t{ stride } * map_cell_count);
+    c.simulation.track_range_end = reinterpret_cast<TrackCell*>(reinterpret_cast<std::byte*>(base) + std::size_t { stride } * map_cell_count);
     return base;
 }
 
@@ -73,12 +72,15 @@ World* construct_world_structure(WorldRuntime& c, World* world) {
     initialize_world_structure_prefix(world);
     initialize_world_calendar_state(c, &world->calendar);
     initialize_world_arrival_state(&world->arrival);
-    for (auto& cell : world->map_cells)
+    for (auto& cell : world->map_cells) {
         initialize_world_map_cell_record(&cell);
-    for (auto& cell : world->track_cells)
+    }
+    for (auto& cell : world->track_cells) {
         initialize_world_track_cell_record(&cell);
-    for (auto& cell : world->region_cells)
+    }
+    for (auto& cell : world->region_cells) {
         initialize_world_re_cell_record(&cell);
+    }
     register_world_map_cell_range(c, world->map_cells.data(), sizeof(MapCell));
     register_world_track_cell_range(c, world->track_cells.data(), sizeof(TrackCell));
     //150 object-control constructor callbacks are verified no-ops (stride36).
@@ -138,11 +140,9 @@ MechanicHqRecord* initialize_world_mechanic_hq_state(WorldRuntime& c, MechanicHq
 
 UiMessageReceiverRecord* initialize_world_ui_message_receiver(WorldRuntime& c, UiMessageReceiverRecord* record) {
     initialize_world_map_object_base(c, &record->base, 1, 17);
-    for (int category : { 18, 10, 7, 8, 33, 15, 19, 34, 39, 35, 36, 42, 43 })
-        register_world_used_thing_for_event(c,
-                                            get_world_event_subscription_registry(c),
-                                            &record->base.header,
-                                            category);
+    for (int category : { 18, 10, 7, 8, 33, 15, 19, 34, 39, 35, 36, 42, 43 }) {
+        register_world_used_thing_for_event(c, get_world_event_subscription_registry(c), &record->base.header, category);
+    }
     return record;
 }
 
@@ -163,18 +163,22 @@ void initialize_world_staff_hq_ability_slots(WorldRuntime& c, StaffHqRecord* hq)
     unsigned used = 0;
     //Reject invalid mission data instead of overwriting adjacent training state.
     auto write_slot = [&](StaffType staff, std::int32_t ability) {
-        if (used == hq->staff_slots.size())
+        if (used == hq->staff_slots.size()) {
             throw std::length_error("mission staff requirements exceed ability slots");
+        }
         auto& slot = hq->staff_slots[used++];
         slot.staff_type = staff;
         slot.required_ability = ability;
         slot.assigned_staff = 0;
     };
-    for (const auto& requirement : requirements)
-        for (std::int32_t i = 0; i < requirement.number; ++i)
+    for (const auto& requirement : requirements) {
+        for (std::int32_t i = 0; i < requirement.number; ++i) {
             write_slot(requirement.staff_type, requirement.ability);
-    while (used < 20)
+        }
+    }
+    while (used < 20) {
         write_slot(StaffType::unsupported_index, 0);
+    }
 }
 
 StaffHqRecord* initialize_world_staff_hq_record(WorldRuntime& c, StaffHqRecord* hq) {
@@ -184,18 +188,17 @@ StaffHqRecord* initialize_world_staff_hq_record(WorldRuntime& c, StaffHqRecord* 
     hq->staff_member_picked_up = 0;
     hq->force_strike = 0;
     hq->trained_staff.fill(0);
-    for (int category : { 12, 14, 42, 43, 33, 35, 36 })
+    for (int category : { 12, 14, 42, 43, 33, 35, 36 }) {
         register_world_used_thing_for_event(c, get_world_event_subscription_registry(c), &hq->base.header, category);
+    }
     initialize_world_staff_hq_ability_slots(c, hq);
     return hq;
 }
 
 int initialize_world_advisor_runtime_state(WorldRuntime& c, AdvisorRecord* record) {
-    for (int category : { 5, 17, 19, 23, 14, 8 })
-        register_world_used_thing_for_event(c,
-                                            get_world_event_subscription_registry(c),
-                                            &record->base.header,
-                                            category);
+    for (int category : { 5, 17, 19, 23, 14, 8 }) {
+        register_world_used_thing_for_event(c, get_world_event_subscription_registry(c), &record->base.header, category);
+    }
     record->sound_id = 0;
     record->next_available_queue_pos = 0;
     record->last_action_duration = 0;
@@ -212,8 +215,9 @@ AdvisorRecord* initialize_world_advisor_state(WorldRuntime& c, AdvisorRecord* re
     initialize_world_map_object_base(c, &record->base, 1, 11);
     record->time_signature = 0;
     record->sound_id = 0;
-    for (auto& entry : record->queue)
+    for (auto& entry : record->queue) {
         entry.valid = 0;
+    }
     record->next_available_queue_pos = 0;
     record->last_action_duration = 0;
     record->special_candidate.valid = 0;
@@ -230,8 +234,9 @@ ResearchGroup* initialize_world_research_group_entry(ResearchGroup* group) {
 ResearchLabRecord* initialize_world_research_lab_state(WorldRuntime& c, ResearchLabRecord* record) {
     initialize_world_map_object_base(c, &record->base, 1, 14);
     //Native invokes two arrays of no-op WORD constructors; their bytes survive.
-    for (auto& group : record->groups)
+    for (auto& group : record->groups) {
         initialize_world_research_group_entry(&group);
+    }
     return record;
 }
 } //namespace simcoaster

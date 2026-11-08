@@ -10,12 +10,11 @@ class ParkConstructionRuntime;
 struct WorldSourceStartupBalance {
     WorldStartupBalance world;
     WorldCellConstructionCosts cell_costs;
-    std::int32_t initial_cash{}, initial_admission_fee{};
-    std::array<BankLoanOffer, 10> loan_offers{};
+    std::int32_t initial_cash {}, initial_admission_fee {};
+    std::array<BankLoanOffer, 10> loan_offers {};
 };
 
-std::expected<void, sam::Error>
-load_world_source_startup_balance(WorldSourceStartupBalance&, std::string_view, bool preserve);
+std::expected<void, sam::Error> load_world_source_startup_balance(WorldSourceStartupBalance&, std::string_view, bool preserve);
 //Fresh source-world setup,648070. Assets, the selected mission/profile and
 //catalog templates must be bound; the World must have no linked records.
 //Base.map status bytes are applied afterward, as6A377B ->6A378A does.

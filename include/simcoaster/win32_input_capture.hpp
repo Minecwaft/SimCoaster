@@ -6,8 +6,9 @@ namespace simcoaster {
 //SetCapture on an already owning HWND sends a synchronous self notification
 //on Windows; repeated acquisition must not interrupt those existing owners.
 inline void acquire_window_pointer_capture(HWND window) {
-    if (GetCapture() != window)
+    if (GetCapture() != window) {
         SetCapture(window);
+    }
 }
 
 //External callers can still repeat SetCapture directly. Ignore only a

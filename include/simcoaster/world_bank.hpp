@@ -15,8 +15,7 @@ BankRecord* initialize_world_bank_account_state(EconomyWorld&, BankRecord*);
 void destroy_heap_payload_event(EconomyWorld&, HeapPayloadEvent*);
 void dispatch_world_used_thing_event(WorldRuntime&, ThingHeader*, WorldEvent*);
 void handle_world_bank_account_event(EconomyWorld&, BankRecord*, WorldEvent*);
-std::int64_t*
-write_scaled_global_clock_delta_qword(EconomyWorld&, CalendarState*, std::int64_t*, std::uint32_t start_tick);
+std::int64_t* write_scaled_global_clock_delta_qword(EconomyWorld&, CalendarState*, std::int64_t*, std::uint32_t start_tick);
 std::int32_t apply_bank_balance_and_profit_delta(EconomyWorld&, BankRecord*, std::int32_t amount);
 std::int32_t charge_world_bank_account_expense(EconomyWorld&, BankRecord*, std::int32_t amount);
 std::int32_t accrue_bank_batch_income(BankRecord*, std::int32_t amount);

@@ -3,15 +3,15 @@
 
 namespace simcoaster {
 struct SoundVoiceParameters {
-    std::array<float, 3> position{};
-    bool positioned{};
+    std::array<float, 3> position {};
+    bool positioned {};
     float level = 100.0f;
     float frequency_ratio = 1.0f;
     std::uint8_t channel_mask = 1;
     //Total passes, including the first. UINT32_MAX repeats without a limit.
     std::uint32_t loop_count = 1;
-    std::uint64_t loop_begin_frame{}, loop_end_frame{}; //End0 means sample end.
-    std::uint32_t seek_ms{}, silence_ms{};
+    std::uint64_t loop_begin_frame {}, loop_end_frame {}; //End0 means sample end.
+    std::uint32_t seek_ms {}, silence_ms {};
     float min_distance = 2.0f, max_distance = 2.1f;
     //Portable spectral occlusion. DC/low band remains unchanged; this scalar
     //attenuates the high band rather than multiplying broadband voice level.
@@ -23,16 +23,16 @@ struct SoundVoiceParameters {
 };
 
 struct SoundListener {
-    std::array<float, 3> position{};
-    std::array<float, 3> forward{ 0, 0, 1 }, up{ 0, 1, 0 };
+    std::array<float, 3> position {};
+    std::array<float, 3> forward { 0, 0, 1 }, up { 0, 1, 0 };
 };
 
 struct SoundVoiceStatus {
     SoundVoiceParameters parameters;
-    double source_frame{};
-    std::uint64_t rendered_frames{};
-    std::uint32_t remaining_loops{};
-    bool paused{}, trailing_silence{};
+    double source_frame {};
+    std::uint64_t rendered_frames {};
+    std::uint32_t remaining_loops {};
+    bool paused {}, trailing_silence {};
 };
 
 //Single-owner software mixer. The World thread owns all voice mutations and

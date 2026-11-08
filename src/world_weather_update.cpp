@@ -9,10 +9,12 @@
 namespace simcoaster {
 namespace {
 std::int32_t divide(std::int32_t numerator, std::int32_t denominator) {
-    if (!denominator)
+    if (!denominator) {
         throw std::domain_error("weather volume has a zero divisor");
-    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1)
+    }
+    if (numerator == std::numeric_limits<std::int32_t>::min() && denominator == -1) {
         throw std::overflow_error("weather volume is not representable");
+    }
     return numerator / denominator;
 }
 
@@ -22,18 +24,21 @@ std::uint32_t world_draw(WeatherWorld& c) {
 
 std::int32_t remainder(std::uint32_t numerator, std::int32_t denominator) {
     const auto divisor = numeric::bits(denominator);
-    if (!divisor)
+    if (!divisor) {
         throw std::domain_error("weather random range is zero");
+    }
     return numeric::word(numerator % divisor);
 }
 
 std::int64_t thunder_coordinate(float value) {
     const auto coordinate = std::trunc(static_cast<double>(value));
-    if (!std::isfinite(coordinate))
+    if (!std::isfinite(coordinate)) {
         throw std::domain_error("weather sound coordinate is not finite");
+    }
     const auto limit = std::ldexp(1.0, 63);
-    if (coordinate < -limit || coordinate >= limit)
+    if (coordinate < -limit || coordinate >= limit) {
         throw std::overflow_error("weather sound coordinate is not representable");
+    }
     return static_cast<std::int64_t>(coordinate);
 }
 
@@ -83,14 +88,18 @@ void make_weather_lightning_endpoints(WeatherWorld& c, WorldVector3& ground, Wor
     sky[2] = static_cast<float>(unit() * 100.0 + ground[2] - 50.0);
     //Sky coordinates use the unclamped ground point. Upper-then-lower checks
     //also define the native result when a supplied map dimension is zero.
-    if (ground[0] > width)
+    if (ground[0] > width) {
         ground[0] = width;
-    if (ground[0] < 1.0f)
+    }
+    if (ground[0] < 1.0f) {
         ground[0] = 1.0f;
-    if (ground[2] > height)
+    }
+    if (ground[2] > height) {
         ground[2] = height;
-    if (ground[2] < 1.0f)
+    }
+    if (ground[2] < 1.0f) {
         ground[2] = 1.0f;
+    }
 }
 
 void update_world_weather_state(WeatherWorld& c, WeatherRecord* weather) {
@@ -119,12 +128,9 @@ void update_world_weather_state(WeatherWorld& c, WeatherRecord* weather) {
     if (weather->lightning) {
         weather->lightning_countdown = numeric::subtract(weather->lightning_countdown, c.weather.weather_effects_balance.lightning_countdown_speed);
         if (weather->lightning_countdown < 0) {
-            WorldVector3 ground{}, sky{};
+            WorldVector3 ground {}, sky {};
             make_weather_lightning_endpoints(c, ground, sky);
-            world_operations::trigger_weather_lightning(c,
-                                                        ground,
-                                                        sky,
-                                                        c.weather.weather_effects_balance.lightning_time);
+            world_operations::trigger_weather_lightning(c, ground, sky, c.weather.weather_effects_balance.lightning_time);
             if (weather->thunder_countdown <= 0) {
                 const auto delay_base = std::max(numeric::subtract(c.weather.weather_effects_balance.thunder_starts_this_far_away, weather->lightning_count_this_period), 0);
                 const auto draw = world_draw(c);
@@ -138,8 +144,9 @@ void update_world_weather_state(WeatherWorld& c, WeatherRecord* weather) {
             const auto draw = world_draw(c);
             weather->lightning_countdown = remainder(draw, c.weather.weather_effects_balance.lightning_countdown_from);
         }
-    } else
+    } else {
         weather->lightning_count_this_period = 0;
+    }
 
     weather->thunder_countdown = numeric::subtract(weather->thunder_countdown, 1);
     if (!weather->thunder_countdown) {
@@ -154,18 +161,8 @@ void update_world_weather_state(WeatherWorld& c, WeatherRecord* weather) {
     if (c.weather.weather_refresh_requested == 1) {
         weather->current_drops = 0;
         const auto saved_target = weather->target_drops;
-        const WeatherScheduleEntry saved{ .month = weather->active.month,
-                                          .type = weather->active.type,
-                                          .quality = weather->active.quality,
-                                          .length = weather->active.length,
-                                          .valid = 1,
-                                          .padding = {} };
-        const WeatherScheduleEntry reset{ .month = 0,
-                                          .type = WeatherCategory::code_0,
-                                          .quality = 80,
-                                          .length = 2,
-                                          .valid = 1,
-                                          .padding = {} };
+        const WeatherScheduleEntry saved { .month = weather->active.month, .type = weather->active.type, .quality = weather->active.quality, .length = weather->active.length, .valid = 1, .padding = {} };
+        const WeatherScheduleEntry reset { .month = 0, .type = WeatherCategory::code_0, .quality = 80, .length = 2, .valid = 1, .padding = {} };
         apply_world_weather_configuration(c, weather, &reset);
         c.weather.weather_refresh_requested = 0;
         apply_world_weather_configuration(c, weather, &saved);

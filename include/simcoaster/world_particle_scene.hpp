@@ -12,12 +12,7 @@ struct WorldRuntime;
 class WorldParticleScene {
     SpritePixelCatalog pixels_;
     std::map<std::pair<std::size_t, std::size_t>, TextureImagePtr> textures_;
-    void append_effects(WorldRuntime&,
-                        const ParticleRuntime&,
-                        const SceneCamera*,
-                        float aspect,
-                        EffectScene&,
-                        bool screen_space);
+    void append_effects(WorldRuntime&, const ParticleRuntime&, const SceneCamera*, float aspect, EffectScene&, bool screen_space);
 
 public:
     //World effects participate in the World depth buffer.

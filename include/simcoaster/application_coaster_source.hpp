@@ -11,14 +11,14 @@ class ParkConstructionRuntime;
 //and scanner-derived names in design. No generated editor grid is substituted.
 struct ApplicationCoasterSourceSelection {
     std::int32_t source_index = -1;
-    std::uint16_t definition_id{};
+    std::uint16_t definition_id {};
     bool is_plain = true;
     std::string native_design_path;
     std::optional<CoasterDesign> design;
     //Native map-source recreation flag==1 saves the ordinary profile before
     //selecting special profile mode4; the designer must not overwrite its GMS.
-    bool detach_profile{};
-    std::uint8_t remember_current_source{};
+    bool detach_profile {};
+    std::uint8_t remember_current_source {};
     std::int32_t previous_source_index = -1;
 };
 
@@ -29,9 +29,7 @@ void install_coaster_source_selection(WorldRuntime&, const ApplicationCoasterSou
 //Native5305B0 after World initialization: select the real definition/COS in
 //the construction owner. The source's genuine CEM boundary is initialized by
 //ParkRuntime; this function never invents land, cells or supports.
-void begin_coaster_source_world_interaction(WorldRuntime&,
-                                            ParkConstructionRuntime&,
-                                            const ApplicationCoasterSourceSelection&);
+void begin_coaster_source_world_interaction(WorldRuntime&, ParkConstructionRuntime&, const ApplicationCoasterSourceSelection&);
 
 struct ApplicationCoasterSourceHost {
     WorldUiPanelHost panels;
@@ -53,12 +51,7 @@ class ApplicationCoasterSourceController {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationCoasterSourceController(WorldRuntime&,
-                                       UiRuntime&,
-                                       UiControl* primary,
-                                       const std::filesystem::path& game_root,
-                                       ApplicationCoasterSourceHost,
-                                       std::string language = "American");
+    ApplicationCoasterSourceController(WorldRuntime&, UiRuntime&, UiControl* primary, const std::filesystem::path& game_root, ApplicationCoasterSourceHost, std::string language = "American");
     ~ApplicationCoasterSourceController();
     ApplicationCoasterSourceController(const ApplicationCoasterSourceController&) = delete;
     ApplicationCoasterSourceController& operator=(const ApplicationCoasterSourceController&) = delete;

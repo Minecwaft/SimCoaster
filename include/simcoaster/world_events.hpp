@@ -27,12 +27,10 @@ struct EventRegistry {
     std::array<EventSubscriptionSlot, world_event_slot_count> slots;
 
     template <std::size_t... I>
-    EventRegistry(AllocationPort& services, std::index_sequence<I...>)
-        : resource(services),
-          slots{ (static_cast<void>(I), EventSubscriptionSlot{ &resource })... } {}
+    EventRegistry(AllocationPort& services, std::index_sequence<I...>) : resource(services),
+                                                                         slots { (static_cast<void>(I), EventSubscriptionSlot { &resource })... } {}
 
-    explicit EventRegistry(AllocationPort& services)
-        : EventRegistry(services, std::make_index_sequence<world_event_slot_count>{}) {}
+    explicit EventRegistry(AllocationPort& services) : EventRegistry(services, std::make_index_sequence<world_event_slot_count> {}) {}
 
     EventRegistry(const EventRegistry&) = delete;
     EventRegistry& operator=(const EventRegistry&) = delete;

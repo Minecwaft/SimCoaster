@@ -7,9 +7,9 @@ namespace simcoaster {
 struct WorldRuntime;
 
 struct UiPersonPreviewPlacement {
-    std::array<std::int32_t, 4> bounds{};
-    std::array<float, 4> clip{ 0, 0, 2048, 1536 };
-    std::int16_t depth{};
+    std::array<std::int32_t, 4> bounds {};
+    std::array<float, 4> clip { 0, 0, 2048, 1536 };
+    std::int16_t depth {};
     float adjustment = 12.f;
 };
 

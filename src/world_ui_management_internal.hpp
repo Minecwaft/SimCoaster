@@ -8,12 +8,7 @@
 
 namespace simcoaster {
 struct WorldManagementUiController::State : UiPanelPresentation {
-    static constexpr UiPanelPresentationPolicy panel_presentation{
-        .missing_control = "Original management template has no control ",
-        .text_error = "Management localized row ",
-        .list_error = "Management original list column mismatch",
-        .list_style = UiPanelListStyle::required_aligned_columns
-    };
+    static constexpr UiPanelPresentationPolicy panel_presentation { .missing_control = "Original management template has no control ", .text_error = "Management localized row ", .list_error = "Management original list column mismatch", .list_style = UiPanelListStyle::required_aligned_columns };
     enum class Page {
         none,
         finance,
@@ -26,40 +21,38 @@ struct WorldManagementUiController::State : UiPanelPresentation {
         options
     };
     WorldRuntime& c;
-    UiModalScope message_scope{ c };
+    UiModalScope message_scope { c };
     UiFocusBookmark modal_focus;
     UiMessageControls message_controls;
     UiRuntime& ui;
-    mutable UiPanelBindings bindings{ ui };
-    UiControl *primary{}, *root{}, *list_control{}, *graph_control{}, *name_editor{}, *message_wrapper{},
-        *message_root{};
+    mutable UiPanelBindings bindings { ui };
+    UiControl *primary {}, *root {}, *list_control {}, *graph_control {}, *name_editor {}, *message_wrapper {}, *message_root {};
     std::filesystem::path game_root;
     WorldManagementUiHost host;
-    Page page{};
+    Page page {};
     std::vector<UiControl*> roots;
     std::unique_ptr<UiFontLibrary> local_fonts;
     std::unique_ptr<UiGraphPresenter> graph_presenter;
     std::vector<UiGraphSeriesStyle> graph_styles;
     StatisticsGraphUiState shares_graph;
-    std::uint64_t graph_revision{}, loan_revision{}, award_revision{};
-    std::int32_t advisor_action = -1, staged_fee{}, shares_sort{}, loan_sort{}, challenge_sort = 1, challenge_mode{},
-                 options_page = 95020;
+    std::uint64_t graph_revision {}, loan_revision {}, award_revision {};
+    std::int32_t advisor_action = -1, staged_fee {}, shares_sort {}, loan_sort {}, challenge_sort = 1, challenge_mode {}, options_page = 95020;
     std::optional<std::size_t> selected_challenge;
-    ThingId gate_target{};
-    bool challenge_advisor_latched{};
+    ThingId gate_target {};
+    bool challenge_advisor_latched {};
     std::optional<std::int32_t> highlighted_award;
-    std::uint32_t award_step{}, award_phase{}, award_next_ms{}, award_started_ms{};
+    std::uint32_t award_step {}, award_phase {}, award_next_ms {}, award_started_ms {};
     UiPreferences options_snapshot, options_current;
     ManagementGraphicsPreferences graphics_snapshot, graphics_current;
     ManagementGraphicsCapabilities graphics_caps;
-    bool closing{}, refreshing{}, options_pause_owned{}, options_committed{};
+    bool closing {}, refreshing {}, options_pause_owned {}, options_committed {};
     std::function<void()> message_accepted;
     std::vector<std::byte> challenge_generic, challenge_specific;
     std::uint32_t pixel_width = 1100, pixel_height = 760;
 
     struct ScrollText {
-        UiControl* scroll{};
-        UiRect bounds{};
+        UiControl* scroll {};
+        UiRect bounds {};
     };
 
     std::map<UiControl*, ScrollText> scrolling;

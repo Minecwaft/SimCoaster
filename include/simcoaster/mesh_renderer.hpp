@@ -13,12 +13,7 @@ class MeshRenderer {
     std::unique_ptr<Impl> impl_;
 
 public:
-    MeshRenderer(std::uint32_t width,
-                 std::uint32_t height,
-                 void* window = nullptr,
-                 bool force_software = false,
-                 std::optional<std::uint32_t> adapter = {},
-                 std::optional<ApplicationGraphicsProfile> profile = {});
+    MeshRenderer(std::uint32_t width, std::uint32_t height, void* window = nullptr, bool force_software = false, std::optional<std::uint32_t> adapter = {}, std::optional<ApplicationGraphicsProfile> profile = {});
     ~MeshRenderer();
     MeshRenderer(const MeshRenderer&) = delete;
     MeshRenderer& operator=(const MeshRenderer&) = delete;
@@ -38,15 +33,7 @@ public:
 };
 
 void write_texture_png(const TextureImage&, const std::filesystem::path&);
-int run_mesh_viewer(const std::filesystem::path& source,
-                    std::string_view model_name,
-                    const std::filesystem::path& game_root,
-                    const std::optional<std::filesystem::path>& capture = {});
-int run_park_viewer(const std::filesystem::path& save,
-                    std::string theme,
-                    const std::filesystem::path& game_root,
-                    const std::optional<std::filesystem::path>& capture = {});
-int run_application(const std::filesystem::path& game_root,
-                    const std::optional<std::filesystem::path>& initial_park = {},
-                    std::string initial_theme = {});
+int run_mesh_viewer(const std::filesystem::path& source, std::string_view model_name, const std::filesystem::path& game_root, const std::optional<std::filesystem::path>& capture = {});
+int run_park_viewer(const std::filesystem::path& save, std::string theme, const std::filesystem::path& game_root, const std::optional<std::filesystem::path>& capture = {});
+int run_application(const std::filesystem::path& game_root, const std::optional<std::filesystem::path>& initial_park = {}, std::string initial_theme = {});
 } //namespace simcoaster

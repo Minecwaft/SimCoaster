@@ -28,11 +28,6 @@ public:
     bool reconcile();
     void advance();
     const std::vector<std::string>& diagnostics() const;
-    void append(UiDrawList&,
-                UiControl&,
-                UiRect clip,
-                std::uint32_t pixel_width,
-                std::uint32_t pixel_height,
-                std::int32_t depth_offset = 1);
+    void append(UiDrawList&, UiControl&, UiRect clip, std::uint32_t pixel_width, std::uint32_t pixel_height, std::int32_t depth_offset = 1);
 };
 } //namespace simcoaster

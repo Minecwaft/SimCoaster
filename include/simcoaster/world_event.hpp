@@ -135,7 +135,7 @@ struct ObstacleRemovedEvent {
 
 struct PromotionEvent {
     std::int32_t rank;
-    std::int32_t share_prize{};
+    std::int32_t share_prize {};
 };
 enum class ChallengeNotificationCode : std::int32_t {
     offered = 0,

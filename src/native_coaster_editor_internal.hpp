@@ -13,29 +13,34 @@ namespace native_coaster_detail {
 void capture_preview(NativeCoasterPreview&, const coaster_editor_detail::EditTransaction&, std::size_t ride_index);
 
 inline void require(bool value, std::string_view detail) {
-    if (!value)
-        throw std::logic_error(std::string{ "Native coaster editor: " } + std::string{ detail });
+    if (!value) {
+        throw std::logic_error(std::string { "Native coaster editor: " } + std::string { detail });
+    }
 }
 
 inline void checked(std::expected<void, MeshError> value) {
-    if (!value)
+    if (!value) {
         throw std::runtime_error(describe_mesh_error(value.error()));
+    }
 }
 
 template <class T>
 T checked(std::expected<T, MeshError> value) {
-    if (!value)
+    if (!value) {
         throw std::runtime_error(describe_mesh_error(value.error()));
+    }
     return std::move(*value);
 }
 
 inline void record(AttractionWorld& c, LayoutAction action) {
-    if (c.construction.action_recording_disabled || !c.construction.action_record_streams_initialized)
+    if (c.construction.action_recording_disabled || !c.construction.action_record_streams_initialized) {
         return;
+    }
     require(c.construction.action_record_stream != nullptr, "recording stream is not bound");
     const auto result = write_layout_action(*c.construction.action_record_stream, action);
-    if (!result)
+    if (!result) {
         throw std::runtime_error(describe_layout_error(result.error()));
+    }
 }
 
 inline WorldMeshRuntime& meshes(ConstructionWorld& c) {
@@ -75,9 +80,7 @@ inline void disable_admission(ConstructionWorld& c, ParkObjectRuntimeView& objec
     object.can_load = 0;
     object.person_being_loaded = 0;
     world_operations::set_script_slot(c, world_operations::find_script(c, object.script_id), 6, 1);
-    world_operations::select_park_object_mesh_animation_variant(c,
-                                                                object.mesh_instance_id,
-                                                                ParkObjectMeshVariant::closed);
+    world_operations::select_park_object_mesh_animation_variant(c, object.mesh_instance_id, ParkObjectMeshVariant::closed);
 }
 } //namespace native_coaster_detail
 
@@ -98,7 +101,7 @@ struct NativeCoasterEditor::State {
 
     struct Detached {
         WorldCellCoordinates tile;
-        std::uint32_t mesh{};
+        std::uint32_t mesh {};
     };
 
     std::optional<std::uint32_t> map;
@@ -107,40 +110,40 @@ struct NativeCoasterEditor::State {
     std::optional<NativeCoasterPreview> geometry_preview;
     std::vector<std::uint32_t> preview_signature;
     MeshPlaybackClocks preview_clocks;
-    bool preview_candidate_valid{};
-    Stage stage{};
-    Edit edit{};
-    std::uint32_t interaction{}, remaining{};
-    bool edit_event_pending{}, support_refresh_pending{}, advisor_followup{};
-    std::uint32_t selected_tools{};
+    bool preview_candidate_valid {};
+    Stage stage {};
+    Edit edit {};
+    std::uint32_t interaction {}, remaining {};
+    bool edit_event_pending {}, support_refresh_pending {}, advisor_followup {};
+    std::uint32_t selected_tools {};
     std::optional<CoasterEditorEntryTool> entry;
     std::optional<CoasterEditorTool> active_tool;
     CoasterEditorInputRoute input_route = CoasterEditorInputRoute::world_default;
     bool geometry_action_enabled = true;
-    std::array<float, 2> drag_sensitivity{};
+    std::array<float, 2> drag_sensitivity {};
 
     struct ParameterAxis {
         CoasterParameter parameter;
         CoasterParameterRange range;
-        float value{};
+        float value {};
     };
 
     struct ParameterDrag {
-        std::uint32_t map{}, mesh_slot{};
-        std::size_t ordinal{}, geometry_count{};
-        std::array<float, 2> start_pixel{};
-        std::array<float, 2> sensitivity{};
+        std::uint32_t map {}, mesh_slot {};
+        std::size_t ordinal {}, geometry_count {};
+        std::array<float, 2> start_pixel {};
+        std::array<float, 2> sensitivity {};
         std::array<std::optional<ParameterAxis>, 2> axes;
-        bool camera_relative{};
-        float track_heading{};
+        bool camera_relative {};
+        float track_heading {};
         std::optional<std::array<float, 3>> previous_attachment;
     };
 
     std::optional<ParameterDrag> parameter_drag;
     std::optional<std::size_t> geometry_anchor;
     void restore_snapshot(State&&);
-    WorldCellCoordinates hover_tile{ -1, -1 }, original_tile{ -1, -1 };
-    float original_height{};
+    WorldCellCoordinates hover_tile { -1, -1 }, original_tile { -1, -1 };
+    float original_height {};
 
     WorldCoasterBinding& ride(AttractionWorld& c) {
         native_coaster_detail::require(map.has_value(), "no active context");
@@ -157,29 +160,35 @@ struct NativeCoasterEditor::State {
     std::optional<std::size_t> anchor(AttractionWorld& c) {
         auto& r = ride(c);
         if (interaction & 0x100u) {
-            if (!preview || !*preview)
+            if (!preview || !*preview) {
                 return {};
+            }
             const auto index = *preview - 1;
-            if ((r.train_state.placement_flags & 2u) && (r.geometry.at(index).geometry_flags & 0x10000u))
+            if ((r.train_state.placement_flags & 2u) && (r.geometry.at(index).geometry_flags & 0x10000u)) {
                 return {};
+            }
             return index;
         }
-        if (r.train_state.placement_flags & 2u)
+        if (r.train_state.placement_flags & 2u) {
             return current;
-        if (r.geometry.empty())
+        }
+        if (r.geometry.empty()) {
             return {};
+        }
         return r.geometry.size() - 1;
     }
 
     void clear_range(AttractionWorld& c) {
-        if (!map)
+        if (!map) {
             return;
+        }
         auto& r = ride(c);
         if (range_anchor && range_cursor) {
             const auto low = std::min(*range_anchor, *range_cursor), high = std::max(*range_anchor, *range_cursor);
             native_coaster_detail::require(high < r.geometry.size(), "selection endpoint is stale");
-            for (auto i = low; i < high; ++i)
+            for (auto i = low; i < high; ++i) {
                 r.geometry[i].geometry_flags &= ~0x1004000u;
+            }
             native_coaster_detail::mark(r);
         }
         range_anchor.reset();
@@ -191,40 +200,45 @@ struct NativeCoasterEditor::State {
         auto& r = ride(c);
         auto& m = native_coaster_detail::meshes(c);
         if (r.pulsing_geometry_slot) {
-            if (auto* row = m.instance(*r.pulsing_geometry_slot))
+            if (auto* row = m.instance(*r.pulsing_geometry_slot)) {
                 row->playback.runtime_flags &= ~0x4000000u;
+            }
             r.pulsing_geometry_slot.reset();
         }
-        if (!enable)
+        if (!enable) {
             return;
+        }
         if (r.park_object && park_object_definition_is_marked_special(c, r.park_object)) {
             bool registered = false;
-            for (std::uint32_t i = 0; i < c.attractions.special_ride_group_count; ++i)
+            for (std::uint32_t i = 0; i < c.attractions.special_ride_group_count; ++i) {
                 if (c.attractions.special_ride_groups.at(i).thing_id == r.park_object->base.header.id) {
                     registered = true;
                     break;
                 }
-            if (!registered)
+            }
+            if (!registered) {
                 return;
+            }
         }
-        const auto index = (r.train_state.placement_flags & 2u)
-                             ? current
-                             : (r.geometry.empty() ? std::nullopt : std::optional{ r.geometry.size() - 1 });
-        if (index)
+        const auto index = (r.train_state.placement_flags & 2u) ? current : (r.geometry.empty() ? std::nullopt : std::optional { r.geometry.size() - 1 });
+        if (index) {
             if (const auto slot = r.geometry_state.at(*index).mesh_slot) {
                 auto* row = m.instance(slot);
                 native_coaster_detail::require(row != nullptr, "pulsing model slot is missing");
                 row->playback.runtime_flags |= 0x4000000u;
                 r.pulsing_geometry_slot = slot;
             }
+        }
     }
 
     void restore_detached(AttractionWorld& c, ParkConstructionRuntime& editor) {
-        if (!detached)
+        if (!detached) {
             return;
+        }
         const auto copy = *detached;
-        for (const auto op : std::array{ 21u, 131u, 129u })
+        for (const auto op : std::array { 21u, 131u, 129u }) {
             editor.command_line(c, op, copy.tile, copy.tile);
+        }
         construction_detail::track(c, construction_detail::cell_id(copy.tile)).base.common.mesh_instance = copy.mesh;
         detached.reset();
     }
@@ -233,10 +247,12 @@ struct NativeCoasterEditor::State {
         finish_parameter_drag(c, true);
         geometry_preview.reset();
         preview_signature.clear();
-        if (!map)
+        if (!map) {
             return;
-        if (restore)
+        }
+        if (restore) {
             restore_detached(c, editor);
+        }
         clear_range(c);
         auto& r = ride(c);
         if (edit == Edit::cleanup) {
@@ -252,8 +268,7 @@ struct NativeCoasterEditor::State {
         preview.reset();
         edit_event_pending = false;
         support_refresh_pending = false;
-        native_coaster_detail::checked(
-            finalize_coaster_geometry_edit(c, native_coaster_detail::meshes(c), ride_index(c)));
+        native_coaster_detail::checked(finalize_coaster_geometry_edit(c, native_coaster_detail::meshes(c), ride_index(c)));
     }
 
     void rebuild_preview(WorldRuntime&, bool update_feedback);
@@ -264,16 +279,9 @@ struct NativeCoasterEditor::State {
     void finish_parameter_drag(AttractionWorld&, bool commit);
     void rebuild_parameter_preview(AttractionWorld&, bool update_feedback);
     bool single_piece_endpoint(AttractionWorld&);
-    void insert_intermediate_support(AttractionWorld&,
-                                     std::size_t,
-                                     std::optional<WorldCellCoordinates> chosen = {},
-                                     bool recording = true);
+    void insert_intermediate_support(AttractionWorld&, std::size_t, std::optional<WorldCellCoordinates> chosen = {}, bool recording = true);
     void restore_build_tools_after_delete(AttractionWorld&);
-    bool place(AttractionWorld&,
-               ParkConstructionRuntime&,
-               WorldCellCoordinates,
-               bool charge_cost = true,
-               coaster_editor_detail::PlacementValidation = coaster_editor_detail::PlacementValidation::interactive);
+    bool place(AttractionWorld&, ParkConstructionRuntime&, WorldCellCoordinates, bool charge_cost = true, coaster_editor_detail::PlacementValidation = coaster_editor_detail::PlacementValidation::interactive);
     void commit_move(AttractionWorld&, ParkConstructionRuntime&, WorldCellCoordinates);
 };
 } //namespace simcoaster

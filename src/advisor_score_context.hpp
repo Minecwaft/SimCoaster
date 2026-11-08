@@ -22,8 +22,9 @@ inline World& primary(AdvisorWorld& c) {
 template <class T>
 T& record(AdvisorWorld& c, ThingId id) {
     auto* p = c.entities.at(id).payload;
-    if (!p)
+    if (!p) {
         throw std::logic_error("Advisor missing World record");
+    }
     return *reinterpret_cast<T*>(p);
 }
 
@@ -53,8 +54,9 @@ inline bool has(const ParkObjectRuntimeView& object, ParkObjectCapabilities capa
 
 inline const ResearchCatalogDefinition& definition(AdvisorWorld& c, const ParkObjectRuntimeView& object) {
     const auto* d = get_park_object_definition(c, &object);
-    if (!d || !d->balance)
+    if (!d || !d->balance) {
         throw std::logic_error("Advisor object definition");
+    }
     return *d;
 }
 
@@ -62,8 +64,9 @@ template <class F>
 void active(AdvisorWorld& c, F&& visit) {
     for (auto* row = c.entities.active_head; row;) {
         auto* h = row->payload;
-        if (!h)
+        if (!h) {
             throw std::logic_error("Advisor null active record");
+        }
         visit(*h);
         row = c.entities.at(h->id).active_next;
     }
@@ -72,8 +75,9 @@ void active(AdvisorWorld& c, F&& visit) {
 template <class F>
 void objects(EconomyWorld& c, F&& visit) {
     active(c, [&](ThingHeader& h) {
-        if (h.kind == ThingKind::park_object)
+        if (h.kind == ThingKind::park_object) {
             visit(*reinterpret_cast<ParkObjectRuntimeView*>(&h));
+        }
     });
 }
 
@@ -93,19 +97,21 @@ std::int32_t available(const SampleHistory<T, N>& h) {
 
 template <class T, std::size_t N>
 std::optional<T> sample(const SampleHistory<T, N>& h, std::int32_t offset) {
-    if (offset >= h.num_entries || (offset > h.current_entry && !h.wrapped))
+    if (offset >= h.num_entries || (offset > h.current_entry && !h.wrapped)) {
         return {};
-    const auto index = offset <= h.current_entry ? fixed::subtract(h.current_entry, offset)
-                                                 : fixed::subtract(fixed::add(h.num_entries, h.current_entry), offset);
+    }
+    const auto index = offset <= h.current_entry ? fixed::subtract(h.current_entry, offset) : fixed::subtract(fixed::add(h.num_entries, h.current_entry), offset);
     return h.data.at(static_cast<std::size_t>(index));
 }
 
 template <class T, std::size_t N, class Project>
 double sum(const SampleHistory<T, N>& h, std::int32_t maximum, Project project) {
     double value = 0;
-    for (int i = 0, count = std::min(maximum, available(h)); i < count; ++i)
-        if (auto v = sample(h, i))
+    for (int i = 0, count = std::min(maximum, available(h)); i < count; ++i) {
+        if (auto v = sample(h, i)) {
             value += project(*v);
+        }
+    }
     return value;
 }
 
@@ -114,8 +120,9 @@ inline AdvisorActionHistoryEntry& history(AdvisorWorld& c, std::int32_t action) 
 }
 
 inline bool select(AdvisorWorld& c, ThingId id) {
-    if (!id)
+    if (!id) {
         return false;
+    }
     c.advisor.behavior.callback_thing_id = id;
     c.advisor.behavior.callback_secondary = record<ParkObjectRuntimeView>(c, id).definition_id;
     return true;

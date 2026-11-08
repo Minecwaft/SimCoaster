@@ -16,8 +16,9 @@ void step_rsse_coaster_instruction(ScriptWorld& c, RsseScriptState& script) {
     };
     const auto output = [&](std::uint32_t destination, std::uint32_t value) {
         script.current_value = std::bit_cast<std::int32_t>(value);
-        if ((destination & rsse_tag_mask) == std::to_underlying(RsseWordTag::value_slot))
+        if ((destination & rsse_tag_mask) == std::to_underlying(RsseWordTag::value_slot)) {
             script.value_slots.at(destination ^ std::to_underlying(RsseWordTag::value_slot)) = script.current_value;
+        }
     };
     const auto binding = [&]() -> WorldCoasterBinding& {
         auto* world = c.resources.meshes ? c.resources.meshes->coasters() : nullptr;
@@ -43,13 +44,8 @@ void step_rsse_coaster_instruction(ScriptWorld& c, RsseScriptState& script) {
             const auto selector = resolve();
             auto& ride = binding();
             if (selector >= 0 && selector <= 2) {
-                constexpr std::array requests{ RideDetailState::run_16,
-                                               RideDetailState::paused,
-                                               RideDetailState::run_32 };
-                transition_coaster_detail_state(c,
-                                                *c.resources.meshes,
-                                                ride,
-                                                requests[static_cast<std::size_t>(selector)]);
+                constexpr std::array requests { RideDetailState::run_16, RideDetailState::paused, RideDetailState::run_32 };
+                transition_coaster_detail_state(c, *c.resources.meshes, ride, requests[static_cast<std::size_t>(selector)]);
             }
             return;
         }
@@ -58,10 +54,12 @@ void step_rsse_coaster_instruction(ScriptWorld& c, RsseScriptState& script) {
             auto& ride = binding();
             const auto current = ride.train_state.detail_state_flags;
             if (enabled) {
-                if (current & 4u)
+                if (current & 4u) {
                     transition_coaster_detail_state(c, *c.resources.meshes, ride, RideDetailState::passenger_mode_8);
-            } else if (current & 0xAu)
+                }
+            } else if (current & 0xAu) {
                 transition_coaster_detail_state(c, *c.resources.meshes, ride, RideDetailState::passenger_mode_4);
+            }
             return;
         }
         case RsseCoastCommand::set_capacity => {
@@ -77,15 +75,15 @@ void step_rsse_coaster_instruction(ScriptWorld& c, RsseScriptState& script) {
         case RsseCoastCommand::bind_map => {
             (void)read();
             script.coaster_runtime_map_id = 0;
-            if (auto* world = c.resources.meshes ? c.resources.meshes->coasters() : nullptr)
-                for (auto& ride : std::views::reverse(world->bindings))
+            if (auto* world = c.resources.meshes ? c.resources.meshes->coasters() : nullptr) {
+                for (auto& ride : std::views::reverse(world->bindings)) {
                     if (ride.script_id == script.id) {
                         script.coaster_runtime_map_id = ride.map_id;
-                        (void)c.resources.meshes->set_coaster_speed(c,
-                                                                    ride.map_id,
-                                                                    static_cast<std::uint32_t>(script.operating_speed));
+                        (void)c.resources.meshes->set_coaster_speed(c, ride.map_id, static_cast<std::uint32_t>(script.operating_speed));
                         break;
                     }
+                }
+            }
             return;
         }
         case _ => return;

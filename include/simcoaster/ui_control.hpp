@@ -39,11 +39,11 @@ enum class UiMessageButtonKind : std::uint8_t {
 };
 
 struct UiPoint {
-    std::int32_t x{}, y{};
+    std::int32_t x {}, y {};
 };
 
 struct UiRect {
-    std::int32_t left{}, top{}, right{}, bottom{};
+    std::int32_t left {}, top {}, right {}, bottom {};
 
     std::int32_t width() const {
         return right - left;
@@ -59,9 +59,9 @@ struct UiRect {
 };
 
 struct UiEvent {
-    std::int32_t type{};
-    std::uint32_t id{};
-    std::intptr_t value{};
+    std::int32_t type {};
+    std::uint32_t id {};
+    std::intptr_t value {};
 };
 struct UiControl;
 class UiRuntime;
@@ -69,10 +69,10 @@ using UiCallback = std::function<std::intptr_t(UiControl&, const UiEvent&)>;
 
 struct UiPeriodicEvent {
     std::int32_t event = 16;
-    std::uint32_t id{};
-    std::intptr_t value{};
-    std::chrono::milliseconds interval{};
-    std::chrono::milliseconds next{};
+    std::uint32_t id {};
+    std::intptr_t value {};
+    std::chrono::milliseconds interval {};
+    std::chrono::milliseconds next {};
     bool repeating = true;
 };
 enum class UiHitShape {
@@ -84,24 +84,24 @@ enum class UiHitShape {
 
 struct UiHitRegion {
     UiHitShape shape = UiHitShape::rectangle;
-    UiRect rect{};
-    UiPoint center{}, radii{};
+    UiRect rect {};
+    UiPoint center {}, radii {};
     std::vector<UiPoint> polygon;
 };
 
 struct UiAttachmentPlacement {
-    std::uint16_t part_base{}, part_value{};
-    std::int32_t depth = 1, rotation{};
-    UiPoint pivot{};
+    std::uint16_t part_base {}, part_value {};
+    std::int32_t depth = 1, rotation {};
+    UiPoint pivot {};
 };
 
 struct UiTextConstraints {
-    bool width{}, height{};
+    bool width {}, height {};
 };
 
 struct UiMeterPresentation {
     std::string texture;
-    UiPoint inset{};
+    UiPoint inset {};
 };
 enum class UiListCellFormat : std::uint8_t {
     text,
@@ -117,20 +117,20 @@ enum class UiScalarTextKind : std::uint8_t {
 };
 
 struct UiListCell {
-    std::variant<std::u16string, std::int32_t> value{ std::u16string{} };
+    std::variant<std::u16string, std::int32_t> value { std::u16string {} };
     bool visible = true;
-    std::optional<std::array<std::uint8_t, 4>> color{};
+    std::optional<std::array<std::uint8_t, 4>> color {};
     std::uint32_t help_index = 4294967295u;
     //Numeric identity/sort semantics remain in value. Native category/date
     //attachments may display a localized caption for that same numeric cell.
-    std::optional<std::u16string> display_text{};
+    std::optional<std::u16string> display_text {};
     UiListCell() = default;
 
     UiListCell(std::u16string text) : value(std::move(text)) {}
 
-    UiListCell(std::u16string_view text) : value(std::u16string{ text }) {}
+    UiListCell(std::u16string_view text) : value(std::u16string { text }) {}
 
-    UiListCell(const char16_t* text) : value(std::u16string{ text }) {}
+    UiListCell(const char16_t* text) : value(std::u16string { text }) {}
 
     UiListCell(std::int32_t number) : value(number) {}
 
@@ -162,84 +162,82 @@ struct UiListColumnPresentation {
     UiListCellFormat format = UiListCellFormat::text;
     std::optional<std::uint32_t> font;
     std::optional<std::array<std::uint8_t, 4>> color;
-    std::int32_t horizontal_alignment{}, vertical_alignment = 1;
+    std::int32_t horizontal_alignment {}, vertical_alignment = 1;
     UiTextConstraints text_constraints;
-    UiPoint text_offset{};
-    UiPoint model_inset{};
+    UiPoint text_offset {};
+    UiPoint model_inset {};
     UiMeterPresentation meter;
-    std::uint32_t model_asset_hash{};
-    bool zero_blank{};
+    std::uint32_t model_asset_hash {};
+    bool zero_blank {};
 };
 
 struct UiListRow {
-    std::intptr_t identity{};
+    std::intptr_t identity {};
     std::vector<UiListCell> cells;
-    std::optional<std::intptr_t> parent_identity{};
-    std::optional<std::array<std::uint8_t, 4>> color{};
+    std::optional<std::intptr_t> parent_identity {};
+    std::optional<std::array<std::uint8_t, 4>> color {};
 };
 
 struct UiAnimationStep {
-    std::array<std::int32_t, 4> words{};
+    std::array<std::int32_t, 4> words {};
 };
 
 struct UiBoundsTransition {
     UiRect target, delta;
-    std::int64_t remaining{};
-    std::chrono::milliseconds interval{}, next{};
-    bool paused{};
+    std::int64_t remaining {};
+    std::chrono::milliseconds interval {}, next {};
+    bool paused {};
 };
 
 //Native coordinates are absolute logical-canvas coordinates. Creation flag
 //1024 translates supplied bounds through the ancestor chain. Runtime pointers,
 //ownership and callback payloads follow the native x64 host ABI.
 struct UiControl {
-    UiRuntime* runtime{};
-    UiControl* parent{};
+    UiRuntime* runtime {};
+    UiControl* parent {};
     std::vector<UiControl*> children;
     UiControlKind kind = UiControlKind::window;
-    std::uint32_t id{}, flags{};
-    UiRect rect{}, attachment_rect{}, viewport{};
+    std::uint32_t id {}, flags {};
+    UiRect rect {}, attachment_rect {}, viewport {};
     UiHitRegion hit_region;
-    bool custom_hit_region{}, destroying{}, enabled = true;
-    std::int32_t state{}, value{}, minimum{}, maximum = 1024;
+    bool custom_hit_region {}, destroying {}, enabled = true;
+    std::int32_t state {}, value {}, minimum {}, maximum = 1024;
     //Native common constructor initializes -1. Applying this control's cursor
     //uses the configured global default, independently of its parent's cursor.
     std::int32_t cursor_id = -1;
     std::int32_t selected_id = -1, render_depth = 1;
-    std::uint32_t asset_hash{}, secondary_asset_hash{};
+    std::uint32_t asset_hash {}, secondary_asset_hash {};
     //Native edit boxes own a third model attachment for caret/selection;
     //it is independently laid out, rather than a whole-control backdrop.
-    std::uint32_t edit_caret_asset_hash{};
-    UiPoint edit_text_scroll{};
+    std::uint32_t edit_caret_asset_hash {};
+    UiPoint edit_text_scroll {};
     //Native858A3A replaces the text attachment's Y offset after scrolling;
     //before that first update the font-specific default offset still applies.
-    bool edit_vertical_scroll_applied{};
+    bool edit_vertical_scroll_applied {};
     //Native85A488/85A646 add half the raw bitmap line advance to pointer Y
     //before the row-first nearest-position search (not half its UI-scaled size).
-    std::int32_t edit_pointer_y_bias{};
+    std::int32_t edit_pointer_y_bias {};
     UiAttachmentPlacement primary_placement, secondary_placement;
     std::u16string text;
     //Affixed edit attachments format presentation independently of the raw
     //editable buffer; caret positions refer to the unprefixed text.
     std::u16string text_affix;
-    bool append_text_affix{};
+    bool append_text_affix {};
     std::optional<UiScalarTextKind> scalar_text;
     //Explicit native controller binding: an additional primary text surface
     //under the usual secondary caption, with its own bounds/offset/depth.
-    bool has_primary_text_attachment{};
-    bool primary_shadow_text{}, secondary_shadow_text{};
+    bool has_primary_text_attachment {};
+    bool primary_shadow_text {}, secondary_shadow_text {};
     UiTextConstraints text_constraints;
     std::u16string help_text;
-    std::uint32_t font{};
-    std::array<std::uint8_t, 4> color{ 255, 255, 255, 255 };
-    std::array<std::array<std::uint8_t, 4>, 4> button_text_colors{
-        { { 255, 255, 255, 255 }, { 0xCD, 0xCD, 0xCD, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 } }
-    };
-    UiPoint text_offset{}, active_text_offset{ 1, 1 };
-    bool text_offsets_explicit{};
+    std::uint32_t font {};
+    std::array<std::uint8_t, 4> color { 255, 255, 255, 255 };
+    std::array<std::array<std::uint8_t, 4>, 4> button_text_colors { { { 255, 255, 255, 255 }, { 0xCD, 0xCD, 0xCD, 255 }, { 0, 0, 0, 255 }, { 255, 255, 255, 255 } } };
+    UiPoint text_offset {}, active_text_offset { 1, 1 };
+    bool text_offsets_explicit {};
     std::int32_t default_text_y_offset = 12;
     std::uint32_t help_index = 4294967295u, template_metadata = 4294967295u;
-    std::array<void*, 16> context{};
+    std::array<void*, 16> context {};
     UiCallback primary_callback, secondary_callback;
     std::array<std::optional<UiPeriodicEvent>, 7> periodic;
     std::vector<UiRect> columns;
@@ -248,32 +246,32 @@ struct UiControl {
     //The native sort key is +(column+1) ascending, -(column+1) descending,
     //and zero when no sort column is selected. Item identity is independent
     //of its current visible/sorted row index.
-    std::int32_t sort_column = -1, sort_direction{}, step_size = 1;
-    std::uint32_t list_highlight_asset_hash{};
+    std::int32_t sort_column = -1, sort_direction {}, step_size = 1;
+    std::uint32_t list_highlight_asset_hash {};
     std::optional<std::int32_t> row_height_font_padding;
     std::optional<UiMeterPresentation> meter_presentation;
-    std::int32_t repeat_countdown{}, repeat_increment = 1;
-    std::int32_t raw_minimum{}, raw_maximum = 4095, raw_position{}, mapped_raw_position{}, pointer_y{};
-    std::int32_t horizontal_alignment{}, vertical_alignment{};
+    std::int32_t repeat_countdown {}, repeat_increment = 1;
+    std::int32_t raw_minimum {}, raw_maximum = 4095, raw_position {}, mapped_raw_position {}, pointer_y {};
+    std::int32_t horizontal_alignment {}, vertical_alignment {};
     std::u16string accepted_characters, rejected_characters;
     std::function<UiRect(const UiControl&, std::size_t)> text_position;
-    UiControl* associated_edit{};
-    std::size_t selection_begin{}, selection_end{}, text_limit = 32767;
-    std::int32_t scroll_offset{}, row_height{}, visible_rows{};
-    std::chrono::milliseconds repeat_delay{ 500 }, repeat_interval{ 125 };
-    std::chrono::milliseconds next_repeat{};
+    UiControl* associated_edit {};
+    std::size_t selection_begin {}, selection_end {}, text_limit = 32767;
+    std::int32_t scroll_offset {}, row_height {}, visible_rows {};
+    std::chrono::milliseconds repeat_delay { 500 }, repeat_interval { 125 };
+    std::chrono::milliseconds next_repeat {};
     std::optional<std::chrono::milliseconds> next_caret_blink;
-    std::uint8_t visual_flags{}, tracked_mask{};
-    bool hovered{}, pressed{}, repeating{}, read_only{}, numeric_only{}, password{};
-    bool initial_value_pending{};
+    std::uint8_t visual_flags {}, tracked_mask {};
+    bool hovered {}, pressed {}, repeating {}, read_only {}, numeric_only {}, password {};
+    bool initial_value_pending {};
     //Native editbox +172: locale1037 prepares a caret at the end instead
     //of selecting existing text. Independent of IME composition support.
-    bool edit_prepare_caret_at_end{};
+    bool edit_prepare_caret_at_end {};
     std::vector<UiAnimationStep> animation;
-    std::size_t animation_index{};
-    UiRect animation_correction{};
-    std::chrono::milliseconds animation_interval{}, animation_tick{};
-    bool animation_playing{};
+    std::size_t animation_index {};
+    UiRect animation_correction {};
+    std::chrono::milliseconds animation_interval {}, animation_tick {};
+    bool animation_playing {};
     std::optional<UiBoundsTransition> transition;
 
     bool visible() const {
@@ -282,17 +280,17 @@ struct UiControl {
 };
 
 struct UiTemplateError {
-    std::size_t word{};
+    std::size_t word {};
     std::string reason;
 };
 
 struct UiEventRouteFilter {
-    std::int32_t id{}, value_high_byte{};
+    std::int32_t id {}, value_high_byte {};
 };
 
 struct UiHelpQuery {
     std::uint32_t index = 4294967295u;
-    const char16_t* text{};
+    const char16_t* text {};
 };
 
 class UiRuntime {
@@ -358,11 +356,7 @@ public:
     std::optional<std::size_t> parent_list_row(const UiControl&, std::size_t visible_index) const;
     void set_list_rows(UiControl&, std::vector<UiListRow>, bool preserve_selection = true, bool notify = true);
     void insert_list_row(UiControl&, UiListRow, std::optional<std::size_t> before = std::nullopt, bool notify = true);
-    bool update_list_row(UiControl&,
-                         std::intptr_t identity,
-                         std::span<const UiListCell>,
-                         std::uint64_t column_mask,
-                         bool notify = true);
+    bool update_list_row(UiControl&, std::intptr_t identity, std::span<const UiListCell>, std::uint64_t column_mask, bool notify = true);
     bool remove_list_row(UiControl&, std::intptr_t identity, bool notify = true);
     void clear_list_rows(UiControl&, bool notify = true);
     void set_primary_callback(UiControl&, UiCallback);
@@ -371,13 +365,13 @@ public:
     std::intptr_t dispatch(UiControl*, const UiEvent&);
 
     std::intptr_t dispatch(UiControl* c, std::int32_t event, std::uint32_t id = 0, std::intptr_t value = 0) {
-        return dispatch(c, UiEvent{ event, id, value });
+        return dispatch(c, UiEvent { event, id, value });
     }
 
     bool post(UiControl*, const UiEvent&);
 
     bool post(UiControl* c, std::int32_t event, std::uint32_t id = 0, std::intptr_t value = 0) {
-        return post(c, UiEvent{ event, id, value });
+        return post(c, UiEvent { event, id, value });
     }
 
     std::size_t drain(std::size_t primary_limit = 1024, std::size_t secondary_limit = 4096);
@@ -413,11 +407,9 @@ public:
     std::chrono::milliseconds clock() const;
     std::size_t size() const;
     std::uint64_t dropped_events() const;
-    std::expected<UiControl*, UiTemplateError>
-    parse_template(UiControl* parent, std::span<const std::byte>, UiCallback = {});
+    std::expected<UiControl*, UiTemplateError> parse_template(UiControl* parent, std::span<const std::byte>, UiCallback = {});
 
-    std::expected<UiControl*, UiTemplateError>
-    parse_template(UiControl* parent, std::span<const std::uint16_t> words, UiCallback callback = {}) {
+    std::expected<UiControl*, UiTemplateError> parse_template(UiControl* parent, std::span<const std::uint16_t> words, UiCallback callback = {}) {
         return parse_template(parent, std::as_bytes(words), std::move(callback));
     }
 };

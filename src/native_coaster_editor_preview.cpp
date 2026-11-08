@@ -10,10 +10,7 @@ namespace {
 namespace core = coaster_editor_detail;
 constexpr std::int32_t cash_bias = 250539758; //4760AD,513920: UI quote encoding only.
 
-std::vector<std::uint32_t> signature(WorldRuntime& c,
-                                     const WorldCoasterBinding& ride,
-                                     const WorldCoasterRuntime& world,
-                                     WorldCellCoordinates tile) {
+std::vector<std::uint32_t> signature(WorldRuntime& c, const WorldCoasterBinding& ride, const WorldCoasterRuntime& world, WorldCellCoordinates tile) {
     std::vector<std::uint32_t> result;
     const auto integer = [&](std::size_t value) {
         require(value <= std::numeric_limits<std::uint32_t>::max(), "preview graph is too large");
@@ -35,20 +32,24 @@ std::vector<std::uint32_t> signature(WorldRuntime& c,
         integer(input.geometry_flags & ~0x200000u);
         integer(local.mesh_slot);
         integer(local.placement);
-        for (const auto value : input.inline_position)
+        for (const auto value : input.inline_position) {
             scalar(value);
-        for (const auto value : local.controls)
+        }
+        for (const auto value : local.controls) {
             scalar(value);
-        for (const auto value : local.angles)
+        }
+        for (const auto value : local.angles) {
             scalar(value);
+        }
     }
     for (const auto& owner : world.placements) {
         integer(owner.flags);
         integer(static_cast<std::uint32_t>(owner.tile_x));
         integer(static_cast<std::uint32_t>(owner.tile_y));
         integer(owner.pylon);
-        for (const auto value : owner.position)
+        for (const auto value : owner.position) {
             scalar(value);
+        }
         integer(owner.links.size());
         for (const auto& ref : owner.links) {
             integer(ref ? ref->ride : std::numeric_limits<std::uint32_t>::max());
@@ -58,36 +59,30 @@ std::vector<std::uint32_t> signature(WorldRuntime& c,
     //A terrain edit can change a new support's reference Y without changing an
     //existing placement/control. Include the actual queried reference, not an
     //invented flat-ground height or a permanent temporary support handle.
-    const auto* terrain =
-        c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
+    const auto* terrain = c.construction.active_terrain_model_data ? c.construction.active_terrain_model_data->terrain_grid : nullptr;
     require(terrain != nullptr, "preview terrain is missing");
     const auto height = mesh_placement_reference_height(*terrain, { tile.x, tile.y }, nullptr, 1, 1, 0, 0);
-    if (!height)
+    if (!height) {
         throw height.error();
+    }
     scalar(*height);
     return result;
 }
 } //namespace
 
-void
-native_coaster_detail::capture_preview(NativeCoasterPreview& output, const core::EditTransaction& edit, std::size_t r) {
+void native_coaster_detail::capture_preview(NativeCoasterPreview& output, const core::EditTransaction& edit, std::size_t r) {
     const auto& ride = edit.world.bindings.at(r);
     output.map_id = ride.map_id;
     output.track = ride.generated_mesh;
     std::set<std::uint32_t> captured;
-    for (const auto& local : ride.geometry_state)
+    for (const auto& local : ride.geometry_state) {
         if (local.mesh_slot && captured.insert(local.mesh_slot).second) {
             const auto* mesh = edit.meshes.instance(local.mesh_slot);
             require(mesh != nullptr, "preview support model is missing");
             const bool created = std::ranges::find(edit.created, local.mesh_slot) != edit.created.end();
-            output.models.push_back(
-                { created ? 0 : local.mesh_slot,
-                  mesh->template_id,
-                  mesh->playback.registered,
-                  mesh->playback.model,
-                  mesh->hoarding && mesh->hoarding->registered ? std::optional{ mesh->hoarding->model } : std::nullopt,
-                  mesh->terrain_texture_cells });
+            output.models.push_back({ created ? 0 : local.mesh_slot, mesh->template_id, mesh->playback.registered, mesh->playback.model, mesh->hoarding && mesh->hoarding->registered ? std::optional { mesh->hoarding->model } : std::nullopt, mesh->terrain_texture_cells });
         }
+    }
 }
 
 void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_feedback) {
@@ -144,10 +139,7 @@ void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_fe
         index(preview);
         index(validation);
         append(preview_candidate_valid ? 1u : 0u);
-        if (key != preview_signature
-            || !geometry_preview
-            || preview_clocks.simulation != m.clocks.simulation
-            || preview_clocks.unscaled != m.clocks.unscaled) {
+        if (key != preview_signature || !geometry_preview || preview_clocks.simulation != m.clocks.simulation || preview_clocks.unscaled != m.clocks.unscaled) {
             NativeCoasterPreview output;
             output.valid = preview_candidate_valid;
             {
@@ -157,9 +149,9 @@ void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_fe
                 //values only. The rollback restores bindings, saved ordinals, support
                 //poses, allocator identities and event tail, so save/picking/RSSE
                 //never see a fake node.
-                core::EditTransaction transaction{ c, m };
+                core::EditTransaction transaction { c, m };
                 const auto r = ride_index(c);
-                construction_detail::RestoreValue recording{ c.construction.action_recording_disabled };
+                construction_detail::RestoreValue recording { c.construction.action_recording_disabled };
                 c.construction.action_recording_disabled = 1;
                 auto& target = transaction.world.bindings.at(r);
                 if (moving) {
@@ -169,69 +161,55 @@ void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_fe
                     bool compatible = true;
                     for (std::size_t i = 0; i < transaction.world.placements.size(); ++i) {
                         const auto& owner = transaction.world.placements[i];
-                        if ((owner.flags & 5u) || !equal(coordinate(owner), hover_tile) || i == source)
+                        if ((owner.flags & 5u) || !equal(coordinate(owner), hover_tile) || i == source) {
                             continue;
-                        compatible = compatible
-                                  && owner.definition == source_owner.definition
-                                  && owner.pylon == source_owner.pylon;
-                        if (owner.definition)
+                        }
+                        compatible = compatible && owner.definition == source_owner.definition && owner.pylon == source_owner.pylon;
+                        if (owner.definition) {
                             compatible = compatible && owner.links.size() < core::rules(owner).maximum_stack;
-                        for (const auto& ref : owner.links)
+                        }
+                        for (const auto& ref : owner.links) {
                             compatible = compatible && ref && ref->ride == r;
-                        if (!owner.links.empty() && owner.links.front())
-                            compatible = compatible
-                                      && !(transaction.world.bindings.at(owner.links.front()->ride)
-                                               .geometry.at(owner.links.front()->node)
-                                               .geometry_flags
-                                           & 0x600u);
+                        }
+                        if (!owner.links.empty() && owner.links.front()) {
+                            compatible = compatible && !(transaction.world.bindings.at(owner.links.front()->ride).geometry.at(owner.links.front()->node).geometry_flags & 0x600u);
+                        }
                     }
                     if (!compatible) {
                         geometry_preview.reset();
                         preview_signature.clear();
                         return;
                     }
-                    const auto old_piece =
-                        core::truncated_cost(core::piece_cost(transaction.world, r, ordinal, false, false));
-                    const bool following =
-                        (target.train_state.placement_flags & 1u) && ordinal + 1 < target.geometry.size();
-                    const auto old_next =
-                        following
-                            ? core::truncated_cost(core::piece_cost(transaction.world, r, ordinal + 1, false, false))
-                            : 0;
+                    const auto old_piece = core::truncated_cost(core::piece_cost(transaction.world, r, ordinal, false, false));
+                    const bool following = (target.train_state.placement_flags & 1u) && ordinal + 1 < target.geometry.size();
+                    const auto old_next = following ? core::truncated_cost(core::piece_cost(transaction.world, r, ordinal + 1, false, false)) : 0;
                     core::move_node_raw(transaction, r, ordinal, hover_tile.x, hover_tile.y, false);
-                    auto expense = core::rounded_cost(
-                        static_cast<float>(core::piece_cost(transaction.world, r, ordinal, false, true)));
+                    auto expense = core::rounded_cost(static_cast<float>(core::piece_cost(transaction.world, r, ordinal, false, true)));
                     if (following) {
-                        const auto& center =
-                            transaction.world.placements.at(target.geometry_state[ordinal].placement).position;
-                        expense = core::sum_costs(expense,
-                                                  core::rounded_cost(static_cast<float>(
-                                                      core::piece_cost(transaction.world,
-                                                                       r,
-                                                                       ordinal + 1,
-                                                                       false,
-                                                                       false,
-                                                                       std::array{ center[0] + 5, center[2] + 5 }))));
+                        const auto& center = transaction.world.placements.at(target.geometry_state[ordinal].placement).position;
+                        expense = core::sum_costs(expense, core::rounded_cost(static_cast<float>(core::piece_cost(transaction.world, r, ordinal + 1, false, false, std::array { center[0] + 5, center[2] + 5 }))));
                     }
                     output.piece_cost = fixed::subtract(expense, core::sum_costs(old_piece, old_next));
-                    if (!output.valid)
+                    if (!output.valid) {
                         target.geometry.at(ordinal).geometry_flags |= 0x4000u;
+                    }
                     core::finish(transaction, r);
                 } else {
                     std::optional<std::size_t> existing;
-                    for (std::size_t i = 0; i < transaction.world.placements.size(); ++i)
-                        if (!(transaction.world.placements[i].flags & 5u)
-                            && equal(coordinate(transaction.world.placements[i]), hover_tile)) {
+                    for (std::size_t i = 0; i < transaction.world.placements.size(); ++i) {
+                        if (!(transaction.world.placements[i].flags & 5u) && equal(coordinate(transaction.world.placements[i]), hover_tile)) {
                             existing = i;
                             break;
                         }
+                    }
                     const auto type = (interaction & 0x4040u) ? 1u : 0u;
                     bool compatible = true;
                     if (existing) {
                         const auto& owner = transaction.world.placements[*existing];
                         compatible = owner.definition == target.definition && owner.pylon == type;
-                        for (const auto& ref : owner.links)
+                        for (const auto& ref : owner.links) {
                             compatible = compatible && ref && ref->ride == r;
+                        }
                         if (validation && target.geometry_state.at(*validation).placement == *existing) {
                             target.train_state.runtime_flags |= 8u;
                             target.geometry.at(*current).geometry_flags &= ~0x50000u;
@@ -242,9 +220,11 @@ void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_fe
                             compatible = false; //Boundary closure has no extra temporary node.
                         } else {
                             compatible = compatible && owner.links.size() < core::rules(owner).maximum_stack;
-                            for (const auto& ref : owner.links)
-                                if (ref && ref->ride == r && ref->node == *selected)
+                            for (const auto& ref : owner.links) {
+                                if (ref && ref->ride == r && ref->node == *selected) {
                                     compatible = false;
+                                }
+                            }
                         }
                     }
                     if (compatible) {
@@ -258,42 +238,48 @@ void NativeCoasterEditor::State::rebuild_preview(WorldRuntime& c, bool update_fe
                         const auto ordinal = core::place_node_raw(transaction, r, request, false);
                         auto& inserted = target.geometry.at(ordinal);
                         inserted.geometry_flags |= 0x8000u;
-                        if (output.valid)
+                        if (output.valid) {
                             inserted.geometry_flags &= ~0x4000u;
-                        else
+                        } else {
                             inserted.geometry_flags |= 0x4000u;
+                        }
                         if (ordinal + 1 < target.geometry.size()) {
                             auto& before = target.geometry[ordinal - 1].geometry_flags;
                             before &= (before & 0x200u) ? ~0x10000u : ~0x50000u;
                             inserted.geometry_flags |= 0x50000u;
                         }
-                        if (!existing)
+                        if (!existing) {
                             transaction.world.placements.at(target.geometry_state[ordinal].placement).flags |= 8u;
+                        }
                         core::mark(target, ordinal);
-                        if (ordinal > 1)
+                        if (ordinal > 1) {
                             core::mark(target, ordinal - 1);
+                        }
                         core::finish(transaction, r);
-                        output.piece_cost =
-                            core::truncated_cost(core::piece_cost(transaction.world, r, ordinal, true, false));
+                        output.piece_cost = core::truncated_cost(core::piece_cost(transaction.world, r, ordinal, true, false));
                         capture_preview(output, transaction, r);
                     }
                 }
-                if (moving)
+                if (moving) {
                     capture_preview(output, transaction, r);
+                }
             }
-            if (output.piece_cost < 0)
+            if (output.piece_cost < 0) {
                 output.interaction_cost = fixed::subtract(output.piece_cost, cash_bias);
-            else
+            } else {
                 output.interaction_cost = output.piece_cost;
+            }
             preview_signature = std::move(key);
             preview_clocks = m.clocks;
-            if (output.track || !output.models.empty())
+            if (output.track || !output.models.empty()) {
                 geometry_preview = std::move(output);
-            else
+            } else {
                 geometry_preview.reset();
+            }
         }
-        if (update_feedback && geometry_preview && !c.construction.action_recording_disabled)
+        if (update_feedback && geometry_preview && !c.construction.action_recording_disabled) {
             construction.state.cost = fixed::add(construction.state.cost, geometry_preview->interaction_cost);
+        }
     } catch (const MeshError& error) {
         geometry_preview.reset();
         preview_signature.clear();

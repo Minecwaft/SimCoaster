@@ -19,17 +19,17 @@ enum class SpriteShadowOrder : std::uint8_t {
 };
 
 struct SpriteShadowPolicy {
-    SpriteShadowQuality quality{ SpriteShadowQuality::off };
-    SpriteShadowOrder order{ SpriteShadowOrder::batched };
+    SpriteShadowQuality quality { SpriteShadowQuality::off };
+    SpriteShadowOrder order { SpriteShadowOrder::batched };
 };
 
 //An invalid SAM selector preserves the caller's prior native policy.
 std::optional<SpriteShadowPolicy> sprite_shadow_policy(std::int32_t selector, bool immediate);
 
 struct SpriteProjection {
-    WorldVector3 direction{}, basis{};
-    SpriteTransform transform{};
-    std::uint32_t color{};
+    WorldVector3 direction {}, basis {};
+    SpriteTransform transform {};
+    std::uint32_t color {};
 };
 enum class SpriteProjectionAdmission {
     admitted,
@@ -39,8 +39,8 @@ enum class SpriteProjectionAdmission {
 };
 
 class SpriteProjectionSet {
-    std::array<SpriteProjection, 4> entries_{};
-    std::size_t count_{};
+    std::array<SpriteProjection, 4> entries_ {};
+    std::size_t count_ {};
 
 public:
     //6F47F0: normalize a directional light, cross it with (0,1,0),
@@ -63,18 +63,18 @@ enum class SpriteShadowSource {
 };
 
 struct SpriteShadowSources {
-    const SpriteTextureState* selected_frame{};
-    const SpriteTextureState* alphkid{};
+    const SpriteTextureState* selected_frame {};
+    const SpriteTextureState* alphkid {};
 };
 
 struct SpriteShadowQuad {
     SpriteQuad geometry;
-    SpriteShadowSource source{};
+    SpriteShadowSource source {};
 };
 
 struct SpriteShadowGeometry {
     std::array<SpriteShadowQuad, 4> quads;
-    std::size_t count{};
+    std::size_t count {};
 
     std::span<const SpriteShadowQuad> entries() const {
         return { quads.data(), count };
@@ -88,9 +88,9 @@ enum class SpriteProjectionFailure {
 };
 
 struct SpriteProjectionError {
-    SpriteProjectionFailure reason{};
-    std::uint32_t handle{};
-    std::size_t light{}, vertex{};
+    SpriteProjectionFailure reason {};
+    std::uint32_t handle {};
+    std::size_t light {}, vertex {};
 };
 
 //6FBC30 + 6FC020/6FC2D0. command.scale MUST be the original World scale,
@@ -108,11 +108,5 @@ struct SpriteProjectionError {
 //The ResourceVariant producer690400 and its two constructors never write that
 //malloc-backed field. Default0 is a defined host repair for that native edge,
 //not a recovered resource-script slot or the object's World height.
-std::expected<SpriteShadowGeometry, SpriteProjectionError> build_sprite_shadow_quads(const ResourceSpriteCommand&,
-                                                                                     const EncodedSpriteFrame&,
-                                                                                     const SpriteProjectionSet&,
-                                                                                     SpriteShadowPolicy,
-                                                                                     const SpriteGeometrySettings&,
-                                                                                     SpriteShadowSources,
-                                                                                     float command_height_bias = 0);
+std::expected<SpriteShadowGeometry, SpriteProjectionError> build_sprite_shadow_quads(const ResourceSpriteCommand&, const EncodedSpriteFrame&, const SpriteProjectionSet&, SpriteShadowPolicy, const SpriteGeometrySettings&, SpriteShadowSources, float command_height_bias = 0);
 } //namespace simcoaster

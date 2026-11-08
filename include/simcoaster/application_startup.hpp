@@ -16,10 +16,7 @@ class ApplicationStartupPresentation {
     std::unique_ptr<State> state_;
 
 public:
-    ApplicationStartupPresentation(const std::filesystem::path& game_root,
-                                   std::string language,
-                                   std::uint32_t viewport_width,
-                                   std::uint32_t viewport_height);
+    ApplicationStartupPresentation(const std::filesystem::path& game_root, std::string language, std::uint32_t viewport_width, std::uint32_t viewport_height);
     ~ApplicationStartupPresentation();
     ApplicationStartupPresentation(const ApplicationStartupPresentation&) = delete;
     ApplicationStartupPresentation& operator=(const ApplicationStartupPresentation&) = delete;
@@ -36,10 +33,7 @@ public:
 
 //Native6A1780/6A1930: American logo selection and day-of-month modulo8.
 //Missing movie paths are nullopt, matching the native resolver's skip path.
-std::array<std::optional<std::filesystem::path>, 2>
-application_startup_movie_paths(const std::filesystem::path& game_root,
-                                std::string_view language,
-                                unsigned day_of_month);
+std::array<std::optional<std::filesystem::path>, 2> application_startup_movie_paths(const std::filesystem::path& game_root, std::string_view language, unsigned day_of_month);
 //Native6A1400 gates states4..8 on dialog graphics bit512. MovieVolume
 //controls attenuation and is independent of this startup selection.
 bool application_startup_movies_enabled(const std::filesystem::path& game_root);
